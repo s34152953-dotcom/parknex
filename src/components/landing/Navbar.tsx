@@ -36,47 +36,53 @@ export default function Navbar() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease }}
-        className="fixed top-0 left-0 right-0 z-50 bg-sp-black/60 backdrop-blur-md border-b border-white/[0.03]"
+        className="fixed top-0 left-0 right-0 z-50 bg-[#05070A]/70 backdrop-blur-xl border-b border-white/[0.04]"
       >
-        <div className="mx-auto max-w-[1440px] px-6 md:px-12 lg:px-20">
-          <div className="flex items-center justify-between h-[76px]">
-            {/* Logo matching reference */}
+        <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 md:px-12 lg:px-16">
+          <div className="flex items-center justify-between h-[72px] sm:h-[76px]">
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
-              <div className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center bg-sp-elevated/70 group-hover:border-white/25 transition-colors duration-200">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-sp-white">
+              <div className="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center bg-white/[0.04] group-hover:border-white/20 group-hover:bg-white/[0.08] transition-all duration-200 shadow-inner shadow-white/5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white">
                   <polygon
                     points="12 2 21 7.5 21 16.5 12 22 3 16.5 3 7.5"
                     stroke="currentColor"
-                    strokeWidth="1.5"
+                    strokeWidth="1.6"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
               </div>
-              <span className="text-[16px] font-bold tracking-[-0.02em] text-sp-white font-[family-name:var(--font-manrope)]">
+              <span className="text-[16px] font-bold tracking-[-0.02em] text-white font-[family-name:var(--font-manrope)]">
                 SmartPark
               </span>
             </Link>
 
             {/* Center Nav Links */}
-            <div className="hidden md:flex items-center gap-9">
+            <div className="hidden md:flex items-center gap-8 lg:gap-10">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-[13.5px] font-medium text-sp-nav hover:text-sp-white transition-colors duration-200"
+                  className="text-[13.5px] font-medium text-white/70 hover:text-white transition-colors duration-200 tracking-[-0.01em]"
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
 
-            {/* Get Started Pill */}
-            <div className="hidden md:flex items-center">
+            {/* Right Action / Get Started Pill */}
+            <div className="hidden md:flex items-center gap-3 shrink-0">
+              <Link
+                href="/auth/login"
+                className="text-[13px] font-medium text-white/70 hover:text-white px-3 py-2 transition-colors duration-200"
+              >
+                Sign In
+              </Link>
               <Link
                 href="/parking"
-                className="inline-flex items-center justify-center h-[38px] px-5 rounded-full bg-sp-cta text-sp-cta-text text-[13px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-sm shadow-white/10"
+                className="inline-flex items-center justify-center h-[38px] px-5 rounded-full bg-white text-[#05070A] text-[13px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-md shadow-white/10"
               >
                 Get Started
               </Link>
@@ -85,10 +91,10 @@ export default function Navbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-sp-white"
+              className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 text-white active:scale-95 transition-transform"
               aria-label="Open menu"
             >
-              <Menu className="w-5 h-5 text-sp-white" />
+              <Menu className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
