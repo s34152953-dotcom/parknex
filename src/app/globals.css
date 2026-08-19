@@ -1,26 +1,163 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ── SmartPark Design System ──────────────────────────────── */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Surfaces */
+  --color-sp-black: #050505;
+  --color-sp-surface: #090B0F;
+  --color-sp-elevated: #0D1117;
+  --color-sp-card: #111318;
+  --color-sp-border: rgba(255, 255, 255, 0.06);
+  --color-sp-border-hover: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --color-sp-white: #FAFAFA;
+  --color-sp-secondary: #a7a6a6;
+  --color-sp-nav: #b6b5b5;
+  --color-sp-muted: #6b6b6b;
+
+  /* Accents */
+  --color-sp-blue: #146BFF;
+  --color-sp-blue-hover: #2979FF;
+  --color-sp-blue-glow: rgba(20, 107, 255, 0.15);
+  --color-sp-green: #10B981;
+  --color-sp-red: #EF4444;
+  --color-sp-amber: #F59E0B;
+  --color-sp-cyan: #06B6D4;
+
+  /* CTA */
+  --color-sp-cta: #FFFFFF;
+  --color-sp-cta-text: #050505;
+
+  /* Font */
+  --font-manrope: 'Manrope', system-ui, -apple-system, sans-serif;
+
+  /* Easing */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Spacing scale extensions */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base Styles ──────────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #050505;
+  color: #FAFAFA;
+  font-family: var(--font-manrope);
+  overflow-x: hidden;
+}
+
+/* ── Selection ────────────────────────────────────────────── */
+
+::selection {
+  background: rgba(20, 107, 255, 0.3);
+  color: #FAFAFA;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090B0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1d24;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2d34;
+}
+
+/* ── Focus ────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid #146BFF;
+  outline-offset: 2px;
+}
+
+/* ── Utility Classes ──────────────────────────────────────── */
+
+.sp-glass {
+  background: rgba(13, 17, 23, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sp-glass-subtle {
+  background: rgba(9, 11, 15, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sp-gradient-fade-left {
+  background: linear-gradient(
+    90deg,
+    #050505 0%,
+    #050505 25%,
+    rgba(5, 5, 5, 0.85) 45%,
+    rgba(5, 5, 5, 0.5) 65%,
+    rgba(5, 5, 5, 0.15) 85%,
+    transparent 100%
+  );
+}
+
+.sp-gradient-fade-bottom {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(5, 5, 5, 0.3) 50%,
+    #050505 100%
+  );
+}
+
+.sp-gradient-fade-top {
+  background: linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(5, 5, 5, 0.5) 60%,
+    #050505 100%
+  );
+}
+
+.sp-text-gradient {
+  background: linear-gradient(180deg, #FAFAFA 0%, #a7a6a6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Reduced Motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
