@@ -473,8 +473,8 @@ export default function InteractiveParkingMap3D({
     <div className="relative w-full h-full bg-[#040608] overflow-hidden select-none">
       <Canvas
         camera={{
-          position: is3D ? [15, 24, 24] : [0, 34, 0.1],
-          fov: 40,
+          position: is3D ? [12, 17, 19] : [0, 26, 0.1],
+          fov: 34,
         }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         shadows

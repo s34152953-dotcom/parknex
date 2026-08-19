@@ -36,11 +36,11 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-[64px] bg-sp-surface/80 backdrop-blur-xl border-b border-sp-border flex items-center px-5 lg:px-8 gap-4">
+      <header className="sticky top-0 z-40 h-[64px] bg-sp-surface/80 backdrop-blur-xl border-b border-sp-border flex items-center px-6 lg:px-8 gap-4 select-none">
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg"
+          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-white hover:border-sp-border-hover transition-colors"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5 text-sp-white" />
@@ -48,36 +48,40 @@ export default function TopBar() {
 
         {/* Logo for mobile */}
         <Link href="/" className="lg:hidden flex items-center gap-2 mr-auto">
-          <div className="w-7 h-7 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50">
-            <CircleParking className="w-3.5 h-3.5 text-sp-white" strokeWidth={1.5} />
+          <div className="w-8 h-8 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50">
+            <CircleParking className="w-4 h-4 text-sp-white" strokeWidth={1.5} />
           </div>
         </Link>
 
         {/* Page title (desktop) */}
-        <h1 className="hidden lg:block text-[18px] font-semibold text-sp-white tracking-[-0.01em]">
+        <h1 className="hidden lg:block text-[17px] font-bold text-sp-white tracking-[-0.015em]">
           {getTitle()}
         </h1>
 
         <div className="flex-1" />
 
         {/* Mall selector */}
-        <button className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-sp-border bg-sp-elevated/40 text-[13px] font-medium text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200">
-          <span className="text-sp-secondary text-[12px]">—</span>
+        <button className="hidden sm:flex items-center gap-2 h-9 px-3.5 rounded-xl border border-sp-border bg-sp-elevated/40 text-[12.5px] font-medium text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm">
+          <span className="text-sp-white font-semibold">Central Mall Grand</span>
           <ChevronDown className="w-3.5 h-3.5 text-sp-muted" />
         </button>
 
         {/* Notifications */}
         <button
-          className="relative flex items-center justify-center w-9 h-9 rounded-lg border border-sp-border bg-sp-elevated/40 hover:border-sp-border-hover transition-colors duration-200"
+          className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm"
           aria-label="Notifications"
         >
-          <Bell className="w-4 h-4 text-sp-nav" strokeWidth={1.5} />
+          <Bell className="w-4 h-4" strokeWidth={1.5} />
         </button>
 
         {/* Profile avatar */}
-        <div className="w-8 h-8 rounded-full bg-sp-elevated border border-sp-border flex items-center justify-center">
-          <UserCircle className="w-5 h-5 text-sp-muted" strokeWidth={1.5} />
-        </div>
+        <Link
+          href="/profile"
+          className="w-9 h-9 rounded-xl bg-sp-elevated border border-sp-border hover:border-sp-border-hover flex items-center justify-center transition-colors shadow-sm"
+          aria-label="Profile"
+        >
+          <UserCircle className="w-5 h-5 text-sp-muted hover:text-sp-white" strokeWidth={1.5} />
+        </Link>
       </header>
 
       {/* ── Mobile Menu for Dashboard ──────────────────── */}

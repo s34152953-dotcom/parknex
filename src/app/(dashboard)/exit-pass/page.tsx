@@ -26,7 +26,7 @@ export default function ExitPassPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-4 sm:p-8 bg-[#05070A] flex flex-col items-center justify-center">
+    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 pt-10 sm:pt-12 bg-[#040608] flex flex-col items-center justify-start">
       <div className="w-full max-w-[460px] flex flex-col items-center">
         {/* Back Link */}
         <div className="w-full flex items-center justify-between mb-4">

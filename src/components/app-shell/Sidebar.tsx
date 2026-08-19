@@ -27,25 +27,25 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[72px] bg-sp-surface border-r border-sp-border h-screen sticky top-0 shrink-0">
+    <aside className="hidden lg:flex flex-col w-[80px] bg-sp-surface border-r border-sp-border h-screen sticky top-0 shrink-0 select-none">
       {/* Logo */}
-      <div className="flex items-center justify-center h-[72px] border-b border-sp-border">
-        <Link href="/" className="flex items-center justify-center">
-          <div className="w-9 h-9 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50 hover:bg-sp-elevated transition-colors duration-200">
-            <CircleParking className="w-[18px] h-[18px] text-sp-white" strokeWidth={1.5} />
+      <div className="flex items-center justify-center h-[64px] border-b border-sp-border">
+        <Link href="/" className="flex items-center justify-center group" aria-label="SmartPark Home">
+          <div className="w-10 h-10 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50 group-hover:bg-sp-elevated group-hover:border-sp-border-hover transition-all duration-200 shadow-sm">
+            <CircleParking className="w-[20px] h-[20px] text-sp-white" strokeWidth={1.5} />
           </div>
         </Link>
       </div>
 
       {/* Nav Links */}
-      <nav className="flex flex-col items-center gap-1 py-4 flex-1 px-2">
+      <nav className="flex flex-col items-center gap-2 py-5 flex-1 px-2.5">
         {sidebarLinks.map((link) => {
           const isActive = pathname === link.href || pathname?.startsWith(link.href + "/");
           return (
             <Link
               key={link.label}
               href={link.href}
-              className="relative group flex flex-col items-center justify-center w-full rounded-xl py-2.5 transition-colors duration-200"
+              className="relative group flex flex-col items-center justify-center w-full rounded-xl py-3 px-1 transition-all duration-200"
               aria-label={link.label}
             >
               {/* Active indicator */}
@@ -65,9 +65,9 @@ export default function Sidebar() {
                 strokeWidth={1.5}
               />
               <span
-                className={`relative z-10 text-[9px] font-medium mt-1 transition-colors duration-200 ${
+                className={`relative z-10 text-[9.5px] font-medium mt-1.5 leading-tight tracking-tight transition-colors duration-200 text-center ${
                   isActive
-                    ? "text-sp-blue"
+                    ? "text-sp-blue font-semibold"
                     : "text-sp-muted group-hover:text-sp-nav"
                 }`}
               >
@@ -79,21 +79,21 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="flex flex-col items-center gap-1 pb-4 px-2 border-t border-sp-border pt-3">
+      <div className="flex flex-col items-center gap-1.5 pb-5 px-2.5 border-t border-sp-border pt-4">
         <Link
-          href="/settings"
-          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 transition-colors duration-200"
+          href="/profile"
+          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 px-1 transition-all duration-200"
           aria-label="Settings"
         >
-          <Settings className="w-[20px] h-[20px] text-sp-muted group-hover:text-sp-nav transition-colors duration-200" strokeWidth={1.5} />
-          <span className="text-[9px] font-medium mt-1 text-sp-muted group-hover:text-sp-nav transition-colors duration-200">Settings</span>
+          <Settings className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-nav transition-colors duration-200" strokeWidth={1.5} />
+          <span className="text-[9.5px] font-medium mt-1.5 text-sp-muted group-hover:text-sp-nav transition-colors duration-200">Settings</span>
         </Link>
         <button
-          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 transition-colors duration-200"
+          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 px-1 transition-all duration-200"
           aria-label="Logout"
         >
-          <LogOut className="w-[20px] h-[20px] text-sp-muted group-hover:text-sp-red transition-colors duration-200" strokeWidth={1.5} />
-          <span className="text-[9px] font-medium mt-1 text-sp-muted group-hover:text-sp-red transition-colors duration-200">Logout</span>
+          <LogOut className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-red transition-colors duration-200" strokeWidth={1.5} />
+          <span className="text-[9.5px] font-medium mt-1.5 text-sp-muted group-hover:text-sp-red transition-colors duration-200">Logout</span>
         </button>
       </div>
     </aside>

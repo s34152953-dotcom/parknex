@@ -35,7 +35,7 @@ export default function FindMyCarPage() {
   return (
     <div className="relative w-full h-[calc(100vh-64px)] flex flex-col bg-[#040608] overflow-hidden">
       {/* ── Top Header Bar ─────────────────────────────────────────────────── */}
-      <div className="relative z-30 flex items-center justify-between px-6 py-3.5 bg-[#05070A]/80 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="relative z-30 flex items-center justify-between px-6 lg:px-8 py-3 bg-[#05070A]/85 backdrop-blur-xl border-b border-white/[0.04] select-none">
         <div className="flex items-center gap-4">
           <Link
             href="/parking"
@@ -85,27 +85,27 @@ export default function FindMyCarPage() {
         <FindMyCar3DMap isNavigating={isNavigating} />
 
         {/* ── Left Floating Route Card ─────────────────────────────────────── */}
-        <div className="absolute top-5 left-5 z-20 w-full max-w-[280px]">
-          <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 shadow-2xl">
+        <div className="absolute top-8 left-8 z-20 w-full max-w-[290px] pointer-events-none">
+          <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 shadow-2xl pointer-events-auto">
             {/* From */}
             <div className="mb-4">
               <p className="text-[10.5px] text-white/50 font-semibold uppercase tracking-wider">
                 Start Point
               </p>
-              <p className="text-[14.5px] font-bold text-white mt-0.5 flex items-center gap-1.5">
+              <p className="text-[14px] font-bold text-white mt-0.5 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Mall Entrance Lobby
               </p>
             </div>
 
             {/* To */}
-            <div className="mb-5 pb-4 border-b border-white/[0.06]">
+            <div className="mb-4 pb-3.5 border-b border-white/[0.06]">
               <p className="text-[10.5px] text-white/50 font-semibold uppercase tracking-wider">
                 Vehicle Destination
               </p>
-              <p className="text-[14.5px] font-bold text-cyan-300 mt-0.5 flex items-center gap-1.5">
+              <p className="text-[14px] font-bold text-cyan-300 mt-0.5 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                Pillar 18, Slot A-18
+                Pillar 18, Slot A-14
               </p>
             </div>
 
@@ -144,14 +144,14 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Right Vertical Floor Switcher ────────────────────────────────── */}
-        <div className="absolute top-5 right-5 z-20 flex flex-col gap-2">
+        <div className="absolute top-8 right-8 z-20 flex flex-col gap-1.5">
           {floors.map((floor) => {
             const isActive = selectedFloor === floor;
             return (
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`w-11 h-10 rounded-xl text-[12.5px] font-bold flex items-center justify-center transition-all duration-200 shadow-xl ${
+                className={`w-10 h-9 rounded-xl text-[12px] font-bold flex items-center justify-center transition-all duration-200 shadow-xl ${
                   isActive
                     ? "bg-white text-[#040608] shadow-white/10 border border-white"
                     : "bg-[#080C14]/90 text-white/60 hover:text-white border border-white/10"
@@ -164,7 +164,7 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Bottom Left Start Navigation CTA ─────────────────────────────── */}
-        <div className="absolute bottom-6 left-6 z-20">
+        <div className="absolute bottom-8 left-8 z-20">
           <button
             onClick={() => setIsNavigating(!isNavigating)}
             className={`h-[48px] px-6 rounded-2xl text-[13.5px] font-bold flex items-center gap-2.5 shadow-2xl transition-all duration-200 active:scale-95 ${

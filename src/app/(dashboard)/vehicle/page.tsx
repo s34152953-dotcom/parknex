@@ -64,7 +64,7 @@ export default function VehicleRegistrationPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-4 sm:p-8 bg-[#05070A] flex flex-col items-center justify-center">
+    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col items-center justify-start">
       <div className="w-full max-w-[540px]">
         {/* Back */}
         <Link

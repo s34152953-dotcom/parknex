@@ -146,7 +146,7 @@ export default function FindMyCar3DMap({
   return (
     <div className="relative w-full h-full bg-[#040608] overflow-hidden select-none">
       <Canvas
-        camera={{ position: [16, 22, 20], fov: 38 }}
+        camera={{ position: [11, 15, 17], fov: 34 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         shadows
       >
@@ -269,7 +269,7 @@ export default function FindMyCar3DMap({
             maxPolarAngle={Math.PI / 2 - 0.1}
             minDistance={8}
             maxDistance={40}
-            target={[-1.5, 0, 5]}
+            target={[-1.0, 0, 5.0]}
           />
         </Suspense>
       </Canvas>

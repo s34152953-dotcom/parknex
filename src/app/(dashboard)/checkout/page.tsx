@@ -34,7 +34,8 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-6 sm:p-10 bg-[#05070A] max-w-[900px] mx-auto">
+    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
+      <div className="max-w-[1100px] w-full mx-auto">
       {/* Header */}
       <div className="pb-6 border-b border-white/[0.06] mb-8">
         <h1 className="text-[26px] font-extrabold text-white tracking-tight">
@@ -155,7 +156,8 @@ export default function CheckoutPage() {
             </p>
           </div>
         </div>
-      </div>
+        </div>
+    </div>
     </div>
   );
 }

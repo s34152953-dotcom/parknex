@@ -142,7 +142,7 @@ export default function ParkingDashboardPage() {
   return (
     <div className="relative w-full h-full flex flex-col bg-[#040608] overflow-hidden">
       {/* ── Floor & Zone Switcher Header Bar ───────────────────────────────── */}
-      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 px-6 py-3 bg-[#05070A]/80 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-6 lg:px-8 py-3 bg-[#05070A]/85 backdrop-blur-xl border-b border-white/[0.04] select-none">
         {/* Floor Selection Tabs */}
         <div className="flex items-center gap-1.5 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
           {floors.map((floor) => {
@@ -171,7 +171,7 @@ export default function ParkingDashboardPage() {
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`h-7 px-3 rounded-lg text-[11.5px] font-medium transition-colors ${
+                className={`h-7 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${
                   isZoneActive
                     ? "bg-white/10 text-white border border-white/20"
                     : "text-white/50 hover:text-white hover:bg-white/[0.02] border border-transparent"
@@ -211,8 +211,8 @@ export default function ParkingDashboardPage() {
         />
 
         {/* ── Left Floating Floor / Zone Stat Card ─────────────────────────── */}
-        <div className="absolute top-5 left-5 z-20 pointer-events-none">
-          <div className="w-[190px] bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-4 shadow-2xl pointer-events-auto">
+        <div className="absolute top-8 left-8 z-20 pointer-events-none">
+          <div className="w-[195px] bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-4 shadow-2xl pointer-events-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-[28px] font-extrabold text-white leading-none tracking-tight">
                 {selectedFloor}
@@ -256,7 +256,7 @@ export default function ParkingDashboardPage() {
         </div>
 
         {/* ── Right Floating Map Controls ──────────────────────────────────── */}
-        <div className="absolute top-5 right-5 z-20 flex flex-col items-center gap-2">
+        <div className="absolute top-8 right-8 z-20 flex flex-col items-center gap-2">
           {/* 3D / 2D Toggle */}
           <button
             onClick={() => setIs3D(!is3D)}
@@ -281,7 +281,7 @@ export default function ParkingDashboardPage() {
 
         {/* ── Selected Slot Action Bottom Card ─────────────────────────────── */}
         {selectedSlot && (
-          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 w-full max-w-[420px] px-4">
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-[420px] px-4">
             <div className="bg-[#080C14]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-4">
               <div>
                 <p className="text-[11px] text-white/50 font-medium">Selected Slot</p>
@@ -334,7 +334,7 @@ export default function ParkingDashboardPage() {
         )}
 
         {/* ── Bottom Legend Bar ────────────────────────────────────────────── */}
-        <div className="absolute bottom-4 left-0 right-0 z-20 flex items-center justify-center pointer-events-none">
+        <div className="absolute bottom-8 left-0 right-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="flex items-center gap-5 sm:gap-6 px-5 py-2.5 rounded-full bg-[#080C14]/85 backdrop-blur-xl border border-white/[0.08] text-[12px] shadow-2xl pointer-events-auto">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
