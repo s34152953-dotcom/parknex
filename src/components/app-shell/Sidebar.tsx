@@ -45,7 +45,7 @@ export default function Sidebar() {
             <Link
               key={link.label}
               href={link.href}
-              className="relative group flex flex-col items-center justify-center w-full rounded-xl py-3 px-1 transition-all duration-200"
+              className="relative group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
               aria-label={link.label}
             >
               {/* Active indicator */}
@@ -82,14 +82,14 @@ export default function Sidebar() {
       <div className="flex flex-col items-center gap-1.5 pb-5 px-2.5 border-t border-sp-border pt-4">
         <Link
           href="/profile"
-          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 px-1 transition-all duration-200"
+          className="group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
           aria-label="Settings"
         >
           <Settings className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-nav transition-colors duration-200" strokeWidth={1.5} />
           <span className="text-[9.5px] font-medium mt-1.5 text-sp-muted group-hover:text-sp-nav transition-colors duration-200">Settings</span>
         </Link>
         <button
-          className="group flex flex-col items-center justify-center w-full rounded-xl py-2.5 px-1 transition-all duration-200"
+          className="group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
           aria-label="Logout"
         >
           <LogOut className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-red transition-colors duration-200" strokeWidth={1.5} />

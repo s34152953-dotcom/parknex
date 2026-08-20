@@ -95,7 +95,7 @@ export default function MyCarPage() {
 
           <Link
             href="/vehicle"
-            className="h-10 px-5 rounded-xl bg-white text-[#040608] text-[13px] font-bold flex items-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-md shadow-white/10 shrink-0"
+            className="h-10 px-5 rounded-xl bg-white text-[#040608] text-[13px] font-bold inline-flex items-center justify-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-md shadow-white/10 shrink-0"
           >
             <Plus className="w-4 h-4" />
             {vehicle ? "Edit Vehicle" : "Add Vehicle"}
@@ -103,7 +103,7 @@ export default function MyCarPage() {
         </div>
 
         {session ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* Active Parking Status Card */}
             <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-7 sm:p-8 shadow-2xl relative flex flex-col justify-between">
               <div>
@@ -157,14 +157,14 @@ export default function MyCarPage() {
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Link
                   href="/find-my-car"
-                  className="h-10 px-4 rounded-xl bg-white text-[#040608] text-[13px] font-bold flex items-center gap-1.5 hover:bg-white/90 active:scale-95 transition-all shadow-md shadow-white/10 shrink-0"
+                  className="h-12 px-5 rounded-xl bg-white text-[#040608] text-[13px] font-bold inline-flex items-center justify-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-md shadow-white/10 shrink-0"
                 >
                   <Compass className="w-4 h-4" />
                   Find My Car
                 </Link>
                 <Link
                   href="/checkout"
-                  className="h-10 px-4 rounded-xl bg-white/[0.04] border border-white/10 text-white text-[13px] font-semibold flex items-center gap-1.5 hover:border-white/20 active:scale-95 transition-all shrink-0"
+                  className="h-12 px-5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 hover:border-white/20 active:scale-95 transition-all shrink-0"
                 >
                   <CreditCard className="w-4 h-4 text-white/60" />
                   Proceed to Checkout
@@ -210,7 +210,7 @@ export default function MyCarPage() {
               <div className="pt-6 border-t border-white/[0.06] mt-6">
                 <Link
                   href="/exit-pass"
-                  className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/10 text-[13px] font-semibold text-white/80 hover:text-white flex items-center justify-center gap-2 hover:border-white/20 transition-colors shadow-sm"
+                  className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/10 text-[13px] font-semibold text-white/80 hover:text-white inline-flex items-center justify-center gap-2 hover:border-white/20 transition-colors shadow-sm"
                 >
                   <QrCode className="w-4 h-4" />
                   View Active Exit Pass

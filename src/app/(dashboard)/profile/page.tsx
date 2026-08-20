@@ -58,7 +58,7 @@ export default function ProfilePage() {
     <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
       <div className="max-w-[1040px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-white/[0.06] mb-10">
+        <div className="pb-6 border-b border-white/[0.06] mb-8">
           <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
             User Account & Security
           </h1>
@@ -68,7 +68,7 @@ export default function ProfilePage() {
         </div>
 
         {profile ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.8fr)] gap-6 items-stretch">
             {/* User Card */}
             <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-8 shadow-2xl flex flex-col items-center justify-center text-center">
               <div className="w-24 h-24 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-sky-400 mb-5 shadow-xl">
@@ -115,14 +115,14 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/[0.06] mt-8 flex justify-end">
+              <div className="pt-6 border-t border-white/[0.06] mt-6 flex justify-end items-center">
                 <button
                   onClick={async () => {
                     await supabase.auth.signOut();
                     localStorage.removeItem("smartpark_user");
                     setProfile(null);
                   }}
-                  className="h-10 px-5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[13px] font-semibold text-rose-400 hover:bg-rose-500/20 transition-colors flex items-center gap-2"
+                  className="h-10 px-5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[13px] font-semibold text-rose-400 hover:bg-rose-500/20 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out

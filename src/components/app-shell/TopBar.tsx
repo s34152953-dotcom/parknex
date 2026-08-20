@@ -58,30 +58,31 @@ export default function TopBar() {
           {getTitle()}
         </h1>
 
-        <div className="flex-1" />
+        {/* Right controls — single aligned group */}
+        <div className="flex items-center gap-3">
+          {/* Mall selector */}
+          <button className="hidden sm:flex items-center gap-2 h-9 px-3.5 rounded-xl border border-sp-border bg-sp-elevated/40 text-[12.5px] font-medium text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm shrink-0">
+            <span className="text-sp-white font-semibold">Central Mall Grand</span>
+            <ChevronDown className="w-3.5 h-3.5 text-sp-muted" />
+          </button>
 
-        {/* Mall selector */}
-        <button className="hidden sm:flex items-center gap-2 h-9 px-3.5 rounded-xl border border-sp-border bg-sp-elevated/40 text-[12.5px] font-medium text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm">
-          <span className="text-sp-white font-semibold">Central Mall Grand</span>
-          <ChevronDown className="w-3.5 h-3.5 text-sp-muted" />
-        </button>
+          {/* Notifications */}
+          <button
+            className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm shrink-0"
+            aria-label="Notifications"
+          >
+            <Bell className="w-4 h-4" strokeWidth={1.5} />
+          </button>
 
-        {/* Notifications */}
-        <button
-          className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" strokeWidth={1.5} />
-        </button>
-
-        {/* Profile avatar */}
-        <Link
-          href="/profile"
-          className="w-9 h-9 rounded-xl bg-sp-elevated border border-sp-border hover:border-sp-border-hover flex items-center justify-center transition-colors shadow-sm"
-          aria-label="Profile"
-        >
-          <UserCircle className="w-5 h-5 text-sp-muted hover:text-sp-white" strokeWidth={1.5} />
-        </Link>
+          {/* Profile avatar */}
+          <Link
+            href="/profile"
+            className="w-9 h-9 rounded-xl bg-sp-elevated border border-sp-border hover:border-sp-border-hover flex items-center justify-center transition-colors shadow-sm shrink-0"
+            aria-label="Profile"
+          >
+            <UserCircle className="w-5 h-5 text-sp-muted hover:text-sp-white" strokeWidth={1.5} />
+          </Link>
+        </div>
       </header>
 
       {/* ── Mobile Menu for Dashboard ──────────────────── */}

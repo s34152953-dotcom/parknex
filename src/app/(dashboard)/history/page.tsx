@@ -96,7 +96,7 @@ export default function HistoryPage() {
     <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-white/[0.06] mb-10">
+        <div className="pb-6 border-b border-white/[0.06] mb-8">
           <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
             Parking History & Receipts
           </h1>
@@ -111,29 +111,29 @@ export default function HistoryPage() {
               <table className="w-full text-left text-[13px]">
                 <thead className="border-b border-white/[0.06] text-white/40 uppercase text-[11px] font-semibold bg-white/[0.02]">
                   <tr>
-                    <th className="py-4.5 px-7">Date & Mall</th>
-                    <th className="py-4.5 px-6">Vehicle</th>
-                    <th className="py-4.5 px-6">Location</th>
-                    <th className="py-4.5 px-6">Duration</th>
-                    <th className="py-4.5 px-6">Amount</th>
-                    <th className="py-4.5 px-7">Status</th>
+                    <th className="py-4 px-6">Date & Mall</th>
+                    <th className="py-4 px-6">Vehicle</th>
+                    <th className="py-4 px-6">Location</th>
+                    <th className="py-4 px-6">Duration</th>
+                    <th className="py-4 px-6">Amount</th>
+                    <th className="py-4 px-6">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04] text-white/70">
                   {sessions.map((s) => (
                     <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-5 px-7">
+                      <td className="py-4 px-6">
                         <p className="text-white font-semibold text-[13.5px]">{s.mall}</p>
                         <p className="text-[11px] text-white/40 mt-0.5">{s.date}</p>
                       </td>
-                      <td className="py-5 px-6 text-white/80 font-medium">{s.vehicle}</td>
-                      <td className="py-5 px-6">
+                      <td className="py-4 px-6 text-white/80 font-medium">{s.vehicle}</td>
+                      <td className="py-4 px-6">
                         <p className="text-white font-semibold">Floor {s.floor}</p>
                         <p className="text-[11.5px] text-cyan-400 font-mono mt-0.5">{s.pillarSlot}</p>
                       </td>
-                      <td className="py-5 px-6 text-white/80 font-medium">{s.duration}</td>
-                      <td className="py-5 px-6 text-white font-bold text-[14px]">{s.amount}</td>
-                      <td className="py-5 px-7">
+                      <td className="py-4 px-6 text-white/80 font-medium">{s.duration}</td>
+                      <td className="py-4 px-6 text-white font-bold text-[14px]">{s.amount}</td>
+                      <td className="py-4 px-6">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {s.status}

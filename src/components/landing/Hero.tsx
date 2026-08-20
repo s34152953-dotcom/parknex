@@ -57,14 +57,14 @@ export default function Hero() {
 
           {/* CTAs */}
           <motion.div
-            className="mt-7 flex flex-wrap items-center gap-4 sm:gap-5"
+            className="mt-7 flex flex-wrap items-center gap-3.5"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.58, ease }}
           >
             <Link
               href="/parking"
-              className="group inline-flex items-center gap-2.5 h-[46px] px-6 rounded-full bg-white text-[#040608] text-[13.5px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-white/10 shrink-0"
+              className="group inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full bg-white text-[#040608] text-[13.5px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-white/10 shrink-0"
             >
               Find Parking
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -72,7 +72,7 @@ export default function Hero() {
 
             <Link
               href="#how-it-works"
-              className="group inline-flex items-center gap-2.5 h-[46px] px-6 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md text-white text-[13.5px] font-semibold hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.98] transition-all duration-200 shrink-0"
+              className="group inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md text-white text-[13.5px] font-semibold hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.98] transition-all duration-200 shrink-0"
             >
               See How It Works
               <div className="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center">
@@ -122,7 +122,7 @@ function FeatureStrip() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.75, delay: 0.7, ease }}
     >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-5 border-t border-white/[0.06]">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-5 border-t border-white/[0.06]">
         {features.map((f) => (
           <div
             key={f.title}

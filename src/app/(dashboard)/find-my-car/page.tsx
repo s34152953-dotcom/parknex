@@ -53,10 +53,10 @@ export default function FindMyCarPage() {
         </div>
 
         {/* Remote Vehicle Triggers */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleHonk}
-            className={`h-9 px-3.5 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+            className={`h-10 px-4 rounded-xl border text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 transition-all shadow-md ${
               hornHonked
                 ? "bg-emerald-500 text-white border-emerald-400"
                 : "bg-white/[0.04] text-white/80 border-white/10 hover:border-white/25 hover:bg-white/[0.08]"
@@ -67,7 +67,7 @@ export default function FindMyCarPage() {
           </button>
           <button
             onClick={handleFlash}
-            className={`h-9 px-3.5 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+            className={`h-10 px-4 rounded-xl border text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 transition-all shadow-md ${
               lightsFlashed
                 ? "bg-amber-500 text-white border-amber-400"
                 : "bg-white/[0.04] text-white/80 border-white/10 hover:border-white/25 hover:bg-white/[0.08]"
@@ -85,7 +85,7 @@ export default function FindMyCarPage() {
         <FindMyCar3DMap isNavigating={isNavigating} />
 
         {/* ── Left Floating Route Card ─────────────────────────────────────── */}
-        <div className="absolute top-8 left-8 z-20 w-full max-w-[290px] pointer-events-none">
+        <div className="absolute top-6 left-6 z-20 w-full max-w-[290px] pointer-events-none">
           <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 shadow-2xl pointer-events-auto">
             {/* From */}
             <div className="mb-4">
@@ -144,14 +144,14 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Right Vertical Floor Switcher ────────────────────────────────── */}
-        <div className="absolute top-8 right-8 z-20 flex flex-col gap-1.5">
+        <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
           {floors.map((floor) => {
             const isActive = selectedFloor === floor;
             return (
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`w-10 h-9 rounded-xl text-[12px] font-bold flex items-center justify-center transition-all duration-200 shadow-xl ${
+                className={`w-10 h-10 rounded-xl text-[12px] font-bold inline-flex items-center justify-center transition-all duration-200 shadow-xl ${
                   isActive
                     ? "bg-white text-[#040608] shadow-white/10 border border-white"
                     : "bg-[#080C14]/90 text-white/60 hover:text-white border border-white/10"
@@ -164,7 +164,7 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Bottom Left Start Navigation CTA ─────────────────────────────── */}
-        <div className="absolute bottom-8 left-8 z-20">
+        <div className="absolute bottom-6 left-6 z-20">
           <button
             onClick={() => setIsNavigating(!isNavigating)}
             className={`h-[48px] px-6 rounded-2xl text-[13.5px] font-bold flex items-center gap-2.5 shadow-2xl transition-all duration-200 active:scale-95 ${

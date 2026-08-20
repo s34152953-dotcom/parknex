@@ -151,7 +151,7 @@ export default function ParkingDashboardPage() {
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`h-7 px-4 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${isActive
+                className={`h-8 px-4 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${isActive
                     ? "bg-white text-[#040608] shadow-md shadow-white/10"
                     : "text-white/60 hover:text-white hover:bg-white/[0.04]"
                   }`}
@@ -170,7 +170,7 @@ export default function ParkingDashboardPage() {
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`h-7 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${isZoneActive
+                className={`h-8 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${isZoneActive
                     ? "bg-white/10 text-white border border-white/20"
                     : "text-white/50 hover:text-white hover:bg-white/[0.02] border border-transparent"
                   }`}

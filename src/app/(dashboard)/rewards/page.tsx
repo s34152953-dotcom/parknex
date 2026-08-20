@@ -104,7 +104,7 @@ export default function RewardsPage() {
     <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-white/[0.06] mb-10">
+        <div className="pb-6 border-b border-white/[0.06] mb-8">
           <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
             Rewards & Partner Offers
           </h1>
@@ -114,7 +114,7 @@ export default function RewardsPage() {
         </div>
 
         {rewards.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {rewards.map((r) => (
               <div
                 key={r.id}
@@ -149,7 +149,7 @@ export default function RewardsPage() {
                   </div>
                   <button
                     onClick={() => handleCopy(r.code, r.id)}
-                    className="h-8 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-[11.5px] font-semibold text-white flex items-center gap-1.5 hover:bg-white/[0.08] active:scale-95 transition-all shadow-sm shrink-0"
+                    className="h-9 px-4 rounded-lg bg-white/[0.04] border border-white/10 text-[11.5px] font-semibold text-white inline-flex items-center justify-center gap-1.5 hover:bg-white/[0.08] active:scale-95 transition-all shadow-sm shrink-0"
                   >
                     {copiedId === r.id ? (
                       <>
