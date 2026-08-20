@@ -36,7 +36,7 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-[64px] bg-sp-surface/80 backdrop-blur-xl border-b border-sp-border flex items-center px-6 lg:px-8 gap-4 select-none">
+      <header className="sticky top-0 z-40 h-16 bg-sp-black border-b border-[#333333] flex items-center px-6 lg:px-8 gap-4 select-none">
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(true)}

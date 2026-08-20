@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Clock, Car, MapPin, Calendar, CheckCircle2, ChevronRight, ArrowRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface ParkingHistoryItem {
   id: string;
@@ -93,10 +94,10 @@ export default function HistoryPage() {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
+    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#000000] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-white/[0.06] mb-8">
+        <div className="pb-6 border-b border-[#333333] mb-8">
           <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
             Parking History & Receipts
           </h1>
@@ -106,10 +107,10 @@ export default function HistoryPage() {
         </div>
 
         {sessions.length > 0 ? (
-          <div className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl">
+          <div className="bg-[#111111] border border-[#333333] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[13px]">
-                <thead className="border-b border-white/[0.06] text-white/40 uppercase text-[11px] font-semibold bg-white/[0.02]">
+                <thead className="border-b border-[#333333] text-white/40 uppercase text-[11px] font-semibold bg-[#0a0a0a]">
                   <tr>
                     <th className="py-4 px-6">Date & Mall</th>
                     <th className="py-4 px-6">Vehicle</th>
@@ -119,9 +120,9 @@ export default function HistoryPage() {
                     <th className="py-4 px-6">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04] text-white/70">
+                <tbody className="divide-y divide-[#333333] text-white/70">
                   {sessions.map((s) => (
-                    <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={s.id} className="hover:bg-[#1a1a1a] transition-all duration-200 cursor-default group">
                       <td className="py-4 px-6">
                         <p className="text-white font-semibold text-[13.5px]">{s.mall}</p>
                         <p className="text-[11px] text-white/40 mt-0.5">{s.date}</p>
@@ -146,25 +147,20 @@ export default function HistoryPage() {
             </div>
           </div>
         ) : (
-          /* Clean Designed Empty State */
-          <div className="w-full py-20 px-6 rounded-3xl bg-[#080C14]/50 border border-white/[0.06] flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/40 mb-4 shadow-xl">
-              <Clock className="w-8 h-8" strokeWidth={1.5} />
-            </div>
-            <h2 className="text-[19px] font-bold text-white mb-2">
-              No Past Parking Sessions
-            </h2>
-            <p className="text-[13.5px] text-white/50 max-w-[380px] mb-7 leading-relaxed">
-              Your completed parking sessions and invoice receipts will automatically appear here after exiting the garage.
-            </p>
-            <Link
-              href="/parking"
-              className="h-11 px-6 rounded-full bg-white text-[#040608] text-[13.5px] font-bold hover:bg-white/90 transition-colors shadow-lg shadow-white/10 flex items-center gap-2"
-            >
-              Find Parking Spot
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <EmptyState
+            icon={Clock}
+            title="No Past Parking Sessions"
+            description="Your completed parking sessions and invoice receipts will automatically appear here after exiting the garage."
+            action={
+              <Link
+                href="/parking"
+                className="h-11 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold hover:bg-[#E5E5E5] transition-colors inline-flex items-center justify-center gap-2"
+              >
+                Find Parking Spot
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            }
+          />
         )}
       </div>
     </div>

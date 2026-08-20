@@ -3,13 +3,13 @@
 /* ── SmartPark Design System ──────────────────────────────── */
 
 @theme inline {
-  /* Surfaces */
-  --color-sp-black: #050505;
-  --color-sp-surface: #090B0F;
-  --color-sp-elevated: #0D1117;
-  --color-sp-card: #111318;
-  --color-sp-border: rgba(255, 255, 255, 0.06);
-  --color-sp-border-hover: rgba(255, 255, 255, 0.12);
+  /* Surfaces (Luxury Automotive Theme) */
+  --color-sp-black: #000000;
+  --color-sp-surface: #0a0a0a;
+  --color-sp-elevated: #111111;
+  --color-sp-card: #141414;
+  --color-sp-border: rgba(255, 255, 255, 0.12);
+  --color-sp-border-hover: rgba(255, 255, 255, 0.25);
 
   /* Text */
   --color-sp-white: #FAFAFA;
@@ -17,14 +17,14 @@
   --color-sp-nav: #b6b5b5;
   --color-sp-muted: #6b6b6b;
 
-  /* Accents */
-  --color-sp-blue: #146BFF;
-  --color-sp-blue-hover: #2979FF;
-  --color-sp-blue-glow: rgba(20, 107, 255, 0.15);
-  --color-sp-green: #10B981;
-  --color-sp-red: #EF4444;
-  --color-sp-amber: #F59E0B;
-  --color-sp-cyan: #06B6D4;
+  /* Accents (Electric Cyan / Sharp Contrast) */
+  --color-sp-blue: #00E5FF;
+  --color-sp-blue-hover: #00B8D4;
+  --color-sp-blue-glow: rgba(0, 229, 255, 0.2);
+  --color-sp-green: #00E676;
+  --color-sp-red: #FF1744;
+  --color-sp-amber: #FFEA00;
+  --color-sp-cyan: #00E5FF;
 
   /* CTA */
   --color-sp-cta: #FFFFFF;
@@ -56,8 +56,8 @@ html {
 }
 
 body {
-  background: #050505;
-  color: #FAFAFA;
+  background: var(--color-sp-black);
+  color: var(--color-sp-white);
   font-family: var(--font-manrope);
   overflow-x: hidden;
 }
@@ -99,27 +99,23 @@ body {
 /* ── Utility Classes ──────────────────────────────────────── */
 
 .sp-glass {
-  background: rgba(13, 17, 23, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-sp-elevated);
+  border: 1px solid var(--color-sp-border);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.8);
 }
 
 .sp-glass-subtle {
-  background: rgba(9, 11, 15, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--color-sp-card);
+  border: 1px solid var(--color-sp-border);
 }
 
 .sp-gradient-fade-left {
   background: linear-gradient(
     90deg,
-    #050505 0%,
-    #050505 25%,
-    rgba(5, 5, 5, 0.85) 45%,
-    rgba(5, 5, 5, 0.5) 65%,
-    rgba(5, 5, 5, 0.15) 85%,
+    var(--color-sp-black) 0%,
+    var(--color-sp-black) 25%,
+    rgba(0, 0, 0, 0.9) 45%,
+    rgba(0, 0, 0, 0.5) 65%,
     transparent 100%
   );
 }
@@ -128,8 +124,7 @@ body {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(5, 5, 5, 0.3) 50%,
-    #050505 100%
+    var(--color-sp-black) 100%
   );
 }
 
@@ -137,8 +132,7 @@ body {
   background: linear-gradient(
     0deg,
     transparent 0%,
-    rgba(5, 5, 5, 0.5) 60%,
-    #050505 100%
+    var(--color-sp-black) 100%
   );
 }
 

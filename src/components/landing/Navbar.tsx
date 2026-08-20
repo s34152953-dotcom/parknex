@@ -36,7 +36,7 @@ export default function Navbar() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease }}
-        className="fixed top-0 left-0 right-0 z-50 bg-[#05070A]/75 backdrop-blur-xl border-b border-white/[0.04]"
+        className="fixed top-0 left-0 right-0 z-50 bg-[#000000] border-b border-[#333333]"
       >
         <div className="mx-auto w-full max-w-[1400px] px-8 sm:px-12 lg:px-16">
           <div className="grid h-[72px]" style={{ gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
@@ -82,7 +82,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/parking"
-                className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-white text-[#05070A] text-[13px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-md shadow-white/10 shrink-0"
+                className="inline-flex items-center justify-center h-10 px-5 rounded-md bg-white text-black text-[13px] font-bold tracking-[-0.01em] hover:bg-[#E5E5E5] active:scale-[0.98] transition-all duration-200 shrink-0"
               >
                 Get Started
               </Link>

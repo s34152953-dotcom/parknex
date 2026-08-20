@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Gift, Tag, Clock, Store, Check, Copy, ArrowRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface RewardItem {
   id: string;
@@ -101,10 +102,10 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#040608] flex flex-col justify-start">
+    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#000000] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-white/[0.06] mb-8">
+        <div className="pb-6 border-b border-[#333333] mb-8">
           <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
             Rewards & Partner Offers
           </h1>
@@ -118,7 +119,7 @@ export default function RewardsPage() {
             {rewards.map((r) => (
               <div
                 key={r.id}
-                className="bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-7 shadow-2xl flex flex-col justify-between hover:border-white/20 transition-all duration-200"
+                className="bg-[#111111] border border-[#333333] rounded-2xl p-6 sm:p-8 flex flex-col hover:border-[#666666] transition-colors"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
@@ -142,14 +143,14 @@ export default function RewardsPage() {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
+                <div className="pt-4 border-t border-[#333333] flex items-center justify-between gap-3 mt-auto">
                   <div className="flex items-center gap-1.5 text-[11.5px] text-white/40 min-w-0 flex-1">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{r.expires}</span>
                   </div>
                   <button
                     onClick={() => handleCopy(r.code, r.id)}
-                    className="h-9 px-4 rounded-lg bg-white/[0.04] border border-white/10 text-[11.5px] font-semibold text-white inline-flex items-center justify-center gap-1.5 hover:bg-white/[0.08] active:scale-95 transition-all shadow-sm shrink-0"
+                    className="h-9 px-4 rounded-md bg-transparent border border-[#333333] text-[11.5px] font-semibold text-white inline-flex items-center justify-center gap-1.5 hover:border-[#666666] active:scale-95 transition-all shrink-0"
                   >
                     {copiedId === r.id ? (
                       <>
@@ -168,25 +169,20 @@ export default function RewardsPage() {
             ))}
           </div>
         ) : (
-          /* Designed Empty State */
-          <div className="w-full py-20 px-6 rounded-3xl bg-[#080C14]/50 border border-white/[0.06] flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/40 mb-4 shadow-xl">
-              <Gift className="w-8 h-8" strokeWidth={1.5} />
-            </div>
-            <h2 className="text-[19px] font-bold text-white mb-2">
-              No Rewards Unlocked Yet
-            </h2>
-            <p className="text-[13.5px] text-white/50 max-w-[380px] mb-7 leading-relaxed">
-              Park frequently at participating malls and partner venues to earn free parking credits and shopping vouchers.
-            </p>
-            <Link
-              href="/parking"
-              className="h-11 px-6 rounded-full bg-white text-[#040608] text-[13.5px] font-bold hover:bg-white/90 transition-colors shadow-lg shadow-white/10 flex items-center gap-2"
-            >
-              Start Parking
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <EmptyState
+            icon={Gift}
+            title="No Rewards Unlocked Yet"
+            description="Park frequently at participating malls and partner venues to earn free parking credits and shopping vouchers."
+            action={
+              <Link
+                href="/parking"
+                className="h-11 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold hover:bg-[#E5E5E5] transition-colors inline-flex items-center justify-center gap-2"
+              >
+                Start Parking
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            }
+          />
         )}
       </div>
     </div>

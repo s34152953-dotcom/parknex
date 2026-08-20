@@ -9,7 +9,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Hero() {
   return (
-    <section className="relative w-full min-h-[calc(100vh-140px)] flex flex-col justify-between overflow-hidden bg-[#040608]">
+    <section className="relative w-full min-h-[calc(100vh-140px)] flex flex-col justify-between overflow-hidden bg-[#000000]">
       {/* ── Cinematic Parking Garage Canvas Background ── */}
       <CinematicGarageCanvas />
 
@@ -64,7 +64,7 @@ export default function Hero() {
           >
             <Link
               href="/parking"
-              className="group inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full bg-white text-[#040608] text-[13.5px] font-bold tracking-[-0.01em] hover:bg-white/90 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-white/10 shrink-0"
+              className="group inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold tracking-[-0.01em] hover:bg-[#E5E5E5] active:scale-[0.98] transition-all duration-200 shrink-0"
             >
               Find Parking
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -72,11 +72,11 @@ export default function Hero() {
 
             <Link
               href="#how-it-works"
-              className="group inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md text-white text-[13.5px] font-semibold hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.98] transition-all duration-200 shrink-0"
+              className="group inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md border border-[#333333] bg-transparent text-white text-[13.5px] font-semibold hover:border-[#666666] active:scale-[0.98] transition-all duration-200 shrink-0"
             >
               See How It Works
-              <div className="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center">
-                <Play className="w-2 h-2 fill-white text-white translate-x-[0.5px]" />
+              <div className="w-4 h-4 flex items-center justify-center">
+                <Play className="w-3 h-3 fill-white text-white translate-x-[0.5px]" />
               </div>
             </Link>
           </motion.div>
@@ -126,10 +126,10 @@ function FeatureStrip() {
         {features.map((f) => (
           <div
             key={f.title}
-            className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/[0.08] transition-colors shadow-sm"
+            className="flex items-center gap-4 p-4 rounded-xl bg-[#111111] border border-[#333333] hover:border-[#666666] transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl border border-white/[0.08] bg-white/[0.04] flex items-center justify-center text-white shrink-0 shadow-inner">
-              <f.icon className="w-4 h-4 text-sky-400" strokeWidth={1.75} />
+            <div className="w-12 h-12 rounded-lg border border-[#333333] bg-[#000000] flex items-center justify-center text-white shrink-0">
+              <f.icon className="w-5 h-5 text-[#00E5FF]" strokeWidth={1.5} />
             </div>
             <div>
               <p className="text-[13px] font-semibold text-white leading-tight">{f.title}</p>

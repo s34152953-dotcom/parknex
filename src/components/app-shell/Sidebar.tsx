@@ -27,9 +27,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[80px] bg-sp-surface border-r border-sp-border h-screen sticky top-0 shrink-0 select-none">
+    <aside className="hidden lg:flex flex-col w-[80px] bg-sp-black border-r border-[#333333] h-screen sticky top-0 shrink-0 select-none">
       {/* Logo */}
-      <div className="flex items-center justify-center h-[64px] border-b border-sp-border">
+      <div className="flex items-center justify-center h-[64px] border-b border-[#333333]">
         <Link href="/" className="flex items-center justify-center group" aria-label="SmartPark Home">
           <div className="w-10 h-10 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50 group-hover:bg-sp-elevated group-hover:border-sp-border-hover transition-all duration-200 shadow-sm">
             <CircleParking className="w-[20px] h-[20px] text-sp-white" strokeWidth={1.5} />
@@ -79,7 +79,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="flex flex-col items-center gap-1.5 pb-5 px-2.5 border-t border-sp-border pt-4">
+      <div className="flex flex-col items-center gap-1.5 pb-5 px-2.5 border-t border-[#333333] pt-4">
         <Link
           href="/profile"
           className="group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
