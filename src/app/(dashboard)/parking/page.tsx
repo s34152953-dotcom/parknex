@@ -33,10 +33,10 @@ function generateFloorSlots(floorName: string = "B2"): ParkingSlotData[] {
       i === 4
         ? "my_vehicle" // Pillar 18 / Slot A-14 is user's vehicle
         : i % 3 === 0
-        ? "available"
-        : i % 5 === 0
-        ? "reserved"
-        : "occupied";
+          ? "available"
+          : i % 5 === 0
+            ? "reserved"
+            : "occupied";
 
     slots.push({
       id: `slot-a-left-${i}`,
@@ -57,8 +57,8 @@ function generateFloorSlots(floorName: string = "B2"): ParkingSlotData[] {
       i % 2 === 0
         ? "occupied"
         : i % 4 === 0
-        ? "reserved"
-        : "available";
+          ? "reserved"
+          : "available";
 
     slots.push({
       id: `slot-a-right-${i}`,
@@ -151,11 +151,10 @@ export default function ParkingDashboardPage() {
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`h-7 px-4 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${
-                  isActive
+                className={`h-7 px-4 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${isActive
                     ? "bg-white text-[#040608] shadow-md shadow-white/10"
                     : "text-white/60 hover:text-white hover:bg-white/[0.04]"
-                }`}
+                  }`}
               >
                 {floor}
               </button>
@@ -171,11 +170,10 @@ export default function ParkingDashboardPage() {
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`h-7 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${
-                  isZoneActive
+                className={`h-7 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${isZoneActive
                     ? "bg-white/10 text-white border border-white/20"
                     : "text-white/50 hover:text-white hover:bg-white/[0.02] border border-transparent"
-                }`}
+                  }`}
               >
                 {zone}
               </button>
@@ -260,11 +258,10 @@ export default function ParkingDashboardPage() {
           {/* 3D / 2D Toggle */}
           <button
             onClick={() => setIs3D(!is3D)}
-            className={`w-10 h-10 rounded-xl border flex items-center justify-center text-[12px] font-bold transition-all duration-200 shadow-xl ${
-              is3D
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center text-[12px] font-bold transition-all duration-200 shadow-xl ${is3D
                 ? "bg-white text-[#040608] border-white shadow-white/10"
                 : "bg-[#080C14]/90 text-white/70 border-white/10 hover:text-white"
-            }`}
+              }`}
             title="Toggle 3D View"
           >
             {is3D ? "3D" : "2D"}
@@ -295,8 +292,8 @@ export default function ParkingDashboardPage() {
                       selectedSlot.status === "available"
                         ? "text-emerald-400 font-semibold"
                         : selectedSlot.status === "my_vehicle"
-                        ? "text-cyan-400 font-semibold"
-                        : "text-rose-400 font-semibold"
+                          ? "text-cyan-400 font-semibold"
+                          : "text-rose-400 font-semibold"
                     }
                   >
                     {selectedSlot.status.replace("_", " ").toUpperCase()}
