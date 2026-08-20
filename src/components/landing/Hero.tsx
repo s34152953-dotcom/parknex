@@ -1,143 +1,107 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
-import { ArrowRight, Play, Clock, CheckSquare, Compass, Gift } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import Link from "next/link";
-import CinematicGarageCanvas from "./CinematicGarageCanvas";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function Hero() {
   return (
-    <section className="relative w-full min-h-[calc(100vh-140px)] flex flex-col justify-between overflow-hidden bg-[#000000]">
-      {/* ── Cinematic Parking Garage Canvas Background ── */}
-      <CinematicGarageCanvas />
+    <section className="relative w-full h-screen min-h-[680px] flex items-center overflow-hidden bg-[#FBF8F3]">
+      {/* ── High-End Luxury Car Background Image on the Left Side ── */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex justify-start items-center overflow-hidden">
+        <div className="relative w-full lg:w-[65%] h-full">
+          <Image
+            src="/images/hero-car.jpg"
+            alt="PARKNEX Luxury Automotive Experience"
+            fill
+            priority
+            className="object-cover object-center scale-x-[-1]"
+            sizes="(max-width: 1024px) 100vw, 65vw"
+          />
 
-      {/* ── Hero Main Content ───────────────────────── */}
-      <div className="relative z-20 flex-1 flex flex-col justify-center mx-auto w-full max-w-[1400px] px-8 sm:px-12 lg:px-16 pt-24 sm:pt-28 pb-4">
-        <div className="max-w-[560px]">
-          {/* Sub-badge */}
+          {/* Right Warm Ivory Gradient Blend */}
+          <div className="absolute inset-y-0 right-0 w-80 sm:w-[480px] lg:w-[600px] bg-gradient-to-l from-[#FBF8F3] via-[#FBF8F3]/95 to-transparent z-10" />
+
+          {/* Top subtle navbar shadow fade */}
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#FBF8F3] via-[#FBF8F3]/50 to-transparent z-10" />
+
+          {/* Bottom subtle floor blend */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#FBF8F3] via-[#FBF8F3]/40 to-transparent z-10" />
+        </div>
+      </div>
+
+      {/* ── Hero Main Content (Positioned on the Right Middle Side) ── */}
+      <div className="relative z-20 mx-auto w-full max-w-[1440px] px-6 sm:px-10 lg:px-16 pt-[72px] pb-6 flex items-center justify-end">
+        <div className="w-full max-w-[580px]">
+          {/* Small Orange Micro-Label */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-semibold text-white/80 uppercase tracking-[0.08em] mb-4 backdrop-blur-sm shadow-sm"
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#FFF5F2] border border-[#FADCD5] text-[11.5px] font-bold text-[#D84A2B] uppercase tracking-[0.12em] mb-6 shadow-xs backdrop-blur-xs"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Next-Gen Mall Parking Intelligence
+            <span className="w-2 h-2 rounded-full bg-[#D84A2B] animate-pulse" />
+            SMARTER PARKING. SMOOTHER JOURNEYS.
           </motion.div>
 
-          {/* Headline (strictly 2 clean bold lines) */}
+          {/* Headline: PARK SMART. DRIVE EASY. */}
           <motion.h1
-            className="text-[32px] sm:text-[40px] md:text-[46px] lg:text-[50px] font-extrabold leading-[1.12] tracking-[-0.03em] text-white font-[family-name:var(--font-manrope)]"
+            className="text-[clamp(3.3rem,6.8vw,5.6rem)] font-bold leading-[0.95] tracking-[-0.045em] text-[#1C1917]"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.2, ease }}
           >
-            <span className="block whitespace-nowrap">Smart Parking.</span>
+            <span className="block text-[#1C1917]">PARK SMART.</span>
             <motion.span
-              className="block whitespace-nowrap bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent"
+              className="block text-[#D84A2B]"
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.85, delay: 0.32, ease }}
             >
-              Without the Guesswork.
+              DRIVE EASY.
             </motion.span>
           </motion.h1>
 
           {/* Supporting Text */}
           <motion.p
-            className="mt-4 text-[14px] sm:text-[15px] leading-[1.65] text-[#94A3B8] max-w-[450px] font-normal tracking-[-0.01em]"
+            className="mt-6 text-[15.5px] sm:text-[16.5px] leading-[1.65] text-[#57534E] max-w-[500px] font-normal tracking-[-0.01em]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.45, ease }}
           >
-            A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D spatial guidance.
+            A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D spatial guidance and frictionless checkout.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Sized-up CTAs */}
           <motion.div
-            className="mt-7 flex flex-wrap items-center gap-3.5"
+            className="mt-9 flex flex-wrap items-center gap-4"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.58, ease }}
           >
             <Link
               href="/parking"
-              className="group inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold tracking-[-0.01em] hover:bg-[#E5E5E5] active:scale-[0.98] transition-all duration-200 shrink-0"
+              className="group inline-flex items-center justify-center gap-3 h-[54px] sm:h-[56px] px-8 sm:px-9 rounded-xl bg-[#D84A2B] text-white text-[15px] font-semibold tracking-[-0.01em] hover:bg-[#C23E21] active:scale-[0.97] transition-all duration-180 shadow-lg shadow-[#D84A2B]/25 shrink-0 whitespace-nowrap"
             >
-              Find Parking
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              <span>Find Parking</span>
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
 
             <Link
-              href="#how-it-works"
-              className="group inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md border border-[#333333] bg-transparent text-white text-[13.5px] font-semibold hover:border-[#666666] active:scale-[0.98] transition-all duration-200 shrink-0"
+              href="/parking"
+              className="group inline-flex items-center justify-center gap-3 h-[54px] sm:h-[56px] px-7 sm:px-8 rounded-xl border border-[#E2D9CC] bg-white text-[#1C1917] text-[15px] font-semibold hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.97] transition-all duration-180 shadow-xs shrink-0 whitespace-nowrap"
             >
-              See How It Works
-              <div className="w-4 h-4 flex items-center justify-center">
-                <Play className="w-3 h-3 fill-white text-white translate-x-[0.5px]" />
+              <span>See How It Works</span>
+              <div className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center group-hover:border-[#D84A2B]/30">
+                <Play className="w-2.5 h-2.5 fill-[#1C1917] text-[#1C1917] translate-x-[0.5px]" />
               </div>
             </Link>
           </motion.div>
         </div>
       </div>
-
-      {/* ── Feature Strip ──────────────────────────────── */}
-      <FeatureStrip />
     </section>
-  );
-}
-
-/* ── Feature Strip Component ────────────────────────────── */
-
-const features = [
-  {
-    icon: Clock,
-    title: "Real-time Availability",
-    desc: "Live parking status & slot metrics",
-  },
-  {
-    icon: CheckSquare,
-    title: "Easy Registration",
-    desc: "Scan plate or enter in seconds",
-  },
-  {
-    icon: Compass,
-    title: "Find Your Car",
-    desc: "Turn-by-turn indoor route navigation",
-  },
-  {
-    icon: Gift,
-    title: "Rewards & Offers",
-    desc: "Redeem mall vouchers while you park",
-  },
-];
-
-function FeatureStrip() {
-  return (
-    <motion.div
-      className="relative z-20 mx-auto w-full max-w-[1400px] px-8 sm:px-12 lg:px-16 pt-2 pb-6"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.75, delay: 0.7, ease }}
-    >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-5 border-t border-white/[0.06]">
-        {features.map((f) => (
-          <div
-            key={f.title}
-            className="flex items-center gap-4 p-4 rounded-xl bg-[#111111] border border-[#333333] hover:border-[#666666] transition-colors"
-          >
-            <div className="w-12 h-12 rounded-lg border border-[#333333] bg-[#000000] flex items-center justify-center text-white shrink-0">
-              <f.icon className="w-5 h-5 text-[#00E5FF]" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-[13px] font-semibold text-white leading-tight">{f.title}</p>
-              <p className="text-[11px] text-[#94A3B8] leading-tight mt-0.5">{f.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
   );
 }

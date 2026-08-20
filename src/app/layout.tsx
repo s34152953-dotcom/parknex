@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Sora } from "next/font/google";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "SmartPark — Smart Parking. Without the Guesswork.",
+  title: "PARKNEX — Smarter Parking. Smoother Journeys.",
   description:
-    "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas.",
-  keywords: ["parking", "smart parking", "mall parking", "find my car", "parking rewards"],
+    "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D guidance.",
+  keywords: ["parking", "smart parking", "mall parking", "find my car", "parking rewards", "PARKNEX"],
   openGraph: {
-    title: "SmartPark — Smart Parking. Without the Guesswork.",
+    title: "PARKNEX — Smarter Parking. Smoother Journeys.",
     description:
-      "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas.",
+      "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D guidance.",
     type: "website",
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${manrope.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-manrope)]">
+    <html lang="en" className={`${sora.variable} h-full`}>
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#FBF8F3] text-[#1C1917]">
         {children}
       </body>
     </html>

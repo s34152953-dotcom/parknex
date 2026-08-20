@@ -12,13 +12,14 @@ import {
   Download,
   Share2,
 } from "lucide-react";
+import { ParknexIcon } from "@/components/ui/ParknexLogo";
 
 export default function ExitPassPage() {
   const pass = {
-    passToken: "SP-PASS-98214-B2-A18",
+    passToken: "PNX-PASS-98214-B2-A18",
     vehiclePlate: "KA-01-MJ-2024",
     vehicleName: "Hyundai Creta",
-    mallName: "Central Mall",
+    mallName: "Central Mall Grand",
     location: "Floor B2 · Slot A-18",
     validUntil: "12:30 PM (15 mins remaining)",
     issuedAt: "12:15 PM, Today",
@@ -26,33 +27,35 @@ export default function ExitPassPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 pt-10 sm:pt-12 bg-[#040608] flex flex-col items-center justify-start">
+    <div className="min-h-[calc(100vh-68px)] w-full p-6 sm:p-10 lg:p-12 pt-8 bg-[#FBF8F3] flex flex-col items-center justify-start">
       <div className="w-full max-w-[460px] flex flex-col items-center">
-        {/* Back Link */}
+        {/* Back Link & Active Tag */}
         <div className="w-full flex items-center justify-between mb-4">
           <Link
             href="/my-car"
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-sp-secondary hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#78716C] hover:text-[#1C1917] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            Dashboard
+            Back to Dashboard
           </Link>
-          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sp-green/10 text-sp-green border border-sp-green/20 font-bold uppercase tracking-wider">
-            Active Pass
+          <span className="text-[11.5px] px-3 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 font-bold uppercase tracking-wider">
+            EXIT AUTHORIZED
           </span>
         </div>
 
         {/* ── Premium Digital Exit Pass Card ───────────────────────────── */}
-        <div className="w-full bg-sp-surface/95 backdrop-blur-2xl border border-white/[0.1] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center">
+        <div className="w-full bg-white border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(80,50,20,0.05)] relative overflow-hidden text-center">
           {/* Header */}
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-sp-green shadow-sm shadow-sp-green" />
-            <h1 className="text-[18px] font-bold text-white">{pass.mallName}</h1>
+            <div className="w-8 h-8 rounded-lg border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] p-1">
+              <ParknexIcon className="w-5 h-5" />
+            </div>
+            <h1 className="text-[18px] font-bold text-[#1C1917]">{pass.mallName}</h1>
           </div>
-          <p className="text-[12px] text-sp-secondary">Digital Parking Exit Pass</p>
+          <p className="text-[12.5px] text-[#78716C]">Digital Parking Exit Pass</p>
 
           {/* QR Code Container */}
-          <div className="my-6 p-5 rounded-2xl bg-white flex items-center justify-center shadow-lg mx-auto w-fit">
+          <div className="my-6 p-5 rounded-2xl bg-white border border-[#EAE3D9] flex items-center justify-center shadow-md mx-auto w-fit">
             <QRCodeSVG
               value={JSON.stringify({
                 token: pass.passToken,
@@ -62,34 +65,35 @@ export default function ExitPassPage() {
               })}
               size={180}
               level="H"
+              fgColor="#1C1917"
             />
           </div>
 
           {/* Pass ID */}
-          <p className="text-[11px] font-mono font-medium text-sp-muted uppercase tracking-wider">
+          <p className="text-[11.5px] font-mono font-bold text-[#D84A2B] uppercase tracking-wider">
             Token: {pass.passToken}
           </p>
 
           {/* Vehicle and Expiration Meta */}
-          <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-sp-elevated/70 border border-white/[0.06] text-left mt-5 text-[12.5px]">
+          <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] text-left mt-5 text-[13px]">
             <div>
-              <p className="text-[10px] text-sp-muted uppercase font-semibold">
+              <p className="text-[10.5px] text-[#A8A29E] uppercase font-bold">
                 Vehicle
               </p>
-              <p className="text-white font-bold mt-0.5">{pass.vehiclePlate}</p>
-              <p className="text-[11px] text-sp-secondary">{pass.vehicleName}</p>
+              <p className="text-[#1C1917] font-bold mt-0.5 font-mono">{pass.vehiclePlate}</p>
+              <p className="text-[11.5px] text-[#78716C]">{pass.vehicleName}</p>
             </div>
             <div>
-              <p className="text-[10px] text-sp-muted uppercase font-semibold">
+              <p className="text-[10.5px] text-[#A8A29E] uppercase font-bold">
                 Grace Period
               </p>
-              <p className="text-sp-green font-bold mt-0.5">{pass.validUntil}</p>
-              <p className="text-[11px] text-sp-muted">Issued {pass.issuedAt}</p>
+              <p className="text-[#10B981] font-bold mt-0.5">{pass.validUntil}</p>
+              <p className="text-[11.5px] text-[#A8A29E]">Issued {pass.issuedAt}</p>
             </div>
           </div>
 
           {/* Instruction */}
-          <p className="text-[11.5px] text-sp-secondary mt-5 leading-relaxed">
+          <p className="text-[12px] text-[#78716C] mt-5 leading-relaxed">
             Scan this QR code at the boom barrier or drive toward the exit camera for automated ANPR verification.
           </p>
         </div>

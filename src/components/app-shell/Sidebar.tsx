@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import { ParknexIcon } from "@/components/ui/ParknexLogo";
 
 const sidebarLinks = [
   { label: "Parking", href: "/parking", icon: CircleParking },
@@ -27,48 +28,52 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[80px] bg-sp-black border-r border-[#333333] h-screen sticky top-0 shrink-0 select-none">
+    <aside className="hidden lg:flex flex-col w-[88px] bg-[#FAF7F2] border-r border-[#EAE3D9] h-screen sticky top-0 shrink-0 select-none">
       {/* Logo */}
-      <div className="flex items-center justify-center h-[64px] border-b border-[#333333]">
-        <Link href="/" className="flex items-center justify-center group" aria-label="SmartPark Home">
-          <div className="w-10 h-10 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50 group-hover:bg-sp-elevated group-hover:border-sp-border-hover transition-all duration-200 shadow-sm">
-            <CircleParking className="w-[20px] h-[20px] text-sp-white" strokeWidth={1.5} />
+      <div className="flex items-center justify-center h-[68px] border-b border-[#EAE3D9]">
+        <Link href="/" className="flex items-center justify-center group" aria-label="PARKNEX Home">
+          <div className="w-10 h-10 rounded-xl border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] group-hover:border-[#E8A594] transition-all duration-200 shadow-xs p-1.5">
+            <ParknexIcon className="w-6 h-6" />
           </div>
         </Link>
       </div>
 
       {/* Nav Links */}
-      <nav className="flex flex-col items-center gap-2 py-5 flex-1 px-2.5">
+      <nav className="flex flex-col items-center gap-1.5 py-5 flex-1 px-2.5">
         {sidebarLinks.map((link) => {
           const isActive = pathname === link.href || pathname?.startsWith(link.href + "/");
           return (
             <Link
               key={link.label}
               href={link.href}
-              className="relative group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
+              className={`relative group flex flex-col items-center justify-center w-full min-h-[54px] rounded-lg py-2.5 px-1 transition-all duration-180 ${
+                isActive
+                  ? "bg-[#D84A2B]/[0.08] text-[#D84A2B]"
+                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03]"
+              }`}
               aria-label={link.label}
             >
-              {/* Active indicator */}
+              {/* Active subtle background */}
               {isActive && (
                 <motion.div
                   layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-xl bg-sp-blue/10 border border-sp-blue/20"
+                  className="absolute inset-0 rounded-lg bg-[#D84A2B]/[0.08] border border-[#D84A2B]/20"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
               <link.icon
-                className={`relative z-10 w-[20px] h-[20px] transition-colors duration-200 ${
+                className={`relative z-10 w-[20px] h-[20px] transition-colors duration-180 ${
                   isActive
-                    ? "text-sp-blue"
-                    : "text-sp-muted group-hover:text-sp-nav"
+                    ? "text-[#D84A2B]"
+                    : "text-[#78716C] group-hover:text-[#1C1917]"
                 }`}
-                strokeWidth={1.5}
+                strokeWidth={isActive ? 2 : 1.6}
               />
               <span
-                className={`relative z-10 text-[9.5px] font-medium mt-1.5 leading-tight tracking-tight transition-colors duration-200 text-center ${
+                className={`relative z-10 text-[10px] font-medium mt-1 leading-tight tracking-tight transition-colors duration-180 text-center ${
                   isActive
-                    ? "text-sp-blue font-semibold"
-                    : "text-sp-muted group-hover:text-sp-nav"
+                    ? "text-[#D84A2B] font-bold"
+                    : "text-[#78716C] group-hover:text-[#1C1917]"
                 }`}
               >
                 {link.label}
@@ -79,21 +84,21 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="flex flex-col items-center gap-1.5 pb-5 px-2.5 border-t border-[#333333] pt-4">
+      <div className="flex flex-col items-center gap-1 pb-5 px-2.5 border-t border-[#EAE3D9] pt-3">
         <Link
           href="/profile"
-          className="group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
+          className="group flex flex-col items-center justify-center w-full min-h-[50px] rounded-lg py-2 px-1 text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03] transition-all duration-180"
           aria-label="Settings"
         >
-          <Settings className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-nav transition-colors duration-200" strokeWidth={1.5} />
-          <span className="text-[9.5px] font-medium mt-1.5 text-sp-muted group-hover:text-sp-nav transition-colors duration-200">Settings</span>
+          <Settings className="w-[18px] h-[18px]" strokeWidth={1.6} />
+          <span className="text-[10px] font-medium mt-1">Settings</span>
         </Link>
         <button
-          className="group flex flex-col items-center justify-center w-full min-h-[52px] rounded-xl py-3 px-1 transition-all duration-200"
+          className="group flex flex-col items-center justify-center w-full min-h-[50px] rounded-lg py-2 px-1 text-[#78716C] hover:text-[#EF4444] hover:bg-[#EF4444]/[0.06] transition-all duration-180"
           aria-label="Logout"
         >
-          <LogOut className="w-[19px] h-[19px] text-sp-muted group-hover:text-sp-red transition-colors duration-200" strokeWidth={1.5} />
-          <span className="text-[9.5px] font-medium mt-1.5 text-sp-muted group-hover:text-sp-red transition-colors duration-200">Logout</span>
+          <LogOut className="w-[18px] h-[18px]" strokeWidth={1.6} />
+          <span className="text-[10px] font-medium mt-1">Logout</span>
         </button>
       </div>
     </aside>

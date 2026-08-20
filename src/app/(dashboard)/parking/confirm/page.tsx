@@ -15,15 +15,15 @@ function VehicleInSlotPreview({ carName = "Hyundai Creta" }: { carName: string }
       camera={{ position: [5, 4.5, 6], fov: 38 }}
       gl={{ antialias: true, alpha: true }}
     >
-      <ambientLight intensity={0.8} color="#D1D5DB" />
-      <directionalLight position={[6, 10, 8]} intensity={1.5} color="#FFFFFF" />
+      <ambientLight intensity={0.9} color="#FFF8EF" />
+      <directionalLight position={[6, 10, 8]} intensity={1.3} color="#FFF7ED" />
       <pointLight position={[0, 4, 0]} intensity={1} color="#10B981" distance={10} />
 
       <Suspense fallback={null}>
         {/* Floor Asphalt Base */}
         <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[10, 10]} />
-          <meshStandardMaterial color="#07090E" roughness={0.9} />
+          <meshStandardMaterial color="#EDE5DA" roughness={0.8} />
         </mesh>
 
         {/* Glowing Green Slot Outline Boundary */}
@@ -34,7 +34,7 @@ function VehicleInSlotPreview({ carName = "Hyundai Creta" }: { carName: string }
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
             <planeGeometry args={[2.36, 4.36]} />
-            <meshBasicMaterial color="#10B981" transparent opacity={0.12} />
+            <meshBasicMaterial color="#10B981" transparent opacity={0.16} />
           </mesh>
         </group>
 
@@ -44,26 +44,26 @@ function VehicleInSlotPreview({ carName = "Hyundai Creta" }: { carName: string }
             {/* Chassis */}
             <mesh position={[0, 0.16, 0]}>
               <boxGeometry args={[1.7, 0.38, 3.4]} />
-              <meshStandardMaterial color="#1A2230" roughness={0.2} metalness={0.8} />
+              <meshStandardMaterial color="#D84A2B" roughness={0.2} metalness={0.4} />
             </mesh>
             {/* Cabin Glass */}
             <mesh position={[0, 0.44, -0.1]}>
               <boxGeometry args={[1.4, 0.34, 1.9]} />
-              <meshStandardMaterial color="#0A0E17" roughness={0.05} metalness={0.95} />
+              <meshStandardMaterial color="#1C2128" roughness={0.05} metalness={0.95} />
             </mesh>
             {/* Taillights */}
             <mesh position={[0, 0.2, -1.71]}>
               <boxGeometry args={[1.5, 0.08, 0.02]} />
-              <meshStandardMaterial color="#FF2233" emissive="#FF2233" emissiveIntensity={1.8} />
+              <meshStandardMaterial color="#D84A2B" emissive="#D84A2B" emissiveIntensity={1.8} />
             </mesh>
             {/* Headlights */}
             <mesh position={[0.6, 0.2, 1.71]}>
               <boxGeometry args={[0.35, 0.08, 0.02]} />
-              <meshStandardMaterial color="#E2E8F0" emissive="#FFFFFF" emissiveIntensity={1.2} />
+              <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={1.2} />
             </mesh>
             <mesh position={[-0.6, 0.2, 1.71]}>
               <boxGeometry args={[0.35, 0.08, 0.02]} />
-              <meshStandardMaterial color="#E2E8F0" emissive="#FFFFFF" emissiveIntensity={1.2} />
+              <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={1.2} />
             </mesh>
           </group>
         </Float>
@@ -103,7 +103,6 @@ function ConfirmParkingContent() {
     setErrorMsg(null);
 
     try {
-      // Call Supabase transactional confirmation procedure if available
       const { data: userData } = await supabase.auth.getUser();
 
       if (userData?.user) {
@@ -120,7 +119,6 @@ function ConfirmParkingContent() {
         router.push("/my-car");
       }, 1200);
     } catch (err: any) {
-      // Show error or proceed if offline/demo
       setSuccess(true);
       setTimeout(() => {
         router.push("/my-car");
@@ -131,35 +129,35 @@ function ConfirmParkingContent() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 sm:p-8 bg-[#05070A]">
+    <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 sm:p-8 bg-[#FBF8F3]">
       {/* Background subtle radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(20,107,255,0.04),transparent)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(216,74,43,0.04),transparent)] pointer-events-none" />
 
-      {/* Main Confirmation Card matching screenshot */}
-      <div className="relative z-10 w-full max-w-[680px] bg-sp-surface/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-10 shadow-2xl">
+      {/* Main Confirmation Card */}
+      <div className="relative z-10 w-full max-w-[680px] bg-white/95 backdrop-blur-2xl border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-10 shadow-[0_12px_40px_rgba(80,50,20,0.05)]">
         {/* Back Link */}
         <Link
           href="/parking"
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sp-secondary hover:text-white transition-colors duration-200 mb-6"
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#78716C] hover:text-[#1C1917] transition-colors duration-180 mb-6"
         >
           <ChevronLeft className="w-4 h-4" />
-          Back
+          Back to Parking Map
         </Link>
 
         {/* Selection Status Badge */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="w-2 h-2 rounded-full bg-sp-green shadow-sm shadow-sp-green" />
-          <span className="text-[13px] font-semibold text-sp-green flex items-center gap-1">
-            You selected <Check className="w-3.5 h-3.5 inline text-sp-green" />
+          <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+          <span className="text-[13px] font-bold text-[#10B981] flex items-center gap-1">
+            You selected <Check className="w-3.5 h-3.5 inline text-[#10B981]" />
           </span>
         </div>
 
-        {/* Large Pillar & Slot Heading matching reference */}
-        <div className="flex items-center justify-between pb-6 border-b border-white/[0.06]">
-          <h1 className="text-[32px] sm:text-[40px] font-extrabold text-white tracking-tight">
+        {/* Large Pillar & Slot Heading */}
+        <div className="flex items-center justify-between pb-6 border-b border-[#EAE3D9]">
+          <h1 className="text-[32px] sm:text-[40px] font-extrabold text-[#1C1917] tracking-tight">
             {pillar}
           </h1>
-          <h2 className="text-[32px] sm:text-[40px] font-extrabold text-white tracking-tight">
+          <h2 className="text-[32px] sm:text-[40px] font-extrabold text-[#D84A2B] tracking-tight">
             {slotNum}
           </h2>
         </div>
@@ -169,45 +167,45 @@ function ConfirmParkingContent() {
           {/* Left Metadata list */}
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-[11px] text-sp-muted font-medium uppercase tracking-wider">
+              <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">
                 Floor
               </p>
-              <p className="text-[18px] font-bold text-white mt-0.5">{floor}</p>
+              <p className="text-[18px] font-extrabold text-[#1C1917] mt-0.5">{floor}</p>
             </div>
             <div>
-              <p className="text-[11px] text-sp-muted font-medium uppercase tracking-wider">
+              <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">
                 Zone
               </p>
-              <p className="text-[18px] font-bold text-white mt-0.5">{zone}</p>
+              <p className="text-[18px] font-extrabold text-[#1C1917] mt-0.5">{zone}</p>
             </div>
             <div>
-              <p className="text-[11px] text-sp-muted font-medium uppercase tracking-wider">
+              <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">
                 Vehicle
               </p>
-              <p className="text-[18px] font-bold text-white mt-0.5">{vehicleName}</p>
-              <p className="text-[12px] text-sp-secondary">{vehiclePlate}</p>
+              <p className="text-[18px] font-extrabold text-[#1C1917] mt-0.5">{vehicleName}</p>
+              <p className="text-[12.5px] text-[#78716C] font-mono font-medium">{vehiclePlate}</p>
             </div>
           </div>
 
           {/* Right 3D Vehicle in Green Slot Visualizer */}
-          <div className="relative h-[220px] w-full rounded-2xl bg-sp-elevated/60 border border-white/[0.06] overflow-hidden">
+          <div className="relative h-[220px] w-full rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] overflow-hidden shadow-inner">
             <VehicleInSlotPreview carName={vehicleName} />
           </div>
         </div>
 
         {/* Error message if any */}
         {errorMsg && (
-          <p className="text-[13px] text-sp-red font-medium mb-4">{errorMsg}</p>
+          <p className="text-[13px] text-[#EF4444] font-semibold mb-4">{errorMsg}</p>
         )}
 
-        {/* Primary CTA Confirm Button matching screenshot */}
+        {/* Primary CTA Confirm Button */}
         <button
           onClick={handleConfirmParking}
           disabled={isSubmitting || success}
-          className={`w-full h-[54px] rounded-2xl text-[15px] font-bold tracking-[-0.01em] flex items-center justify-center gap-2 transition-all duration-200 shadow-xl ${
+          className={`w-full h-[54px] rounded-xl text-[15px] font-bold tracking-[-0.01em] flex items-center justify-center gap-2 transition-all duration-180 shadow-md ${
             success
-              ? "bg-sp-green text-white shadow-sp-green/20"
-              : "bg-sp-blue text-white hover:bg-sp-blue-hover active:scale-[0.99] shadow-sp-blue/30"
+              ? "bg-[#10B981] text-white shadow-[#10B981]/20"
+              : "bg-[#D84A2B] text-white hover:bg-[#C23E21] active:scale-[0.98] shadow-[#D84A2B]/20"
           }`}
         >
           {success ? (
@@ -223,7 +221,7 @@ function ConfirmParkingContent() {
         </button>
 
         {/* Bottom Subtitle Note */}
-        <p className="text-center text-[12.5px] text-sp-secondary mt-4">
+        <p className="text-center text-[12.5px] text-[#78716C] mt-4">
           Your location will be saved and you can navigate back anytime.
         </p>
       </div>
@@ -235,7 +233,7 @@ export default function ParkingConfirmPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center text-sp-secondary">
+        <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center text-[#78716C]">
           Loading parking details...
         </div>
       }

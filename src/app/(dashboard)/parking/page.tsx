@@ -140,21 +140,22 @@ export default function ParkingDashboardPage() {
   }, [filteredSlots]);
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#040608] overflow-hidden">
+    <div className="relative w-full h-full flex flex-col bg-[#FBF8F3] overflow-hidden">
       {/* ── Floor & Zone Switcher Header Bar ───────────────────────────────── */}
-      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-6 lg:px-8 py-3 bg-[#05070A]/85 backdrop-blur-xl border-b border-white/[0.04] select-none">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-6 lg:px-8 py-3.5 bg-white/80 backdrop-blur-md border-b border-[#EAE3D9] select-none">
         {/* Floor Selection Tabs */}
-        <div className="flex items-center gap-1.5 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
+        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-lg border border-[#E7DFD5]">
           {floors.map((floor) => {
             const isActive = selectedFloor === floor;
             return (
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`h-8 px-4 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${isActive
-                    ? "bg-white text-[#040608] shadow-md shadow-white/10"
-                    : "text-white/60 hover:text-white hover:bg-white/[0.04]"
-                  }`}
+                className={`h-8 px-4 rounded-md text-[13px] font-semibold transition-all duration-180 ${
+                  isActive
+                    ? "bg-[#D84A2B] text-white shadow-xs shadow-[#D84A2B]/20"
+                    : "text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03]"
+                }`}
               >
                 {floor}
               </button>
@@ -170,10 +171,11 @@ export default function ParkingDashboardPage() {
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`h-8 px-3.5 rounded-lg text-[11.5px] font-medium transition-colors ${isZoneActive
-                    ? "bg-white/10 text-white border border-white/20"
-                    : "text-white/50 hover:text-white hover:bg-white/[0.02] border border-transparent"
-                  }`}
+                className={`h-8 px-3.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                  isZoneActive
+                    ? "bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5]"
+                    : "text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03] border border-transparent"
+                }`}
               >
                 {zone}
               </button>
@@ -183,15 +185,15 @@ export default function ParkingDashboardPage() {
 
         {/* Occupancy Indicator */}
         <div className="hidden md:flex items-center gap-3">
-          <span className="text-[12px] text-white/60">
+          <span className="text-[12.5px] text-[#78716C] font-medium">
             Occupancy:{" "}
-            <strong className="text-white">
+            <strong className="text-[#1C1917]">
               {Math.round((stats.occupied / (stats.total || 1)) * 100)}%
             </strong>
           </span>
-          <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="w-24 h-2 rounded-full bg-[#EAE3D9] overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 rounded-full"
+              className="h-full bg-gradient-to-r from-[#D84A2B] to-[#F59E0B] rounded-full"
               style={{ width: `${Math.round((stats.occupied / (stats.total || 1)) * 100)}%` }}
             />
           </div>
@@ -209,59 +211,60 @@ export default function ParkingDashboardPage() {
         />
 
         {/* ── Left Floating Floor / Zone Stat Card ─────────────────────────── */}
-        <div className="absolute top-8 left-8 z-20 pointer-events-none">
-          <div className="w-[195px] bg-[#080C14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-4 shadow-2xl pointer-events-auto">
+        <div className="absolute top-6 left-6 z-20 pointer-events-none">
+          <div className="w-[210px] bg-white/90 backdrop-blur-xl border border-[rgba(80,60,40,0.10)] rounded-2xl p-4 shadow-[0_6px_24px_rgba(80,50,20,0.04)] pointer-events-auto">
             <div className="flex items-center justify-between">
-              <h2 className="text-[28px] font-extrabold text-white leading-none tracking-tight">
+              <h2 className="text-[30px] font-extrabold text-[#1C1917] leading-none tracking-tight">
                 {selectedFloor}
               </h2>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/[0.06] text-white/80 uppercase">
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5] uppercase">
                 {selectedZone}
               </span>
             </div>
-            <p className="text-[11px] font-medium text-white/50 mt-1 mb-3">
+            <p className="text-[12px] font-medium text-[#78716C] mt-1.5 mb-3">
               Central Mall Parking
             </p>
 
-            <div className="flex flex-col gap-2 text-[12px] border-t border-white/[0.06] pt-3">
+            <div className="flex flex-col gap-2.5 text-[12.5px] border-t border-[#EAE3D9] pt-3">
               <div className="flex items-center justify-between">
-                <span className="text-white/50 font-medium">Total Slots</span>
-                <span className="text-white font-bold">{stats.total}</span>
+                <span className="text-[#78716C] font-medium">Total Slots</span>
+                <span className="text-[#1C1917] font-bold">{stats.total}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-emerald-400 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[#10B981] font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                   Available
                 </span>
-                <span className="text-emerald-400 font-bold">{stats.available}</span>
+                <span className="text-[#10B981] font-bold">{stats.available}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-rose-400 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                <span className="text-[#EF4444] font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
                   Occupied
                 </span>
-                <span className="text-rose-400 font-bold">{stats.occupied}</span>
+                <span className="text-[#EF4444] font-bold">{stats.occupied}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-amber-400 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[#F59E0B] font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
                   Reserved
                 </span>
-                <span className="text-amber-400 font-bold">{stats.reserved}</span>
+                <span className="text-[#F59E0B] font-bold">{stats.reserved}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Right Floating Map Controls ──────────────────────────────────── */}
-        <div className="absolute top-8 right-8 z-20 flex flex-col items-center gap-2">
+        <div className="absolute top-6 right-6 z-20 flex flex-col items-center gap-2">
           {/* 3D / 2D Toggle */}
           <button
             onClick={() => setIs3D(!is3D)}
-            className={`w-10 h-10 rounded-xl border flex items-center justify-center text-[12px] font-bold transition-all duration-200 shadow-xl ${is3D
-                ? "bg-white text-[#040608] border-white shadow-white/10"
-                : "bg-[#080C14]/90 text-white/70 border-white/10 hover:text-white"
-              }`}
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center text-[12.5px] font-bold transition-all duration-180 shadow-md ${
+              is3D
+                ? "bg-[#D84A2B] text-white border-[#D84A2B] shadow-[#D84A2B]/20"
+                : "bg-white text-[#78716C] border-[#E2D9CC] hover:text-[#1C1917]"
+            }`}
             title="Toggle 3D View"
           >
             {is3D ? "3D" : "2D"}
@@ -269,31 +272,31 @@ export default function ParkingDashboardPage() {
 
           {/* Recenter Compass */}
           <button
-            className="w-10 h-10 rounded-xl bg-[#080C14]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-white/20 transition-colors shadow-xl"
+            className="w-10 h-10 rounded-xl bg-white border border-[#E2D9CC] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-md"
             title="Recenter Camera"
           >
-            <Compass className="w-4 h-4" strokeWidth={1.5} />
+            <Compass className="w-4 h-4" strokeWidth={1.75} />
           </button>
         </div>
 
         {/* ── Selected Slot Action Bottom Card ─────────────────────────────── */}
         {selectedSlot && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-[420px] px-4">
-            <div className="bg-[#080C14]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-4">
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-[440px] px-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.12)] rounded-2xl p-4 sm:p-5 shadow-[0_10px_35px_rgba(80,50,20,0.08)] flex items-center justify-between gap-4">
               <div>
-                <p className="text-[11px] text-white/50 font-medium">Selected Slot</p>
-                <p className="text-[15px] font-bold text-white">
-                  {selectedSlot.pillarName || "Pillar"} · {selectedSlot.slotNumber}
+                <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Selected Slot</p>
+                <p className="text-[16px] font-bold text-[#1C1917] mt-0.5">
+                  {selectedSlot.pillarName || "Pillar"} · <span className="text-[#D84A2B]">{selectedSlot.slotNumber}</span>
                 </p>
-                <p className="text-[11px] text-white/60 mt-0.5">
+                <p className="text-[12px] text-[#78716C] mt-0.5">
                   Floor {selectedSlot.floorName} · {selectedSlot.zoneName} ·{" "}
                   <span
                     className={
                       selectedSlot.status === "available"
-                        ? "text-emerald-400 font-semibold"
+                        ? "text-[#10B981] font-bold"
                         : selectedSlot.status === "my_vehicle"
-                          ? "text-cyan-400 font-semibold"
-                          : "text-rose-400 font-semibold"
+                          ? "text-[#D84A2B] font-bold"
+                          : "text-[#EF4444] font-bold"
                     }
                   >
                     {selectedSlot.status.replace("_", " ").toUpperCase()}
@@ -310,44 +313,44 @@ export default function ParkingDashboardPage() {
                   )}&floor=${selectedSlot.floorName}&zone=${encodeURIComponent(
                     selectedSlot.zoneName
                   )}`}
-                  className="h-10 px-5 rounded-xl bg-white text-[#040608] text-[13px] font-bold flex items-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-md shadow-white/10 shrink-0"
+                  className="h-11 px-5 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold flex items-center gap-2 hover:bg-[#C23E21] active:scale-95 transition-all shadow-md shadow-[#D84A2B]/20 shrink-0"
                 >
                   Park Here
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : selectedSlot.status === "my_vehicle" ? (
                 <Link
                   href="/find-my-car"
-                  className="h-10 px-5 rounded-xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[13px] font-semibold flex items-center gap-2 hover:bg-cyan-500/30 active:scale-95 transition-all shrink-0"
+                  className="h-11 px-5 rounded-lg bg-[#FFF5F2] border border-[#FADCD5] text-[#D84A2B] text-[13.5px] font-bold flex items-center gap-2 hover:bg-[#FFEAE4] active:scale-95 transition-all shrink-0"
                 >
                   Locate Car
-                  <Compass className="w-3.5 h-3.5" />
+                  <Compass className="w-4 h-4" />
                 </Link>
               ) : (
-                <span className="text-[12px] text-white/40 italic px-3">Slot Occupied</span>
+                <span className="text-[12.5px] text-[#A8A29E] font-medium italic px-3">Slot Occupied</span>
               )}
             </div>
           </div>
         )}
 
         {/* ── Bottom Legend Bar ────────────────────────────────────────────── */}
-        <div className="absolute bottom-8 left-0 right-0 z-20 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-5 sm:gap-6 px-5 py-2.5 rounded-full bg-[#080C14]/85 backdrop-blur-xl border border-white/[0.08] text-[12px] shadow-2xl pointer-events-auto">
+        <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="flex items-center gap-5 sm:gap-6 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-xl border border-[rgba(80,60,40,0.10)] text-[12.5px] shadow-[0_6px_24px_rgba(80,50,20,0.05)] pointer-events-auto">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-              <span className="text-white/80 font-medium">Available</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+              <span className="text-[#57534E] font-medium">Available</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" />
-              <span className="text-white/80 font-medium">Occupied</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+              <span className="text-[#57534E] font-medium">Occupied</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-              <span className="text-white/80 font-medium">Reserved</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+              <span className="text-[#57534E] font-medium">Reserved</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50" />
-              <span className="text-cyan-300 font-semibold">My Vehicle</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#D84A2B]" />
+              <span className="text-[#D84A2B] font-bold">My Vehicle</span>
             </div>
           </div>
         </div>

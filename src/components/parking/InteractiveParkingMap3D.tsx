@@ -9,10 +9,10 @@ export type SlotStatus = "available" | "occupied" | "reserved" | "my_vehicle";
 
 export interface ParkingSlotData {
   id: string;
-  slotNumber: string; // e.g. "Slot A-18"
-  pillarName?: string; // e.g. "Pillar 18"
-  zoneName: string; // e.g. "Zone A"
-  floorName: string; // e.g. "B2"
+  slotNumber: string;
+  pillarName?: string;
+  zoneName: string;
+  floorName: string;
   status: SlotStatus;
   position: [number, number, number];
   rotationY?: number;
@@ -21,9 +21,9 @@ export interface ParkingSlotData {
   plateNumber?: string;
 }
 
-// ── Realistic Multi-Variant 3D Car Model ────────────────────────────────────
+// ── Multi-Variant 3D Car Model ────────────────────────────────────
 function StylizedCar({
-  color = "#1E293B",
+  color = "#2D3748",
   isUserCar = false,
   bodyType = "sedan",
 }: {
@@ -39,18 +39,18 @@ function StylizedCar({
       {/* Ground Contact Shadow */}
       <mesh position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[1.9, 3.6]} />
-        <meshBasicMaterial color="#020305" transparent opacity={0.85} />
+        <meshBasicMaterial color="#3D3024" transparent opacity={0.4} />
       </mesh>
 
       {/* Main Lower Chassis Body */}
       <mesh castShadow receiveShadow position={[0, 0.14 * heightMult, 0]}>
         <boxGeometry args={[1.65, 0.36 * heightMult, 3.3]} />
         <meshStandardMaterial
-          color={isUserCar ? "#0D2C54" : color}
+          color={isUserCar ? "#D84A2B" : color}
           roughness={0.2}
-          metalness={0.75}
-          emissive={isUserCar ? "#0066FF" : "#000000"}
-          emissiveIntensity={isUserCar ? 0.3 : 0}
+          metalness={isUserCar ? 0.4 : 0.6}
+          emissive={isUserCar ? "#D84A2B" : "#000000"}
+          emissiveIntensity={isUserCar ? 0.25 : 0}
         />
       </mesh>
 
@@ -58,7 +58,7 @@ function StylizedCar({
       {[-0.82, 0.82].map((x, i) => (
         <mesh key={i} position={[x, 0.08 * heightMult, 0]}>
           <boxGeometry args={[0.08, 0.22 * heightMult, 3.1]} />
-          <meshStandardMaterial color={isUserCar ? "#0A2244" : color} roughness={0.3} metalness={0.7} />
+          <meshStandardMaterial color={isUserCar ? "#BA3C20" : color} roughness={0.3} metalness={0.5} />
         </mesh>
       ))}
 
@@ -66,7 +66,7 @@ function StylizedCar({
       <mesh castShadow receiveShadow position={[0, (0.42 * heightMult), -0.1]}>
         <boxGeometry args={[1.38, 0.32 * heightMult, cabinLength]} />
         <meshStandardMaterial
-          color="#080C14"
+          color="#1C2128"
           roughness={0.1}
           metalness={0.9}
         />
@@ -75,7 +75,7 @@ function StylizedCar({
       {/* Front Windshield Angle Highlight */}
       <mesh position={[0, 0.38 * heightMult, cabinLength * 0.52]} rotation={[Math.PI / 5, 0, 0]}>
         <planeGeometry args={[1.34, 0.25]} />
-        <meshStandardMaterial color="#0A0E18" roughness={0.05} metalness={0.95} />
+        <meshStandardMaterial color="#2D3748" roughness={0.1} metalness={0.8} />
       </mesh>
 
       {/* Front Xenon Headlights */}
@@ -83,17 +83,17 @@ function StylizedCar({
         <group key={idx} position={[hx, 0.16 * heightMult, 1.66]}>
           <mesh>
             <boxGeometry args={[0.32, 0.1, 0.02]} />
-            <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={1.4} />
+            <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={1.2} />
           </mesh>
         </group>
       ))}
 
-      {/* Continuous Red LED Taillight Strip */}
+      {/* Continuous Red/Orange LED Taillight Strip */}
       <mesh position={[0, 0.18 * heightMult, -1.66]}>
         <boxGeometry args={[1.48, 0.08, 0.02]} />
         <meshStandardMaterial
-          color="#FF1E33"
-          emissive="#FF1E33"
+          color="#D84A2B"
+          emissive="#D84A2B"
           emissiveIntensity={isUserCar ? 2.0 : 1.2}
         />
       </mesh>
@@ -105,12 +105,12 @@ function StylizedCar({
             {/* Rubber Tire */}
             <mesh>
               <cylinderGeometry args={[0.24, 0.24, 0.18, 16]} />
-              <meshStandardMaterial color="#0A0D12" roughness={0.9} />
+              <meshStandardMaterial color="#2B303A" roughness={0.9} />
             </mesh>
             {/* Silver Rim */}
             <mesh position={[0, i === 0 ? -0.09 : 0.09, 0]}>
               <cylinderGeometry args={[0.15, 0.15, 0.02, 12]} />
-              <meshStandardMaterial color="#D1D5DB" metalness={0.9} roughness={0.2} />
+              <meshStandardMaterial color="#E2E8F0" metalness={0.9} roughness={0.2} />
             </mesh>
           </group>
         ))
@@ -134,21 +134,21 @@ function ParkingSlot({
   const statusColor = useMemo(() => {
     switch (slot.status) {
       case "available":
-        return "#10B981"; // Vibrant Emerald Green
+        return "#10B981"; // Emerald Green
       case "occupied":
-        return "#EF4444"; // Vivid Red
+        return "#EF4444"; // Red
       case "reserved":
-        return "#F59E0B"; // Bright Amber
+        return "#F59E0B"; // Amber
       case "my_vehicle":
-        return "#06B6D4"; // Electric Cyan
+        return "#D84A2B"; // Primary Burnt Orange
       default:
-        return "#64748B";
+        return "#94A3B8";
     }
   }, [slot.status]);
 
   const carColor = useMemo(() => {
     if (slot.carColor) return slot.carColor;
-    const colors = ["#1E293B", "#0F172A", "#334155", "#475569", "#1E1B4B", "#312E81", "#7F1D1D"];
+    const colors = ["#1E293B", "#334155", "#475569", "#1E1B4B", "#2A324B", "#3D3A45", "#52525B"];
     const hash = slot.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   }, [slot.carColor, slot.id]);
@@ -177,10 +177,10 @@ function ParkingSlot({
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[2.1, 4.0]} />
           <meshBasicMaterial
-            color={isSelected ? "#FFFFFF" : hovered ? "#38BDF8" : statusColor}
+            color={isSelected ? "#D84A2B" : hovered ? "#D84A2B" : statusColor}
             wireframe
             transparent
-            opacity={isSelected ? 1 : hovered ? 0.9 : 0.6}
+            opacity={isSelected ? 1 : hovered ? 0.9 : 0.65}
           />
         </mesh>
 
@@ -188,9 +188,9 @@ function ParkingSlot({
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
           <planeGeometry args={[2.04, 3.94]} />
           <meshBasicMaterial
-            color={isSelected ? "#0284C7" : statusColor}
+            color={isSelected ? "#D84A2B" : statusColor}
             transparent
-            opacity={isSelected ? 0.35 : hovered ? 0.22 : 0.06}
+            opacity={isSelected ? 0.28 : hovered ? 0.18 : 0.06}
           />
         </mesh>
 
@@ -198,7 +198,7 @@ function ParkingSlot({
         <group position={[0, 0.01, 1.6]} rotation={[-Math.PI / 2, 0, 0]}>
           <Text
             fontSize={0.22}
-            color={isSelected ? "#FFFFFF" : statusColor}
+            color={isSelected ? "#1C1917" : statusColor}
             anchorX="center"
             anchorY="middle"
             letterSpacing={0.05}
@@ -219,10 +219,10 @@ function ParkingSlot({
       {/* Glowing 3D Beacon for User's Vehicle */}
       {slot.status === "my_vehicle" && (
         <group position={[0, 0, 0]}>
-          {/* Floor Pulsing Cyan Ring */}
+          {/* Floor Pulsing Orange Ring */}
           <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[1.1, 1.25, 32]} />
-            <meshBasicMaterial color="#06B6D4" transparent opacity={0.8} />
+            <meshBasicMaterial color="#D84A2B" transparent opacity={0.7} />
           </mesh>
 
           {/* Floating High-Vis Pin Marker */}
@@ -232,8 +232,8 @@ function ParkingSlot({
               <mesh position={[0, 0.3, 0]}>
                 <sphereGeometry args={[0.32, 24, 24]} />
                 <meshStandardMaterial
-                  color="#06B6D4"
-                  emissive="#06B6D4"
+                  color="#D84A2B"
+                  emissive="#D84A2B"
                   emissiveIntensity={1.8}
                 />
               </mesh>
@@ -241,8 +241,8 @@ function ParkingSlot({
               <mesh position={[0, 0.06, 0]} rotation={[Math.PI, 0, 0]}>
                 <coneGeometry args={[0.18, 0.45, 16]} />
                 <meshStandardMaterial
-                  color="#06B6D4"
-                  emissive="#06B6D4"
+                  color="#D84A2B"
+                  emissive="#D84A2B"
                   emissiveIntensity={1.8}
                 />
               </mesh>
@@ -255,14 +255,14 @@ function ParkingSlot({
       {isSelected && (
         <mesh position={[0, 0.35, 0]}>
           <boxGeometry args={[2.18, 0.7, 4.08]} />
-          <meshBasicMaterial color="#FFFFFF" wireframe transparent opacity={0.85} />
+          <meshBasicMaterial color="#D84A2B" wireframe transparent opacity={0.85} />
         </mesh>
       )}
     </group>
   );
 }
 
-// ── Concrete Pillar with Stencil Label & Accent Stripe ────────────────────────
+// ── Concrete Pillar with Stencil Label & Orange Accent Stripe ────────────────
 function ConcretePillar({
   position,
   label = "P-A 18",
@@ -278,29 +278,29 @@ function ConcretePillar({
       <mesh castShadow receiveShadow position={[0, 1.8, 0]}>
         <boxGeometry args={[0.85, 3.6, 0.85]} />
         <meshStandardMaterial
-          color="#151A23"
-          roughness={0.7}
-          metalness={0.25}
+          color="#FAF5EE"
+          roughness={0.6}
+          metalness={0.1}
         />
       </mesh>
 
-      {/* Beveled Chamfer Frame Wireframe */}
+      {/* Beveled Chamfer Frame */}
       <mesh position={[0, 1.8, 0]}>
         <boxGeometry args={[0.87, 3.62, 0.87]} />
-        <meshBasicMaterial color="#334155" wireframe transparent opacity={0.3} />
+        <meshBasicMaterial color="#DDD3C5" wireframe transparent opacity={0.4} />
       </mesh>
 
-      {/* Safety Yellow/Cyan Accent Base Strip */}
+      {/* Burnt-Orange Safety Accent Base Strip */}
       <mesh position={[0, 0.35, 0]}>
         <boxGeometry args={[0.88, 0.3, 0.88]} />
-        <meshStandardMaterial color="#0EA5E9" emissive="#0284C7" emissiveIntensity={0.4} />
+        <meshStandardMaterial color="#D84A2B" emissive="#D84A2B" emissiveIntensity={0.5} />
       </mesh>
 
       {/* Pillar ID Text Front */}
       <Text
         position={[0, 2.4, 0.44]}
         fontSize={0.24}
-        color="#F8FAFC"
+        color="#1C1917"
         anchorX="center"
         anchorY="middle"
       >
@@ -309,7 +309,7 @@ function ConcretePillar({
       <Text
         position={[0, 2.1, 0.44]}
         fontSize={0.13}
-        color="#94A3B8"
+        color="#78716C"
         anchorX="center"
         anchorY="middle"
       >
@@ -321,7 +321,7 @@ function ConcretePillar({
         position={[0, 2.4, -0.44]}
         rotation={[0, Math.PI, 0]}
         fontSize={0.24}
-        color="#F8FAFC"
+        color="#1C1917"
         anchorX="center"
         anchorY="middle"
       >
@@ -331,7 +331,7 @@ function ConcretePillar({
         position={[0, 2.1, -0.44]}
         rotation={[0, Math.PI, 0]}
         fontSize={0.13}
-        color="#94A3B8"
+        color="#78716C"
         anchorX="center"
         anchorY="middle"
       >
@@ -349,9 +349,9 @@ function ParkingFloorGrid() {
       <mesh receiveShadow position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[48, 40]} />
         <meshStandardMaterial
-          color="#070A0F"
-          roughness={0.8}
-          metalness={0.2}
+          color="#ECE5DA"
+          roughness={0.7}
+          metalness={0.15}
         />
       </mesh>
 
@@ -359,9 +359,9 @@ function ParkingFloorGrid() {
       <mesh receiveShadow position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[7.2, 38]} />
         <meshStandardMaterial
-          color="#05070B"
-          roughness={0.65}
-          metalness={0.3}
+          color="#E4DDD2"
+          roughness={0.6}
+          metalness={0.2}
         />
       </mesh>
 
@@ -369,9 +369,9 @@ function ParkingFloorGrid() {
       <mesh receiveShadow position={[-14, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[6.5, 38]} />
         <meshStandardMaterial
-          color="#05070B"
-          roughness={0.65}
-          metalness={0.3}
+          color="#E4DDD2"
+          roughness={0.6}
+          metalness={0.2}
         />
       </mesh>
 
@@ -379,23 +379,23 @@ function ParkingFloorGrid() {
       <mesh receiveShadow position={[14, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[6.5, 38]} />
         <meshStandardMaterial
-          color="#05070B"
-          roughness={0.65}
-          metalness={0.3}
+          color="#E4DDD2"
+          roughness={0.6}
+          metalness={0.2}
         />
       </mesh>
 
       {/* Center Dashed Lane Divider */}
       <mesh position={[0, -0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.18, 34]} />
-        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.2} />
+        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} />
       </mesh>
 
       {/* Speed Limit Stencil on Floor */}
       <group position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <Text
           fontSize={0.7}
-          color="#64748B"
+          color="#A8A29E"
           anchorX="center"
           anchorY="middle"
           letterSpacing={0.1}
@@ -421,7 +421,7 @@ function ParkingFloorGrid() {
       <group position={[0, 0.01, -16]} rotation={[-Math.PI / 2, 0, 0]}>
         <Text
           fontSize={0.85}
-          color="#EF4444"
+          color="#D84A2B"
           anchorX="center"
           anchorY="middle"
           letterSpacing={0.12}
@@ -435,7 +435,6 @@ function ParkingFloorGrid() {
 
 // ── Camera Controller ────────────────────────────────────────────────────────
 function CameraRig({ is3D }: { is3D: boolean }) {
-  const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
   useFrame(() => {
@@ -470,7 +469,7 @@ export default function InteractiveParkingMap3D({
   is3D?: boolean;
 }) {
   return (
-    <div className="relative w-full h-full bg-[#040608] overflow-hidden select-none">
+    <div className="relative w-full h-full bg-[#F8F4ED] overflow-hidden select-none">
       <Canvas
         camera={{
           position: is3D ? [12, 17, 19] : [0, 26, 0.1],
@@ -479,23 +478,23 @@ export default function InteractiveParkingMap3D({
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         shadows
       >
-        <color attach="background" args={["#040608"]} />
+        <color attach="background" args={["#F8F4ED"]} />
 
-        {/* Atmospheric Lighting matching reference */}
-        <ambientLight intensity={0.75} color="#CBD5E1" />
+        {/* Warm Ambient & Directional Lighting */}
+        <ambientLight intensity={0.9} color="#FFF8EF" />
         <directionalLight
           position={[18, 30, 18]}
-          intensity={1.4}
-          color="#FFFFFF"
+          intensity={1.2}
+          color="#FFF7ED"
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
         <directionalLight
           position={[-18, 25, -18]}
-          intensity={0.6}
-          color="#93C5FD"
+          intensity={0.4}
+          color="#FDE8D0"
         />
-        <pointLight position={[0, 10, 0]} intensity={1.2} color="#60A5FA" distance={35} />
+        <pointLight position={[0, 12, 0]} intensity={1.0} color="#FFEDD5" distance={40} />
 
         <Suspense fallback={null}>
           <ParkingFloorGrid />
@@ -510,7 +509,7 @@ export default function InteractiveParkingMap3D({
             />
           ))}
 
-          {/* Concrete Columns with Zone Badges */}
+          {/* Cream Concrete Columns with Zone Badges */}
           <ConcretePillar position={[-5.8, 0, 10]} label="P17" sub="ZONE A" />
           <ConcretePillar position={[-5.8, 0, 0]} label="P18" sub="ZONE A" />
           <ConcretePillar position={[-5.8, 0, -10]} label="P19" sub="ZONE A" />

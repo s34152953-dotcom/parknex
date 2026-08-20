@@ -27,7 +27,7 @@ export default function HistoryPage() {
       if (savedHistory) {
         setSessions(JSON.parse(savedHistory));
       } else {
-        // High quality preview history entries matching reference
+        // High quality preview history entries
         setSessions([
           {
             id: "hist-1",
@@ -94,23 +94,23 @@ export default function HistoryPage() {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#000000] flex flex-col justify-start">
+    <div className="min-h-[calc(100vh-68px)] w-full p-6 sm:p-10 lg:p-12 bg-[#FBF8F3] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-[#333333] mb-8">
-          <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
+        <div className="pb-6 border-b border-[#EAE3D9] mb-8">
+          <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1C1917] tracking-tight">
             Parking History & Receipts
           </h1>
-          <p className="text-[13px] text-white/50 mt-1">
+          <p className="text-[13.5px] text-[#78716C] mt-1">
             Historical log of all your completed parking sessions, durations, and payment invoices
           </p>
         </div>
 
         {sessions.length > 0 ? (
-          <div className="bg-[#111111] border border-[#333333] rounded-2xl overflow-hidden">
+          <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl shadow-[0_6px_24px_rgba(80,50,20,0.035)] overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[13px]">
-                <thead className="border-b border-[#333333] text-white/40 uppercase text-[11px] font-semibold bg-[#0a0a0a]">
+              <table className="w-full text-left text-[13.5px]">
+                <thead className="border-b border-[#EAE3D9] text-[#78716C] uppercase text-[11px] font-bold bg-[#FAF7F2]">
                   <tr>
                     <th className="py-4 px-6">Date & Mall</th>
                     <th className="py-4 px-6">Vehicle</th>
@@ -120,22 +120,22 @@ export default function HistoryPage() {
                     <th className="py-4 px-6">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#333333] text-white/70">
+                <tbody className="divide-y divide-[#EAE3D9] text-[#57534E]">
                   {sessions.map((s) => (
-                    <tr key={s.id} className="hover:bg-[#1a1a1a] transition-all duration-200 cursor-default group">
+                    <tr key={s.id} className="hover:bg-[#FAF7F2]/70 transition-all duration-180 cursor-default group">
                       <td className="py-4 px-6">
-                        <p className="text-white font-semibold text-[13.5px]">{s.mall}</p>
-                        <p className="text-[11px] text-white/40 mt-0.5">{s.date}</p>
+                        <p className="text-[#1C1917] font-bold text-[14px]">{s.mall}</p>
+                        <p className="text-[11.5px] text-[#78716C] mt-0.5">{s.date}</p>
                       </td>
-                      <td className="py-4 px-6 text-white/80 font-medium">{s.vehicle}</td>
+                      <td className="py-4 px-6 text-[#1C1917] font-medium">{s.vehicle}</td>
                       <td className="py-4 px-6">
-                        <p className="text-white font-semibold">Floor {s.floor}</p>
-                        <p className="text-[11.5px] text-cyan-400 font-mono mt-0.5">{s.pillarSlot}</p>
+                        <p className="text-[#1C1917] font-bold">Floor {s.floor}</p>
+                        <p className="text-[12px] text-[#D84A2B] font-semibold font-mono mt-0.5">{s.pillarSlot}</p>
                       </td>
-                      <td className="py-4 px-6 text-white/80 font-medium">{s.duration}</td>
-                      <td className="py-4 px-6 text-white font-bold text-[14px]">{s.amount}</td>
+                      <td className="py-4 px-6 text-[#1C1917] font-medium">{s.duration}</td>
+                      <td className="py-4 px-6 text-[#1C1917] font-bold text-[14.5px]">{s.amount}</td>
                       <td className="py-4 px-6">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {s.status}
                         </span>
@@ -154,7 +154,7 @@ export default function HistoryPage() {
             action={
               <Link
                 href="/parking"
-                className="h-11 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold hover:bg-[#E5E5E5] transition-colors inline-flex items-center justify-center gap-2"
+                className="h-11 px-6 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] transition-colors inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20"
               >
                 Find Parking Spot
                 <ArrowRight className="w-4 h-4" />

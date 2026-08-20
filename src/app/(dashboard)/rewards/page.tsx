@@ -26,7 +26,7 @@ export default function RewardsPage() {
       if (savedRewards) {
         setRewards(JSON.parse(savedRewards));
       } else {
-        // High quality preview rewards matching reference
+        // High quality preview rewards
         setRewards([
           {
             id: "rew-1",
@@ -102,14 +102,14 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] w-full p-8 sm:p-10 lg:p-12 bg-[#000000] flex flex-col justify-start">
+    <div className="min-h-[calc(100vh-68px)] w-full p-6 sm:p-10 lg:p-12 bg-[#FBF8F3] flex flex-col justify-start">
       <div className="max-w-[1240px] w-full mx-auto">
         {/* Header */}
-        <div className="pb-6 border-b border-[#333333] mb-8">
-          <h1 className="text-[24px] sm:text-[26px] font-extrabold text-white tracking-tight">
+        <div className="pb-6 border-b border-[#EAE3D9] mb-8">
+          <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1C1917] tracking-tight">
             Rewards & Partner Offers
           </h1>
-          <p className="text-[13px] text-white/50 mt-1">
+          <p className="text-[13.5px] text-[#78716C] mt-1">
             Exclusive parking discounts and retail vouchers earned through your visits
           </p>
         </div>
@@ -119,48 +119,48 @@ export default function RewardsPage() {
             {rewards.map((r) => (
               <div
                 key={r.id}
-                className="bg-[#111111] border border-[#333333] rounded-2xl p-6 sm:p-8 flex flex-col hover:border-[#666666] transition-colors"
+                className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl p-6 sm:p-7 flex flex-col hover:border-[#D84A2B]/40 hover:shadow-[0_8px_30px_rgba(80,50,20,0.06)] shadow-[0_4px_20px_rgba(80,50,20,0.025)] transition-all duration-180"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 uppercase tracking-wider shrink-0">
+                    <span className="text-[10.5px] font-bold px-2.5 py-1 rounded-md bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5] uppercase tracking-wider shrink-0">
                       {r.category}
                     </span>
-                    <span className="text-[13px] font-bold text-emerald-400 shrink-0 text-right">
+                    <span className="text-[13px] font-bold text-[#10B981] shrink-0 text-right">
                       {r.discount}
                     </span>
                   </div>
 
-                  <h2 className="text-[18px] font-bold text-white mb-1.5 tracking-tight">
+                  <h2 className="text-[18px] font-bold text-[#1C1917] mb-1.5 tracking-tight">
                     {r.title}
                   </h2>
-                  <p className="text-[12px] font-medium text-white/60 flex items-center gap-1.5 mb-3">
-                    <Store className="w-3.5 h-3.5 text-white/40" />
+                  <p className="text-[12.5px] font-medium text-[#78716C] flex items-center gap-1.5 mb-3">
+                    <Store className="w-3.5 h-3.5 text-[#A8A29E]" />
                     {r.partner}
                   </p>
-                  <p className="text-[12.5px] text-white/60 leading-relaxed mb-6">
+                  <p className="text-[13px] text-[#78716C] leading-relaxed mb-6">
                     {r.description}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#333333] flex items-center justify-between gap-3 mt-auto">
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-white/40 min-w-0 flex-1">
+                <div className="pt-4 border-t border-[#EAE3D9] flex items-center justify-between gap-3 mt-auto">
+                  <div className="flex items-center gap-1.5 text-[12px] text-[#A8A29E] min-w-0 flex-1">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{r.expires}</span>
                   </div>
                   <button
                     onClick={() => handleCopy(r.code, r.id)}
-                    className="h-9 px-4 rounded-md bg-transparent border border-[#333333] text-[11.5px] font-semibold text-white inline-flex items-center justify-center gap-1.5 hover:border-[#666666] active:scale-95 transition-all shrink-0"
+                    className="h-9 px-3.5 rounded-lg bg-[#FFF5F2] border border-[#FADCD5] text-[12px] font-mono font-bold text-[#D84A2B] inline-flex items-center justify-center gap-1.5 hover:bg-[#FFEAE4] active:scale-95 transition-all shrink-0"
                   >
                     {copiedId === r.id ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        Copied
+                        <Check className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                        <span>COPIED</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5 text-white/40 shrink-0" />
-                        <span className="max-w-[90px] truncate">{r.code}</span>
+                        <Copy className="w-3.5 h-3.5 text-[#D84A2B] shrink-0" />
+                        <span className="max-w-[100px] truncate">{r.code}</span>
                       </>
                     )}
                   </button>
@@ -176,7 +176,7 @@ export default function RewardsPage() {
             action={
               <Link
                 href="/parking"
-                className="h-11 px-6 rounded-md bg-white text-[#000000] text-[13.5px] font-bold hover:bg-[#E5E5E5] transition-colors inline-flex items-center justify-center gap-2"
+                className="h-11 px-6 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] transition-colors inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20"
               >
                 Start Parking
                 <ArrowRight className="w-4 h-4" />

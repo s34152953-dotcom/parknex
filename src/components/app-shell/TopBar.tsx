@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, ChevronDown, Menu, X, CircleParking, Home, Compass, Gift, Clock, Car, UserCircle, LogOut } from "lucide-react";
+import { Bell, ChevronDown, Menu, X, Home, Compass, Gift, Clock, Car, UserCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import ParknexLogo from "@/components/ui/ParknexLogo";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [0.16, 1, 0.3, 1] as const;
 
 const mobileNavLinks = [
   { label: "Home", href: "/", icon: Home },
-  { label: "Parking", href: "/parking", icon: CircleParking },
+  { label: "Parking", href: "/parking", icon: Car },
   { label: "My Vehicle", href: "/my-car", icon: Car },
   { label: "Find My Car", href: "/find-my-car", icon: Compass },
   { label: "Rewards", href: "/rewards", icon: Gift },
   { label: "History", href: "/history", icon: Clock },
   { label: "Profile", href: "/profile", icon: UserCircle },
-  { label: "Logout", href: "#", icon: LogOut },
 ];
 
 export default function TopBar() {
@@ -36,51 +36,51 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-16 bg-sp-black border-b border-[#333333] flex items-center px-6 lg:px-8 gap-4 select-none">
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-white hover:border-sp-border-hover transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5 text-sp-white" />
-        </button>
+      <header className="sticky top-0 z-40 h-[68px] bg-white/80 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-6 lg:px-8 gap-4 select-none">
+        {/* Left Mobile Hamburger + Logo */}
+        <div className="flex items-center gap-3 lg:hidden">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5 text-[#1C1917]" />
+          </button>
 
-        {/* Logo for mobile */}
-        <Link href="/" className="lg:hidden flex items-center gap-2 mr-auto">
-          <div className="w-8 h-8 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50">
-            <CircleParking className="w-4 h-4 text-sp-white" strokeWidth={1.5} />
-          </div>
-        </Link>
+          <Link href="/" className="flex items-center">
+            <ParknexLogo size="sm" />
+          </Link>
+        </div>
 
-        {/* Page title (desktop) */}
-        <h1 className="hidden lg:block text-[17px] font-bold text-sp-white tracking-[-0.015em]">
+        {/* Page Title (Desktop) */}
+        <h1 className="hidden lg:block text-[18px] font-bold text-[#1C1917] tracking-tight">
           {getTitle()}
         </h1>
 
-        {/* Right controls — single aligned group */}
+        {/* Right Controls */}
         <div className="flex items-center gap-3">
           {/* Mall selector */}
-          <button className="hidden sm:flex items-center gap-2 h-9 px-3.5 rounded-xl border border-sp-border bg-sp-elevated/40 text-[12.5px] font-medium text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm shrink-0">
-            <span className="text-sp-white font-semibold">Central Mall Grand</span>
-            <ChevronDown className="w-3.5 h-3.5 text-sp-muted" />
+          <button className="hidden sm:flex items-center gap-2 h-10 px-3.5 rounded-lg border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] hover:border-[#D84A2B]/40 hover:text-[#1C1917] transition-colors duration-180 shadow-xs shrink-0">
+            <span className="text-[#1C1917] font-semibold">Central Mall Grand</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#A8A29E]" />
           </button>
 
           {/* Notifications */}
           <button
-            className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-sp-border bg-sp-elevated/40 text-sp-nav hover:text-sp-white hover:border-sp-border-hover transition-colors duration-200 shadow-sm shrink-0"
+            className="relative flex items-center justify-center w-10 h-10 rounded-lg border border-[#E2D9CC] bg-white text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors duration-180 shadow-xs shrink-0"
             aria-label="Notifications"
           >
-            <Bell className="w-4 h-4" strokeWidth={1.5} />
+            <Bell className="w-4 h-4" strokeWidth={1.75} />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#D84A2B]" />
           </button>
 
-          {/* Profile avatar */}
+          {/* Profile Avatar */}
           <Link
             href="/profile"
-            className="w-9 h-9 rounded-xl bg-sp-elevated border border-sp-border hover:border-sp-border-hover flex items-center justify-center transition-colors shadow-sm shrink-0"
+            className="w-10 h-10 rounded-lg bg-white border border-[#E2D9CC] hover:border-[#D84A2B]/40 hover:text-[#D84A2B] flex items-center justify-center text-[#78716C] transition-colors shadow-xs shrink-0"
             aria-label="Profile"
           >
-            <UserCircle className="w-5 h-5 text-sp-muted hover:text-sp-white" strokeWidth={1.5} />
+            <UserCircle className="w-5 h-5" strokeWidth={1.75} />
           </Link>
         </div>
       </header>
@@ -93,26 +93,23 @@ export default function TopBar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease }}
-            className="fixed inset-0 z-[100] bg-sp-black/95 backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-[100] bg-[#FBF8F3]/98 backdrop-blur-xl lg:hidden"
           >
             <div className="flex flex-col h-full px-6 py-5">
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full border border-sp-border flex items-center justify-center bg-sp-elevated/50">
-                    <CircleParking className="w-4 h-4 text-sp-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-[15px] font-semibold text-sp-white">SmartPark</span>
-                </div>
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#EAE3D9]">
+                <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center">
+                  <ParknexLogo size="sm" />
+                </Link>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-[#1C1917] bg-white border border-[#E2D9CC]"
                   aria-label="Close menu"
                 >
-                  <X className="w-5 h-5 text-sp-white" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <nav className="flex flex-col gap-1 flex-1">
+              <nav className="flex flex-col gap-1.5 flex-1">
                 {mobileNavLinks.map((link, i) => {
                   const isActive = pathname === link.href;
                   return (
@@ -125,13 +122,13 @@ export default function TopBar() {
                       <Link
                         href={link.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-[15px] font-medium transition-colors duration-200
+                        className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] font-semibold transition-colors duration-180
                           ${isActive
-                            ? "bg-sp-blue/10 text-sp-blue"
-                            : "text-sp-nav hover:text-sp-white hover:bg-sp-elevated/50"
+                            ? "bg-[#D84A2B]/10 text-[#D84A2B] border border-[#D84A2B]/20"
+                            : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
                           }`}
                       >
-                        <link.icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                        <link.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
                         {link.label}
                       </Link>
                     </motion.div>

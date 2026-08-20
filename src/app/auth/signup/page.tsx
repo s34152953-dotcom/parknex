@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Lock, Mail, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import ParknexLogo from "@/components/ui/ParknexLogo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -47,101 +48,89 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#050505] selection:bg-sp-blue selection:text-white">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#FBF8F3] selection:bg-[#D84A2B]/20 selection:text-[#D84A2B]">
       <div className="w-full max-w-[420px]">
         {/* Logo */}
         <div className="flex flex-col items-center text-center mb-8">
-          <Link href="/" className="flex items-center gap-2.5 mb-3 group">
-            <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center bg-sp-elevated/70 group-hover:border-white/25 transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-sp-white">
-                <polygon
-                  points="12 2 21 7.5 21 16.5 12 22 3 16.5 3 7.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
-            <span className="text-[20px] font-bold text-white tracking-tight">SmartPark</span>
+          <Link href="/" className="mb-3 group">
+            <ParknexLogo size="lg" />
           </Link>
-          <p className="text-[13.5px] text-sp-secondary">
+          <p className="text-[13.5px] text-[#78716C]">
             Register an account to locate and pay for mall parking effortlessly
           </p>
         </div>
 
         {/* Signup Card */}
-        <div className="bg-sp-surface/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(80,50,20,0.05)]">
           <form onSubmit={handleSignup} className="flex flex-col gap-4">
             <div>
-              <label className="block text-[12px] font-semibold text-sp-nav uppercase mb-1.5">
+              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
                 Full Name
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-sp-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Alex Morgan"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-sp-elevated border border-white/10 text-white placeholder:text-sp-muted text-[13.5px] focus:border-sp-blue focus:outline-none transition-colors"
+                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-sp-nav uppercase mb-1.5">
+              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-sp-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="alex.morgan@example.com"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-sp-elevated border border-white/10 text-white placeholder:text-sp-muted text-[13.5px] focus:border-sp-blue focus:outline-none transition-colors"
+                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-sp-nav uppercase mb-1.5">
+              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-sp-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-sp-elevated border border-white/10 text-white placeholder:text-sp-muted text-[13.5px] focus:border-sp-blue focus:outline-none transition-colors"
+                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
             </div>
 
             {errorMsg && (
-              <p className="text-[12px] text-sp-red font-medium">{errorMsg}</p>
+              <p className="text-[12.5px] text-[#EF4444] font-medium">{errorMsg}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-sp-cta text-sp-cta-text text-[14px] font-bold flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all shadow-md mt-2"
+              className="w-full h-12 rounded-lg bg-[#D84A2B] text-white text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 mt-2"
             >
               {loading ? "Creating Account..." : "Create Account"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          <div className="text-center pt-6 mt-6 border-t border-white/[0.06] text-[13px] text-sp-secondary">
+          <div className="text-center pt-6 mt-6 border-t border-[#EAE3D9] text-[13px] text-[#78716C]">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-sp-blue font-semibold hover:underline">
+            <Link href="/auth/login" className="text-[#D84A2B] font-bold hover:underline">
               Sign in
             </Link>
           </div>
