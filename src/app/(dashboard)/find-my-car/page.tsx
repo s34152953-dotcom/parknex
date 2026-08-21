@@ -35,28 +35,28 @@ export default function FindMyCarPage() {
   return (
     <div className="relative w-full h-[calc(100vh-68px)] flex flex-col bg-[#FBF8F3] overflow-hidden">
       {/* ── Top Header Bar ─────────────────────────────────────────────────── */}
-      <div className="relative z-30 flex items-center justify-between px-6 lg:px-8 py-3.5 bg-white/85 backdrop-blur-md border-b border-[#EAE3D9] select-none">
-        <div className="flex items-center gap-4">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 px-6 lg:px-8 py-3.5 bg-white/85 backdrop-blur-md border-b border-[#EAE3D9] select-none">
+        <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
           <Link
             href="/parking"
-            className="w-10 h-10 rounded-lg border border-[#E2D9CC] bg-white flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-xs"
+            className="w-10 h-10 rounded-lg border border-[#E2D9CC] bg-white flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-xs shrink-0"
             aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-[18px] font-bold text-[#1C1917] tracking-tight leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-[17px] sm:text-[18px] font-bold text-[#1C1917] tracking-tight leading-tight truncate">
               Indoor Vehicle Wayfinding
             </h1>
-            <p className="text-[12px] text-[#78716C]">Floor B2 · Zone A · Pillar 18</p>
+            <p className="text-[12px] text-[#78716C] truncate">Floor B2 · Zone A · Pillar 18</p>
           </div>
         </div>
 
         {/* Remote Vehicle Triggers */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={handleHonk}
-            className={`h-10 px-4 rounded-lg border text-[13px] font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-xs ${
+            className={`min-h-[38px] sm:min-h-[40px] px-3.5 sm:px-4 rounded-lg border text-[12.5px] sm:text-[13px] font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 whitespace-nowrap cursor-pointer ${
               hornHonked
                 ? "bg-[#10B981] text-white border-[#10B981]"
                 : "bg-white text-[#1C1917] border-[#E2D9CC] hover:border-[#D84A2B]/40 hover:text-[#D84A2B]"
@@ -67,7 +67,7 @@ export default function FindMyCarPage() {
           </button>
           <button
             onClick={handleFlash}
-            className={`h-10 px-4 rounded-lg border text-[13px] font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-xs ${
+            className={`min-h-[38px] sm:min-h-[40px] px-3.5 sm:px-4 rounded-lg border text-[12.5px] sm:text-[13px] font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 whitespace-nowrap cursor-pointer ${
               lightsFlashed
                 ? "bg-[#F59E0B] text-white border-[#F59E0B]"
                 : "bg-white text-[#1C1917] border-[#E2D9CC] hover:border-[#D84A2B]/40 hover:text-[#D84A2B]"
@@ -85,10 +85,10 @@ export default function FindMyCarPage() {
         <FindMyCar3DMap isNavigating={isNavigating} />
 
         {/* ── Left Floating Route Card ─────────────────────────────────────── */}
-        <div className="absolute top-6 left-6 z-20 w-full max-w-[310px] pointer-events-none">
+        <div className="absolute top-5 left-5 z-20 w-[calc(100%-40px)] sm:w-[320px] max-w-[340px] pointer-events-none">
           <div className="bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.10)] rounded-2xl p-5 shadow-[0_6px_24px_rgba(80,50,20,0.04)] pointer-events-auto">
             {/* From */}
-            <div className="mb-4">
+            <div className="mb-3.5">
               <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">
                 START POINT
               </p>
@@ -99,7 +99,7 @@ export default function FindMyCarPage() {
             </div>
 
             {/* To */}
-            <div className="mb-4 pb-3.5 border-b border-[#EAE3D9]">
+            <div className="mb-3.5 pb-3 border-b border-[#EAE3D9]">
               <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">
                 DESTINATION
               </p>
@@ -144,14 +144,14 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Right Vertical Floor Switcher ────────────────────────────────── */}
-        <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
+        <div className="absolute top-5 right-5 z-20 flex flex-col gap-2">
           {floors.map((floor) => {
             const isActive = selectedFloor === floor;
             return (
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`w-10 h-10 rounded-xl text-[12.5px] font-bold inline-flex items-center justify-center transition-all duration-180 shadow-md ${
+                className={`w-10 h-10 rounded-xl text-[12.5px] font-bold inline-flex items-center justify-center transition-all duration-180 shadow-md cursor-pointer ${
                   isActive
                     ? "bg-[#D84A2B] text-white shadow-[#D84A2B]/20 border border-[#D84A2B]"
                     : "bg-white text-[#78716C] hover:text-[#1C1917] border border-[#E2D9CC]"
@@ -164,10 +164,10 @@ export default function FindMyCarPage() {
         </div>
 
         {/* ── Bottom Left Start Navigation CTA ─────────────────────────────── */}
-        <div className="absolute bottom-6 left-6 z-20">
+        <div className="absolute bottom-5 left-5 z-20">
           <button
             onClick={() => setIsNavigating(!isNavigating)}
-            className={`h-[48px] px-6 rounded-lg text-[14px] font-semibold flex items-center gap-2.5 shadow-lg transition-all duration-180 active:scale-95 ${
+            className={`min-h-[48px] px-5 sm:px-6 rounded-lg text-[13.5px] sm:text-[14px] font-semibold flex items-center gap-2.5 shadow-lg transition-all duration-180 active:scale-95 cursor-pointer whitespace-nowrap ${
               isNavigating
                 ? "bg-[#10B981] text-white shadow-[#10B981]/20"
                 : "bg-[#D84A2B] text-white hover:bg-[#C23E21] shadow-[#D84A2B]/20"

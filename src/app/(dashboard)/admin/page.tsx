@@ -42,20 +42,21 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-[calc(100vh-68px)] w-full p-6 sm:p-10 bg-[#FBF8F3] max-w-[1240px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EAE3D9] mb-8 gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#D84A2B]" />
-            <span className="text-[12px] font-bold uppercase tracking-wider text-[#D84A2B]">
-              Mall Operations Control
-            </span>
+    <div className="min-h-[calc(100vh-68px)] w-full p-6 sm:p-8 lg:p-10 xl:p-12 bg-[#FBF8F3] flex flex-col justify-start">
+      <div className="w-full max-w-[1500px] mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EAE3D9] mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#D84A2B]" />
+              <span className="text-[12px] font-bold uppercase tracking-wider text-[#D84A2B]">
+                Mall Operations Control
+              </span>
+            </div>
+            <h1 className="text-[26px] sm:text-[28px] lg:text-[32px] font-bold text-[#1C1917] tracking-tight">
+              {mallName}
+            </h1>
           </div>
-          <h1 className="text-[26px] font-bold text-[#1C1917] tracking-tight">
-            {mallName}
-          </h1>
-        </div>
 
         <div className="flex items-center gap-3">
           <span className="text-[12.5px] text-[#10B981] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 font-semibold">
@@ -129,5 +130,6 @@ export default function AdminDashboardPage() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
