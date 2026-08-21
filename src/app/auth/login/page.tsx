@@ -55,27 +55,27 @@ export default function LoginPage() {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(80,50,20,0.05)]">
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(80,50,20,0.04)]">
+          <form onSubmit={handleLogin} className="flex flex-col gap-4.5">
             <div>
-              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="alex.morgan@example.com"
-                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-2">
                 <label className="block text-[12px] font-bold text-[#57534E] uppercase">
                   Password
                 </label>
@@ -84,13 +84,13 @@ export default function LoginPage() {
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-lg bg-[#D84A2B] text-white text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 mt-2"
+              className="w-full min-h-[50px] rounded-xl bg-[#D84A2B] text-white text-[14.5px] font-semibold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 mt-2 cursor-pointer"
             >
               {loading ? "Authenticating..." : "Sign In"}
               <ArrowRight className="w-4 h-4" />

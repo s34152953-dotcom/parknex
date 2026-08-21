@@ -107,35 +107,35 @@ export default function HistoryPage() {
         </div>
 
         {sessions.length > 0 ? (
-          <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl shadow-[0_6px_24px_rgba(80,50,20,0.035)] overflow-hidden w-full">
+          <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl shadow-[0_8px_32px_rgba(80,50,20,0.03)] overflow-hidden w-full">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left text-[13.5px] min-w-[700px]">
                 <thead className="border-b border-[#EAE3D9] text-[#78716C] uppercase text-[11px] font-bold bg-[#FAF7F2]">
                   <tr>
-                    <th className="py-4 px-6 sm:px-8">Date & Mall</th>
-                    <th className="py-4 px-6">Vehicle</th>
-                    <th className="py-4 px-6">Location</th>
-                    <th className="py-4 px-6">Duration</th>
-                    <th className="py-4 px-6">Amount</th>
-                    <th className="py-4 px-6 sm:px-8">Status</th>
+                    <th className="py-4.5 px-6 sm:px-8">Date & Mall</th>
+                    <th className="py-4.5 px-6">Vehicle</th>
+                    <th className="py-4.5 px-6">Location</th>
+                    <th className="py-4.5 px-6">Duration</th>
+                    <th className="py-4.5 px-6">Amount</th>
+                    <th className="py-4.5 px-6 sm:px-8">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EAE3D9] text-[#57534E]">
                   {sessions.map((s) => (
-                    <tr key={s.id} className="hover:bg-[#FAF7F2]/70 transition-all duration-180 cursor-default group">
-                      <td className="py-4.5 px-6 sm:px-8">
-                        <p className="text-[#1C1917] font-bold text-[14px]">{s.mall}</p>
-                        <p className="text-[11.5px] text-[#78716C] mt-0.5">{s.date}</p>
+                    <tr key={s.id} className="hover:bg-[#FAF7F2]/70 transition-all duration-200 cursor-default group">
+                      <td className="py-5 px-6 sm:px-8">
+                        <p className="text-[#1C1917] font-bold text-[14.5px]">{s.mall}</p>
+                        <p className="text-[12px] text-[#78716C] mt-0.5">{s.date}</p>
                       </td>
-                      <td className="py-4.5 px-6 text-[#1C1917] font-medium">{s.vehicle}</td>
-                      <td className="py-4.5 px-6">
+                      <td className="py-5 px-6 text-[#1C1917] font-medium text-[14px]">{s.vehicle}</td>
+                      <td className="py-5 px-6">
                         <p className="text-[#1C1917] font-bold">Floor {s.floor}</p>
-                        <p className="text-[12px] text-[#D84A2B] font-semibold font-mono mt-0.5">{s.pillarSlot}</p>
+                        <p className="text-[12.5px] text-[#D84A2B] font-semibold font-mono mt-0.5">{s.pillarSlot}</p>
                       </td>
-                      <td className="py-4.5 px-6 text-[#1C1917] font-medium">{s.duration}</td>
-                      <td className="py-4.5 px-6 text-[#1C1917] font-bold text-[14.5px]">{s.amount}</td>
-                      <td className="py-4.5 px-6 sm:px-8">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 whitespace-nowrap">
+                      <td className="py-5 px-6 text-[#1C1917] font-medium">{s.duration}</td>
+                      <td className="py-5 px-6 text-[#1C1917] font-bold text-[15px]">{s.amount}</td>
+                      <td className="py-5 px-6 sm:px-8">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11.5px] font-semibold bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 whitespace-nowrap">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {s.status}
                         </span>
@@ -154,7 +154,7 @@ export default function HistoryPage() {
             action={
               <Link
                 href="/parking"
-                className="h-11 px-6 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] transition-colors inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20"
+                className="h-11 px-6 rounded-xl bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20 cursor-pointer"
               >
                 Find Parking Spot
                 <ArrowRight className="w-4 h-4" />

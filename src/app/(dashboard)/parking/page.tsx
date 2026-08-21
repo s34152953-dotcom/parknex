@@ -142,16 +142,16 @@ export default function ParkingDashboardPage() {
   return (
     <div className="relative w-full h-full flex flex-col bg-[#FBF8F3] overflow-hidden">
       {/* ── Floor & Zone Switcher Header Bar ───────────────────────────────── */}
-      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-6 lg:px-8 py-3.5 bg-white/80 backdrop-blur-md border-b border-[#EAE3D9] select-none">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-6 lg:px-8 py-3.5 bg-white/85 backdrop-blur-md border-b border-[#EAE3D9] select-none">
         {/* Floor Selection Tabs */}
-        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-lg border border-[#E7DFD5]">
+        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1.5 rounded-xl border border-[#E7DFD5]">
           {floors.map((floor) => {
             const isActive = selectedFloor === floor;
             return (
               <button
                 key={floor}
                 onClick={() => setSelectedFloor(floor)}
-                className={`h-8 px-4 rounded-md text-[13px] font-semibold transition-all duration-180 ${
+                className={`h-8 px-4 rounded-lg text-[13px] font-semibold transition-all duration-180 cursor-pointer ${
                   isActive
                     ? "bg-[#D84A2B] text-white shadow-xs shadow-[#D84A2B]/20"
                     : "text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03]"
@@ -171,7 +171,7 @@ export default function ParkingDashboardPage() {
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`h-8 px-3.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                className={`h-8 px-4 rounded-xl text-[12.5px] font-semibold transition-all cursor-pointer ${
                   isZoneActive
                     ? "bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5]"
                     : "text-[#78716C] hover:text-[#1C1917] hover:bg-black/[0.03] border border-transparent"
@@ -212,20 +212,20 @@ export default function ParkingDashboardPage() {
 
         {/* ── Left Floating Floor / Zone Stat Card ─────────────────────────── */}
         <div className="absolute top-6 left-6 z-20 pointer-events-none">
-          <div className="w-[210px] bg-white/90 backdrop-blur-xl border border-[rgba(80,60,40,0.10)] rounded-2xl p-4 shadow-[0_6px_24px_rgba(80,50,20,0.04)] pointer-events-auto">
+          <div className="w-[230px] bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 sm:p-6 shadow-[0_10px_35px_rgba(80,50,20,0.04)] pointer-events-auto">
             <div className="flex items-center justify-between">
-              <h2 className="text-[30px] font-extrabold text-[#1C1917] leading-none tracking-tight">
+              <h2 className="text-[32px] font-extrabold text-[#1C1917] leading-none tracking-tight">
                 {selectedFloor}
               </h2>
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5] uppercase">
+              <span className="text-[11.5px] font-bold px-3 py-1 rounded-full bg-[#FFF5F2] text-[#D84A2B] border border-[#FADCD5] uppercase">
                 {selectedZone}
               </span>
             </div>
-            <p className="text-[12px] font-medium text-[#78716C] mt-1.5 mb-3">
+            <p className="text-[12.5px] font-medium text-[#78716C] mt-2 mb-3.5">
               Central Mall Parking
             </p>
 
-            <div className="flex flex-col gap-2.5 text-[12.5px] border-t border-[#EAE3D9] pt-3">
+            <div className="flex flex-col gap-2.5 text-[12.5px] border-t border-[#EAE3D9] pt-3.5">
               <div className="flex items-center justify-between">
                 <span className="text-[#78716C] font-medium">Total Slots</span>
                 <span className="text-[#1C1917] font-bold">{stats.total}</span>
@@ -256,11 +256,11 @@ export default function ParkingDashboardPage() {
         </div>
 
         {/* ── Right Floating Map Controls ──────────────────────────────────── */}
-        <div className="absolute top-6 right-6 z-20 flex flex-col items-center gap-2">
+        <div className="absolute top-6 right-6 z-20 flex flex-col items-center gap-2.5">
           {/* 3D / 2D Toggle */}
           <button
             onClick={() => setIs3D(!is3D)}
-            className={`w-10 h-10 rounded-xl border flex items-center justify-center text-[12.5px] font-bold transition-all duration-180 shadow-md ${
+            className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-[13px] font-bold transition-all duration-180 shadow-md cursor-pointer ${
               is3D
                 ? "bg-[#D84A2B] text-white border-[#D84A2B] shadow-[#D84A2B]/20"
                 : "bg-white text-[#78716C] border-[#E2D9CC] hover:text-[#1C1917]"
@@ -272,23 +272,23 @@ export default function ParkingDashboardPage() {
 
           {/* Recenter Compass */}
           <button
-            className="w-10 h-10 rounded-xl bg-white border border-[#E2D9CC] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-md"
+            className="w-11 h-11 rounded-2xl bg-white border border-[#E2D9CC] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-all shadow-md cursor-pointer"
             title="Recenter Camera"
           >
-            <Compass className="w-4 h-4" strokeWidth={1.75} />
+            <Compass className="w-4.5 h-4.5" strokeWidth={1.75} />
           </button>
         </div>
 
         {/* ── Selected Slot Action Bottom Card ─────────────────────────────── */}
         {selectedSlot && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-[440px] px-4">
-            <div className="bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.12)] rounded-2xl p-4 sm:p-5 shadow-[0_10px_35px_rgba(80,50,20,0.08)] flex items-center justify-between gap-4">
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-[460px] px-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 sm:p-6 shadow-[0_12px_40px_rgba(80,50,20,0.08)] flex items-center justify-between gap-4">
               <div>
                 <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Selected Slot</p>
-                <p className="text-[16px] font-bold text-[#1C1917] mt-0.5">
+                <p className="text-[17px] font-bold text-[#1C1917] mt-0.5">
                   {selectedSlot.pillarName || "Pillar"} · <span className="text-[#D84A2B]">{selectedSlot.slotNumber}</span>
                 </p>
-                <p className="text-[12px] text-[#78716C] mt-0.5">
+                <p className="text-[12.5px] text-[#78716C] mt-0.5">
                   Floor {selectedSlot.floorName} · {selectedSlot.zoneName} ·{" "}
                   <span
                     className={
@@ -313,7 +313,7 @@ export default function ParkingDashboardPage() {
                   )}&floor=${selectedSlot.floorName}&zone=${encodeURIComponent(
                     selectedSlot.zoneName
                   )}`}
-                  className="h-11 px-5 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold flex items-center gap-2 hover:bg-[#C23E21] active:scale-95 transition-all shadow-md shadow-[#D84A2B]/20 shrink-0"
+                  className="h-11 px-5 rounded-xl bg-[#D84A2B] text-white text-[13.5px] font-semibold flex items-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 shrink-0 cursor-pointer"
                 >
                   Park Here
                   <ArrowRight className="w-4 h-4" />
@@ -321,7 +321,7 @@ export default function ParkingDashboardPage() {
               ) : selectedSlot.status === "my_vehicle" ? (
                 <Link
                   href="/find-my-car"
-                  className="h-11 px-5 rounded-lg bg-[#FFF5F2] border border-[#FADCD5] text-[#D84A2B] text-[13.5px] font-bold flex items-center gap-2 hover:bg-[#FFEAE4] active:scale-95 transition-all shrink-0"
+                  className="h-11 px-5 rounded-xl bg-[#FFF5F2] border border-[#FADCD5] text-[#D84A2B] text-[13.5px] font-bold flex items-center gap-2 hover:bg-[#FFEAE4] active:scale-[0.98] transition-all shrink-0 cursor-pointer"
                 >
                   Locate Car
                   <Compass className="w-4 h-4" />
@@ -335,7 +335,7 @@ export default function ParkingDashboardPage() {
 
         {/* ── Bottom Legend Bar ────────────────────────────────────────────── */}
         <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-5 sm:gap-6 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-xl border border-[rgba(80,60,40,0.10)] text-[12.5px] shadow-[0_6px_24px_rgba(80,50,20,0.05)] pointer-events-auto">
+          <div className="flex items-center gap-5 sm:gap-6 px-6 py-3 rounded-full bg-white/95 backdrop-blur-xl border border-[rgba(80,60,40,0.08)] text-[12.5px] shadow-[0_8px_32px_rgba(80,50,20,0.05)] pointer-events-auto">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
               <span className="text-[#57534E] font-medium">Available</span>

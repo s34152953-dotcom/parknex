@@ -67,62 +67,62 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {metrics.map((m) => (
           <div
             key={m.label}
-            className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl p-5 shadow-[0_4px_18px_rgba(80,50,20,0.025)]"
+            className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 shadow-[0_6px_28px_rgba(80,50,20,0.025)] hover:shadow-[0_10px_32px_rgba(80,50,20,0.04)] transition-all"
           >
-            <p className="text-[11px] font-bold text-[#A8A29E] uppercase tracking-wider">
+            <p className="text-[11.5px] font-bold text-[#A8A29E] uppercase tracking-wider">
               {m.label}
             </p>
-            <p className={`text-[28px] font-extrabold mt-1 tracking-tight ${m.color}`}>
+            <p className={`text-[30px] font-extrabold mt-1.5 tracking-tight ${m.color}`}>
               {m.value}
             </p>
-            <p className="text-[12.5px] text-[#78716C] mt-1">{m.trend}</p>
+            <p className="text-[13px] text-[#78716C] mt-1">{m.trend}</p>
           </div>
         ))}
       </div>
 
       {/* ANPR Camera Events Feed */}
-      <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl p-6 sm:p-8 shadow-[0_6px_24px_rgba(80,50,20,0.035)]">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[18px] font-bold text-[#1C1917] flex items-center gap-2.5">
+      <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_8px_32px_rgba(80,50,20,0.03)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 className="text-[19px] font-bold text-[#1C1917] flex items-center gap-2.5">
             <Camera className="w-5 h-5 text-[#D84A2B]" />
             Live ANPR Camera Integration Feed
           </h2>
-          <span className="text-[12.5px] text-[#78716C]">Real-time optical audit</span>
+          <span className="text-[13px] text-[#78716C]">Real-time optical audit</span>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5">
           {cameraFeeds.map((cam) => (
             <div
               key={cam.id}
-              className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] shrink-0 shadow-2xs">
                   <Car className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[14.5px] font-bold text-[#1C1917] font-mono">{cam.plate}</span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white border border-[#E2D9CC] text-[#78716C]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[15px] font-bold text-[#1C1917] font-mono">{cam.plate}</span>
+                    <span className="text-[11.5px] font-semibold px-2.5 py-0.5 rounded-lg bg-white border border-[#E2D9CC] text-[#78716C]">
                       {cam.id}
                     </span>
                   </div>
-                  <p className="text-[12.5px] text-[#78716C] mt-0.5">{cam.location}</p>
+                  <p className="text-[13px] text-[#78716C] mt-0.5">{cam.location}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between sm:justify-end gap-6 text-right">
                 <div>
-                  <p className="text-[11px] text-[#A8A29E] font-bold uppercase">Confidence</p>
-                  <p className="text-[13.5px] font-bold text-[#10B981]">{cam.confidence}</p>
+                  <p className="text-[10.5px] text-[#A8A29E] font-bold uppercase tracking-wider">Confidence</p>
+                  <p className="text-[14px] font-bold text-[#10B981]">{cam.confidence}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#A8A29E] font-bold uppercase">Event</p>
-                  <p className="text-[13px] font-semibold text-[#1C1917]">{cam.status}</p>
+                  <p className="text-[10.5px] text-[#A8A29E] font-bold uppercase tracking-wider">Event</p>
+                  <p className="text-[13.5px] font-semibold text-[#1C1917]">{cam.status}</p>
                 </div>
               </div>
             </div>

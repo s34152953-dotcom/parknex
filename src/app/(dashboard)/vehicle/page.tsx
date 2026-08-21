@@ -75,20 +75,20 @@ export default function VehicleRegistrationPage() {
         </Link>
 
         {/* Form Card */}
-        <div className="bg-white/95 backdrop-blur-2xl border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(80,50,20,0.05)]">
-          <div className="w-12 h-12 rounded-xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-4 shadow-xs">
+        <div className="bg-white/95 backdrop-blur-2xl border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(80,50,20,0.04)]">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-5 shadow-xs">
             <Car className="w-6 h-6" strokeWidth={1.75} />
           </div>
 
-          <h1 className="text-[22px] font-bold text-[#1C1917] tracking-tight">Register New Vehicle</h1>
-          <p className="text-[13.5px] text-[#78716C] mt-1 mb-6">
+          <h1 className="text-[24px] font-bold text-[#1C1917] tracking-tight">Register New Vehicle</h1>
+          <p className="text-[13.5px] text-[#78716C] mt-1 mb-7">
             Link your vehicle plate to enable automated entry camera detection
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
             {/* Plate */}
             <div>
-              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+              <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                 License Plate / Registration *
               </label>
               <input
@@ -96,7 +96,7 @@ export default function VehicleRegistrationPage() {
                 value={regNumber}
                 onChange={(e) => setRegNumber(e.target.value)}
                 placeholder="e.g. KA-01-MJ-2024"
-                className="w-full h-12 px-4 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] uppercase tracking-wider focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                className="w-full h-12 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] uppercase tracking-wider focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                 required
               />
             </div>
@@ -104,7 +104,7 @@ export default function VehicleRegistrationPage() {
             {/* Manufacturer & Model */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                   Make / Brand *
                 </label>
                 <input
@@ -112,12 +112,12 @@ export default function VehicleRegistrationPage() {
                   value={manufacturer}
                   onChange={(e) => setManufacturer(e.target.value)}
                   placeholder="e.g. Hyundai, Tesla"
-                  className="w-full h-12 px-4 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                  className="w-full h-12 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                   Model *
                 </label>
                 <input
@@ -125,7 +125,7 @@ export default function VehicleRegistrationPage() {
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   placeholder="e.g. Creta, Model Y"
-                  className="w-full h-12 px-4 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                  className="w-full h-12 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                   required
                 />
               </div>
@@ -134,7 +134,7 @@ export default function VehicleRegistrationPage() {
             {/* Color & Type */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                   Color
                 </label>
                 <input
@@ -142,17 +142,17 @@ export default function VehicleRegistrationPage() {
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                   placeholder="e.g. Black, Deep Blue"
-                  className="w-full h-12 px-4 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                  className="w-full h-12 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
                   Type
                 </label>
                 <select
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
-                  className="w-full h-12 px-4 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all cursor-pointer"
+                  className="w-full h-12 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[14px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all cursor-pointer"
                 >
                   <option value="sedan">Sedan</option>
                   <option value="suv">SUV</option>
@@ -170,9 +170,9 @@ export default function VehicleRegistrationPage() {
             <button
               type="submit"
               disabled={isSubmitting || success}
-              className={`w-full h-12 rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 mt-3 shadow-md transition-all ${
+              className={`w-full min-h-[50px] rounded-xl text-[14.5px] font-semibold flex items-center justify-center gap-2 mt-3 shadow-md transition-all cursor-pointer ${
                 success
-                  ? "bg-[#10B981] text-white"
+                  ? "bg-[#10B981] text-white shadow-[#10B981]/20"
                   : "bg-[#D84A2B] text-white hover:bg-[#C23E21] active:scale-[0.98] shadow-[#D84A2B]/20"
               }`}
             >

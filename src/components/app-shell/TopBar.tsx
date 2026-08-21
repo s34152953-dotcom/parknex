@@ -41,7 +41,7 @@ export default function TopBar() {
         <div className="flex items-center gap-3 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs"
+            className="flex items-center justify-center w-10 h-10 rounded-xl border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5 text-[#1C1917]" />
@@ -60,14 +60,14 @@ export default function TopBar() {
         {/* Right Controls */}
         <div className="flex items-center gap-3">
           {/* Mall selector */}
-          <button className="hidden sm:flex items-center gap-2 h-10 px-3.5 rounded-lg border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] hover:border-[#D84A2B]/40 hover:text-[#1C1917] transition-colors duration-180 shadow-xs shrink-0">
+          <button className="hidden sm:flex items-center gap-2.5 h-10 px-4 rounded-xl border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] hover:border-[#D84A2B]/40 hover:text-[#1C1917] transition-all duration-180 shadow-xs shrink-0 cursor-pointer">
             <span className="text-[#1C1917] font-semibold">Central Mall Grand</span>
             <ChevronDown className="w-3.5 h-3.5 text-[#A8A29E]" />
           </button>
 
           {/* Notifications */}
           <button
-            className="relative flex items-center justify-center w-10 h-10 rounded-lg border border-[#E2D9CC] bg-white text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors duration-180 shadow-xs shrink-0"
+            className="relative flex items-center justify-center w-10 h-10 rounded-xl border border-[#E2D9CC] bg-white text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-all duration-180 shadow-xs shrink-0 cursor-pointer"
             aria-label="Notifications"
           >
             <Bell className="w-4 h-4" strokeWidth={1.75} />
@@ -77,7 +77,7 @@ export default function TopBar() {
           {/* Profile Avatar */}
           <Link
             href="/profile"
-            className="w-10 h-10 rounded-lg bg-white border border-[#E2D9CC] hover:border-[#D84A2B]/40 hover:text-[#D84A2B] flex items-center justify-center text-[#78716C] transition-colors shadow-xs shrink-0"
+            className="w-10 h-10 rounded-xl bg-white border border-[#E2D9CC] hover:border-[#D84A2B]/40 hover:text-[#D84A2B] flex items-center justify-center text-[#78716C] transition-all shadow-xs shrink-0"
             aria-label="Profile"
           >
             <UserCircle className="w-5 h-5" strokeWidth={1.75} />

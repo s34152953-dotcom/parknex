@@ -95,7 +95,7 @@ export default function MyCarPage() {
 
           <Link
             href="/vehicle"
-            className="h-10 px-5 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] text-[13px] font-semibold inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-95 transition-all shadow-xs shrink-0"
+            className="h-11 px-5 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[13px] font-semibold inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all shadow-xs shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-[#D84A2B]" />
             {vehicle ? "Edit Vehicle" : "Add Vehicle"}
@@ -105,7 +105,7 @@ export default function MyCarPage() {
         {session ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
             {/* Active Parking Status Card */}
-            <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_6px_24px_rgba(80,50,20,0.035)] h-full">
+            <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-[0_8px_32px_rgba(80,50,20,0.03)] h-full">
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                   <div className="flex items-center gap-2.5">
@@ -114,33 +114,33 @@ export default function MyCarPage() {
                       ACTIVE PARKING SESSION
                     </span>
                   </div>
-                  <span className="text-[12px] px-3 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] font-semibold shrink-0">
+                  <span className="text-[12px] px-3.5 py-1.5 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] font-semibold shrink-0">
                     {session.status || "Parked Securely"}
                   </span>
                 </div>
 
                 {/* Large Location Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 p-4 sm:p-5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] mb-6 min-w-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 sm:p-6 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] mb-6 min-w-0">
                   <div className="min-w-0">
                     <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Floor</p>
-                    <p className="text-[22px] sm:text-[24px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.floor}</p>
+                    <p className="text-[22px] sm:text-[26px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.floor}</p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Zone</p>
-                    <p className="text-[22px] sm:text-[24px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.zone}</p>
+                    <p className="text-[22px] sm:text-[26px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.zone}</p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Pillar</p>
-                    <p className="text-[22px] sm:text-[24px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.pillar}</p>
+                    <p className="text-[22px] sm:text-[26px] font-extrabold text-[#1C1917] mt-0.5 truncate">{session.pillar}</p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-[#A8A29E] font-bold uppercase tracking-wider">Slot</p>
-                    <p className="text-[22px] sm:text-[24px] font-extrabold text-[#D84A2B] mt-0.5 truncate">{session.slot}</p>
+                    <p className="text-[22px] sm:text-[26px] font-extrabold text-[#D84A2B] mt-0.5 truncate">{session.slot}</p>
                   </div>
                 </div>
 
                 {/* Timings */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-[#78716C] border-t border-[#EAE3D9] pt-4 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[13.5px] text-[#78716C] border-t border-[#EAE3D9] pt-4.5 mb-6">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#A8A29E]" />
                     <span>
@@ -154,17 +154,17 @@ export default function MyCarPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-[#EAE3D9]/60">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-4 border-t border-[#EAE3D9]/60">
                 <Link
                   href="/find-my-car"
-                  className="flex-1 min-h-[48px] px-5 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-sm shadow-[#D84A2B]/20 whitespace-nowrap"
+                  className="flex-1 min-h-[50px] px-6 rounded-xl bg-[#D84A2B] text-white text-[14px] font-semibold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-sm shadow-[#D84A2B]/20 whitespace-nowrap cursor-pointer"
                 >
                   <Compass className="w-4 h-4" />
                   Find My Car
                 </Link>
                 <Link
                   href="/checkout"
-                  className="flex-1 min-h-[48px] px-5 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-semibold inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all shadow-xs whitespace-nowrap"
+                  className="flex-1 min-h-[50px] px-6 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[14px] font-semibold inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all shadow-xs whitespace-nowrap cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4 text-[#78716C]" />
                   Proceed to Checkout
@@ -173,34 +173,34 @@ export default function MyCarPage() {
             </div>
 
             {/* Registered Vehicle Details Card */}
-            <div className="bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_6px_24px_rgba(80,50,20,0.035)] h-full">
+            <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-[0_8px_32px_rgba(80,50,20,0.03)] h-full">
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] shadow-xs">
                     <Car className="w-6 h-6" strokeWidth={1.75} />
                   </div>
-                  <span className="text-[11.5px] font-semibold px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] text-[#78716C]">
+                  <span className="text-[12px] font-semibold px-3.5 py-1.5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] text-[#78716C]">
                     Primary Vehicle
                   </span>
                 </div>
 
-                <h2 className="text-[22px] sm:text-[24px] font-bold text-[#1C1917] tracking-tight">
+                <h2 className="text-[22px] sm:text-[25px] font-bold text-[#1C1917] tracking-tight">
                   {vehicle ? `${vehicle.manufacturer} ${vehicle.model}` : "Vehicle Registered"}
                 </h2>
-                <p className="text-[14px] text-[#D84A2B] font-bold mt-1 font-mono tracking-wide">
+                <p className="text-[14.5px] text-[#D84A2B] font-bold mt-1 font-mono tracking-wide">
                   {vehicle?.plate || "Plate Confirmed"}
                 </p>
 
                 <div className="flex flex-col mt-6 border-t border-[#EAE3D9] text-[13.5px]">
-                  <div className="flex items-center justify-between py-3 border-b border-[#EAE3D9]">
+                  <div className="flex items-center justify-between py-3.5 border-b border-[#EAE3D9]">
                     <span className="text-[#78716C]">Body Type</span>
                     <span className="text-[#1C1917] font-semibold">{vehicle?.type || "Sedan"}</span>
                   </div>
-                  <div className="flex items-center justify-between py-3 border-b border-[#EAE3D9]">
+                  <div className="flex items-center justify-between py-3.5 border-b border-[#EAE3D9]">
                     <span className="text-[#78716C]">Color</span>
                     <span className="text-[#1C1917] font-semibold">{vehicle?.color || "Obsidian"}</span>
                   </div>
-                  <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center justify-between py-3.5">
                     <span className="text-[#78716C]">Location</span>
                     <span className="text-[#1C1917] font-semibold">{session.mall}</span>
                   </div>
@@ -210,7 +210,7 @@ export default function MyCarPage() {
               <div className="pt-6 border-t border-[#EAE3D9] mt-6">
                 <Link
                   href="/exit-pass"
-                  className="w-full min-h-[48px] rounded-lg bg-white border border-[#E2D9CC] text-[13.5px] font-semibold text-[#1C1917] inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] transition-colors shadow-xs"
+                  className="w-full min-h-[50px] rounded-xl bg-white border border-[#E2D9CC] text-[14px] font-semibold text-[#1C1917] inline-flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                 >
                   <QrCode className="w-4 h-4 text-[#D84A2B]" />
                   View Active Exit Pass
@@ -224,17 +224,17 @@ export default function MyCarPage() {
             title="No Active Parking Session"
             description="You currently do not have a vehicle parked in a PARKNEX-enabled mall. Select a parking slot to start an active session."
             action={
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3.5">
                 <Link
                   href="/parking"
-                  className="h-11 px-6 rounded-lg bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] transition-colors inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20"
+                  className="h-11 px-6 rounded-xl bg-[#D84A2B] text-white text-[13.5px] font-semibold hover:bg-[#C23E21] active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 shadow-sm shadow-[#D84A2B]/20 cursor-pointer"
                 >
                   Explore Parking Map
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/vehicle"
-                  className="h-11 px-6 rounded-lg bg-white border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-semibold hover:border-[#D84A2B]/40 transition-colors inline-flex items-center justify-center"
+                  className="h-11 px-6 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-semibold hover:border-[#D84A2B]/40 active:scale-[0.98] transition-all inline-flex items-center justify-center cursor-pointer"
                 >
                   Add Vehicle
                 </Link>

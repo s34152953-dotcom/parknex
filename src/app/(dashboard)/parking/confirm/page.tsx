@@ -134,11 +134,11 @@ function ConfirmParkingContent() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(216,74,43,0.04),transparent)] pointer-events-none" />
 
       {/* Main Confirmation Card */}
-      <div className="relative z-10 w-full max-w-[680px] bg-white/95 backdrop-blur-2xl border border-[rgba(80,60,40,0.10)] rounded-3xl p-6 sm:p-10 shadow-[0_12px_40px_rgba(80,50,20,0.05)]">
+      <div className="relative z-10 w-full max-w-[680px] bg-white/95 backdrop-blur-2xl border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-10 shadow-[0_16px_48px_rgba(80,50,20,0.04)]">
         {/* Back Link */}
         <Link
           href="/parking"
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#78716C] hover:text-[#1C1917] transition-colors duration-180 mb-6"
+          className="inline-flex items-center gap-2 text-[13.5px] font-semibold text-[#78716C] hover:text-[#1C1917] transition-colors duration-180 mb-6"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Parking Map
@@ -188,7 +188,7 @@ function ConfirmParkingContent() {
           </div>
 
           {/* Right 3D Vehicle in Green Slot Visualizer */}
-          <div className="relative h-[220px] w-full rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] overflow-hidden shadow-inner">
+          <div className="relative h-[220px] w-full rounded-3xl bg-[#FAF7F2] border border-[#EAE3D9] overflow-hidden shadow-inner">
             <VehicleInSlotPreview carName={vehicleName} />
           </div>
         </div>
@@ -202,7 +202,7 @@ function ConfirmParkingContent() {
         <button
           onClick={handleConfirmParking}
           disabled={isSubmitting || success}
-          className={`w-full h-[54px] rounded-xl text-[15px] font-bold tracking-[-0.01em] flex items-center justify-center gap-2 transition-all duration-180 shadow-md ${
+          className={`w-full h-[52px] rounded-xl text-[15px] font-bold tracking-[-0.01em] flex items-center justify-center gap-2 transition-all duration-180 shadow-md cursor-pointer ${
             success
               ? "bg-[#10B981] text-white shadow-[#10B981]/20"
               : "bg-[#D84A2B] text-white hover:bg-[#C23E21] active:scale-[0.98] shadow-[#D84A2B]/20"
