@@ -66,6 +66,8 @@ export default function AdminBookingPage() {
   const [resendingSms, setResendingSms] = useState(false);
   const [smsStatusMessage, setSmsStatusMessage] = useState<string | null>(null);
 
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
+
   // Mount & Check WebGL Support & Load Preferred View Mode
   useEffect(() => {
     setIsMounted(true);
@@ -80,7 +82,7 @@ export default function AdminBookingPage() {
     }
   }, []);
 
-  const handleToggleViewMode = (mode: "2D" | "3D") => {
+  const handleToggleViewMode = (mode: "2D" | "3D", isFallback = false) => {
     if (mode === "3D" && !webGLSupported) {
       alert("WebGL 3D graphics acceleration is not supported on this device/browser.");
       return;
@@ -88,6 +90,10 @@ export default function AdminBookingPage() {
     setViewMode(mode);
     if (typeof window !== "undefined") {
       localStorage.setItem("parknex_view_mode", mode);
+    }
+    if (isFallback) {
+      setFallbackMessage("3D unavailable on this device. Switched to 2D fallback.");
+      setTimeout(() => setFallbackMessage(null), 5000);
     }
   };
 
@@ -248,6 +254,12 @@ export default function AdminBookingPage() {
 
         {/* Floor selector, 2D/3D toggle & refresh */}
         <div className="flex flex-wrap items-center gap-3">
+          {fallbackMessage && (
+            <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-full text-[12px] font-semibold text-[#EF4444] animate-in fade-in slide-in-from-right-4 duration-300">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {fallbackMessage}
+            </div>
+          )}
           {/* 2D / 3D Mode Toggle */}
           <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-[#E2D9CC] shadow-xs">
             <button
@@ -312,10 +324,10 @@ export default function AdminBookingPage() {
       </div>
 
       {/* ── Summary Stats Strip (Zero-Flashing Skeleton Protected) ───────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
         {/* Total Spaces */}
-        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
-          <p className="text-[11px] font-bold text-[#A8A29E] uppercase tracking-wider">Total Spaces</p>
+        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)] min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-bold text-[#A8A29E] uppercase tracking-wider truncate">Total Spaces</p>
           {loading && !stats ? (
             <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
           ) : (
@@ -325,8 +337,8 @@ export default function AdminBookingPage() {
         </div>
 
         {/* Available */}
-        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
-          <p className="text-[11px] font-bold text-[#10B981] uppercase tracking-wider">Available Spaces</p>
+        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)] min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-bold text-[#10B981] uppercase tracking-wider truncate">Available Spaces</p>
           {loading && !stats ? (
             <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
           ) : (
@@ -336,8 +348,8 @@ export default function AdminBookingPage() {
         </div>
 
         {/* Occupied */}
-        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
-          <p className="text-[11px] font-bold text-[#EF4444] uppercase tracking-wider">Occupied Spaces</p>
+        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)] min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-bold text-[#EF4444] uppercase tracking-wider truncate">Occupied Spaces</p>
           {loading && !stats ? (
             <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
           ) : (
@@ -347,8 +359,8 @@ export default function AdminBookingPage() {
         </div>
 
         {/* Nearest Recommended */}
-        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
-          <p className="text-[11px] font-bold text-[#D84A2B] uppercase tracking-wider">Recommended Nearest</p>
+        <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)] min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-bold text-[#D84A2B] uppercase tracking-wider truncate">Recommended Nearest</p>
           {loading && !nearestSlot ? (
             <div className="h-8 w-28 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
           ) : (
@@ -367,13 +379,14 @@ export default function AdminBookingPage() {
         {/* Left 68% Parking Map (WebGL 3D or 2D Grid) */}
         <div className="lg:col-span-8 h-full min-h-[580px]">
           {viewMode === "3D" && webGLSupported ? (
-            <WebGLBoundary onFallbackTo2D={() => handleToggleViewMode("2D")}>
+            <WebGLBoundary onFallbackTo2D={() => handleToggleViewMode("2D", true)}>
               <InteractiveParkingMap3D
                 slots={slots}
                 selectedSlot={selectedSlot}
                 nearestSlot={nearestSlot}
                 onSelectSlot={handleSelectSlot}
                 currentFloor={floor}
+                onFallbackTo2D={() => handleToggleViewMode("2D", true)}
               />
             </WebGLBoundary>
           ) : (
@@ -479,7 +492,7 @@ export default function AdminBookingPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2.5 pt-2">
+              <div className="flex flex-col gap-3 pt-4">
                 <Link
                   href={`/customer/${bookedResult.customerAccessToken}`}
                   target="_blank"
@@ -524,12 +537,12 @@ export default function AdminBookingPage() {
               </div>
 
               {/* Distance badge */}
-              <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-between text-[13px]">
+              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-between text-[13px]">
                 <span className="text-[#78716C]">Walking distance</span>
                 <span className="text-[#1C1917] font-bold">{selectedSlot.distanceFromEntrance} meters (~1.5 min)</span>
               </div>
 
-              <form onSubmit={handleConfirmBooking} className="flex flex-col gap-4.5">
+              <form onSubmit={handleConfirmBooking} className="flex flex-col gap-5">
                 {/* Vehicle Number Plate */}
                 <div>
                   <label htmlFor="vehicle-plate-input" className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
@@ -583,7 +596,7 @@ export default function AdminBookingPage() {
                 </div>
 
                 {formError && (
-                  <div className="p-3.5 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center gap-2 text-[12.5px] text-[#EF4444] font-medium" role="alert">
+                  <div className="p-4 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center gap-2 text-[12.5px] text-[#EF4444] font-medium" role="alert">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{formError}</span>
                   </div>
@@ -644,15 +657,15 @@ export default function AdminBookingPage() {
               {/* Instructions */}
               <div className="flex flex-col gap-3 text-[13px] text-[#78716C]">
                 <p className="font-bold text-[#1C1917] text-[14px]">Operator Instructions:</p>
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">1</span>
                   <span>Select any green space directly in 3D or 2D grid mode.</span>
                 </div>
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">2</span>
                   <span>Enter incoming vehicle license plate and customer phone.</span>
                 </div>
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">3</span>
                   <span>Confirm to dispatch the live navigation link and Exit QR via SMS.</span>
                 </div>

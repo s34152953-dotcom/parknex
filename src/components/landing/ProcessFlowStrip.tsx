@@ -28,7 +28,7 @@ const steps = [
 export default function ProcessFlowStrip() {
   return (
     <section className="relative z-20 w-full bg-[#FAF7F2] border-t border-[#E7DFD5] py-5 px-6 sm:px-10 lg:px-12 overflow-x-auto scrollbar-none">
-      <div className="max-w-[1440px] mx-auto flex items-center justify-between min-w-[960px] gap-3">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between min-w-max gap-4 sm:gap-6">
         {steps.map((step, idx) => (
           <div key={step.label} className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2.5">

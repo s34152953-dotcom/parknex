@@ -25,7 +25,7 @@ export default function AdminTopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-[72px] bg-white/90 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-6 lg:px-10 gap-4 select-none">
+      <header className="sticky top-0 z-40 h-[72px] bg-white/90 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-4 sm:px-6 lg:px-10 gap-2 sm:gap-4 select-none">
         {/* Left Mobile Menu Trigger */}
         <div className="flex items-center gap-3.5 lg:hidden">
           <button

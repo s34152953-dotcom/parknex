@@ -53,7 +53,7 @@ function LoginForm() {
 
   return (
     <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(80,50,20,0.04)]">
-      <form onSubmit={handleLogin} className="flex flex-col gap-4.5">
+      <form onSubmit={handleLogin} className="flex flex-col gap-5">
         <div>
           <label htmlFor="email-input" className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
             Operator Email Address
@@ -110,7 +110,7 @@ function LoginForm() {
       </form>
 
       {/* Quick Demo Operator Sign In */}
-      <div className="mt-5 pt-5 border-t border-[#EAE3D9] flex flex-col gap-2.5">
+      <div className="mt-5 pt-5 border-t border-[#EAE3D9] flex flex-col gap-3">
         <button
           type="button"
           onClick={handleDemoLogin}
