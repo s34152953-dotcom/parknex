@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LogOut,
   Car,
@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Navigation,
   Plus,
-  Compass,
 } from "lucide-react";
 import Link from "next/link";
 import ParknexLogo from "@/components/ui/ParknexLogo";
@@ -28,26 +27,15 @@ function formatDuration(entryTime: string): string {
 }
 
 export default function CustomerDashboard() {
+  // 1. All hooks at the top level unconditionally
   const { data: session, status } = useSession();
   const router = useRouter();
   const [vehicleInput, setVehicleInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#D84A2B] border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    router.push("/customer/login");
-    return null;
-  }
-
-  const user = useQuery(api.users.getUser, { email: session.user?.email || "" });
+  const userEmail = session?.user?.email || "";
+  const user = useQuery(api.users.getUser, userEmail ? { email: userEmail } : "skip");
   const upsertUser = useMutation(api.users.upsertUser);
 
   const vehicleNumber = user?.vehicleNumber || "";
@@ -60,17 +48,46 @@ export default function CustomerDashboard() {
     vehicleNumber ? { vehicleNumber } : "skip"
   );
 
+  // 2. Client-side navigation effect for unauthenticated state
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/customer/login");
+    }
+  }, [status, router]);
+
   const handleSaveVehicle = async () => {
-    if (!vehicleInput.trim()) return;
+    if (!vehicleInput.trim() || !userEmail) return;
     setSaving(true);
-    await upsertUser({
-      email: session.user?.email || "",
-      name: session.user?.name || "",
-      vehicleNumber: vehicleInput.trim().toUpperCase(),
-    });
-    setSaving(false);
-    setSaved(true);
+    try {
+      await upsertUser({
+        email: userEmail,
+        name: session?.user?.name || userEmail,
+        vehicleNumber: vehicleInput.trim().toUpperCase(),
+      });
+      setSaved(true);
+    } catch (err) {
+      console.error("Failed to save vehicle:", err);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // 3. Conditional loading/unauthenticated rendering after all hooks
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#D84A2B] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#D84A2B] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050507] text-[#F5F7FA] pb-20 selection:bg-[#D84A2B]/20 selection:text-[#D84A2B]">
