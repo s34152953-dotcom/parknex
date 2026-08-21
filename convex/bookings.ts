@@ -21,6 +21,36 @@ export const getBookingByToken = query({
   },
 });
 
+export const getActiveBookingByVehicle = query({
+  args: { vehicleNumber: v.string() },
+  handler: async (ctx, args) => {
+    const booking = await ctx.db
+      .query("bookings")
+      .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+      .filter((q) => q.eq(q.field("vehicleNumber"), args.vehicleNumber.toUpperCase()))
+      .first();
+    if (!booking) return null;
+    const slot = await ctx.db
+      .query("slots")
+      .withIndex("by_slotId", (q) => q.eq("slotId", booking.slotId))
+      .first();
+    return { ...booking, slotDetails: slot };
+  },
+});
+
+export const getHistoryByVehicle = query({
+  args: { vehicleNumber: v.string() },
+  handler: async (ctx, args) => {
+    const history = await ctx.db
+      .query("bookings")
+      .filter((q) => q.eq(q.field("vehicleNumber"), args.vehicleNumber.toUpperCase()))
+      .order("desc")
+      .take(20);
+    return history;
+  },
+});
+
+
 export const getCustomerHistory = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {

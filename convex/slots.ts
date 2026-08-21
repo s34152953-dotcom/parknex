@@ -84,3 +84,34 @@ export const releaseHold = internalMutation({
     }
   },
 });
+
+export const upsertSlot = mutation({
+  args: {
+    slotId: v.string(),
+    mallId: v.string(),
+    mallName: v.string(),
+    floor: v.string(),
+    zone: v.string(),
+    pillar: v.string(),
+    slotNumber: v.string(),
+    status: v.union(v.literal("available"), v.literal("occupied"), v.literal("reserved"), v.literal("temporarily_held")),
+    positionX: v.number(),
+    positionY: v.number(),
+    positionZ: v.number(),
+    rotationY: v.number(),
+    distanceFromEntrance: v.number(),
+    walkingDirections: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("slots")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+    } else {
+      await ctx.db.insert("slots", args);
+    }
+  },
+});

@@ -22,7 +22,7 @@ function LoginForm() {
     setErrorMsg(null);
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn("operator-credentials", {
         redirect: false,
         email: loginEmail,
         password: password,
