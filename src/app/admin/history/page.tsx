@@ -12,8 +12,11 @@ import {
   ExternalLink,
   Calendar,
   Filter,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 interface BookingItem {
   id: string;
@@ -32,39 +35,27 @@ interface BookingItem {
 }
 
 export default function AdminHistoryPage() {
-  const [bookings, setBookings] = useState<BookingItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [floorFilter, setFloorFilter] = useState("ALL");
   const [dateFilter, setDateFilter] = useState("");
+  const [retryStatus, setRetryStatus] = useState<Record<string, "retrying" | "success" | "error">>({});
 
-  const fetchBookings = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (statusFilter !== "ALL") params.append("status", statusFilter);
-      if (floorFilter !== "ALL") params.append("floor", floorFilter);
-      if (searchQuery.trim()) params.append("query", searchQuery.trim());
-      if (dateFilter) params.append("date", dateFilter);
+  const bookings = useQuery(api.bookings.listBookings, {
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    floor: floorFilter === "ALL" ? undefined : floorFilter,
+    query: searchQuery.trim() || undefined,
+    date: dateFilter || undefined,
+  }) || [];
+  
+  const retrySmsMutation = useMutation(api.bookings.retrySms);
+  
+  const loading = bookings.length === 0 && useQuery(api.bookings.listBookings, {}) === undefined; // approximate loading state
 
-      const res = await fetch(`/api/bookings/list?${params.toString()}`);
-      const data = await res.json();
-      if (data.success) {
-        setBookings(data.bookings);
-      }
-    } catch (err) {
-      console.error("Failed to load bookings:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, floorFilter, searchQuery, dateFilter]);
-
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+  const fetchBookings = () => {
+    // Convex is real-time, no manual refresh needed, but we can reset filters if they click refresh
+  };
 
   // Mask Phone for privacy (e.g. +91 ••••••4821)
   const maskPhone = (phone: string) => {
@@ -81,7 +72,7 @@ export default function AdminHistoryPage() {
   };
 
   // Compute duration
-  const computeDuration = (entry: string, exit: string | null) => {
+  const computeDuration = (entry: string, exit?: string | null) => {
     const start = new Date(entry).getTime();
     const end = exit ? new Date(exit).getTime() : Date.now();
     const diffMins = Math.max(1, Math.round((end - start) / (60 * 1000)));
@@ -200,7 +191,7 @@ export default function AdminHistoryPage() {
                   <th className="py-4.5 px-6">Exit Time</th>
                   <th className="py-4.5 px-6">Duration</th>
                   <th className="py-4.5 px-6">Status</th>
-                  <th className="py-4.5 px-6 sm:px-8 text-right">Customer Link</th>
+                  <th className="py-4.5 px-6 sm:px-8 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE3D9] text-[#57534E]">
@@ -271,14 +262,26 @@ export default function AdminHistoryPage() {
                     </td>
 
                     <td className="py-5 px-6 sm:px-8 text-right">
-                      <Link
-                        href={`/customer/${b.customerAccessToken}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[#D84A2B] hover:underline"
-                      >
-                        <span>View Portal</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
+                      {b.status === "ACTIVE" && (
+                        <button
+                          disabled={retryStatus[b.id] === "retrying"}
+                          onClick={async () => {
+                            setRetryStatus(prev => ({ ...prev, [b.id]: "retrying" }));
+                            try {
+                              await retrySmsMutation({ bookingId: b.id });
+                              setRetryStatus(prev => ({ ...prev, [b.id]: "success" }));
+                              setTimeout(() => setRetryStatus(prev => ({ ...prev, [b.id]: undefined as any })), 3000);
+                            } catch (e: any) {
+                              setRetryStatus(prev => ({ ...prev, [b.id]: "error" }));
+                              setTimeout(() => setRetryStatus(prev => ({ ...prev, [b.id]: undefined as any })), 3000);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[#D84A2B] hover:underline disabled:opacity-50"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>{retryStatus[b.id] === "retrying" ? "Retrying..." : retryStatus[b.id] === "success" ? "Sent!" : retryStatus[b.id] === "error" ? "Failed" : "Retry SMS"}</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

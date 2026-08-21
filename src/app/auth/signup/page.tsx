@@ -34,14 +34,13 @@ export default function SignupPage() {
       });
 
       if (error) {
-        // Fallback for demo
-        router.push("/parking");
+        setErrorMsg(error.message || "Registration failed. Please try again.");
         return;
       }
 
-      router.push("/parking");
+      router.push("/customer/login?registered=1");
     } catch (err: any) {
-      router.push("/parking");
+      setErrorMsg(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }

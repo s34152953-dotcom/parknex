@@ -1,36 +1,30 @@
 @import "tailwindcss";
 
-/* ── PARKNEX Premium Warm Ivory & Burnt Orange Design Tokens ── */
+/* ── PARKNEX Midnight Garage Theme ── */
 
 @theme inline {
-  /* Surfaces (Luxury Warm Ivory & Soft Beige Theme) */
-  --color-sp-black: #FBF8F3;
-  --color-sp-surface: #FFFFFF;
-  --color-sp-elevated: #F8F3EB;
-  --color-sp-card: rgba(255, 255, 255, 0.76);
-  --color-sp-border: rgba(80, 60, 40, 0.10);
-  --color-sp-border-hover: rgba(216, 74, 43, 0.35);
+  /* Surfaces */
+  --color-page: #080B10;
+  --color-surface: #10151D;
+  --color-surface-raised: #161D27;
+  --color-surface-soft: #1C2531;
+  --color-border-main: #293442;
+  --color-border-strong: #3A485A;
 
   /* Text Colors */
-  --color-sp-white: #1C1917;
-  --color-sp-secondary: #78716C;
-  --color-sp-nav: #57534E;
-  --color-sp-muted: #A8A29E;
+  --color-text-main: #F5F7FA;
+  --color-text-secondary: #A7B0BD;
+  --color-text-muted: #778393;
 
-  /* Primary Accent: Burnt Orange / Terracotta (#D84A2B) */
-  --color-sp-blue: #D84A2B;
-  --color-sp-blue-hover: #C23E21;
-  --color-sp-blue-glow: rgba(216, 74, 43, 0.16);
-  
+  /* Primary Accent: Orange */
+  --color-accent: #FF5533;
+  --color-accent-hover: #FF6A49;
+
   /* Semantic Status Colors */
-  --color-sp-green: #10B981;
-  --color-sp-red: #EF4444;
-  --color-sp-amber: #F59E0B;
-  --color-sp-cyan: #D84A2B;
-
-  /* Call-To-Action */
-  --color-sp-cta: #D84A2B;
-  --color-sp-cta-text: #FFFFFF;
+  --color-available: #22D39A;
+  --color-occupied: #FF5C68;
+  --color-reserved: #FFB547;
+  --color-vehicle: #4DA3FF;
 
   /* Typography */
   --font-sora: 'Sora', system-ui, -apple-system, sans-serif;
@@ -44,40 +38,10 @@
 }
 
 :root {
-  --background: 38 45% 97%;
-  --foreground: 20 12% 13%;
-
-  --card: 36 35% 98%;
-  --card-foreground: 20 12% 13%;
-
-  --popover: 36 35% 99%;
-  --popover-foreground: 20 12% 13%;
-
-  --primary: 12 78% 53%;
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 35 30% 94%;
-  --secondary-foreground: 20 12% 18%;
-
-  --muted: 35 24% 94%;
-  --muted-foreground: 25 8% 46%;
-
-  --accent: 12 78% 53%;
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 0 72% 51%;
-
-  --border: 30 20% 88%;
-  --input: 30 20% 88%;
-  --ring: 12 78% 53%;
-
-  --sidebar: 40 45% 98%;
-  --sidebar-hover: 25 35% 94%;
-
-  --radius: 1.125rem;
+  color-scheme: dark;
 }
 
-/* ── Base Styles ──────────────────────────────────────────── */
+/* ── Base Styles & Layout Fixes ───────────────────────────── */
 
 * {
   margin: 0;
@@ -89,84 +53,93 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-page);
 }
 
 body {
-  background: linear-gradient(180deg, #FBF8F3 0%, #F8F3EB 100%);
-  background-attachment: fixed;
-  color: #1C1917;
+  background-color: var(--color-page);
+  color: var(--color-text-main);
   font-family: var(--font-sora), "Sora", sans-serif;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll globally, force max-width logic on containers instead of viewport */
+#__next,
+body,
+html {
+  max-width: 100%;
 }
 
 /* ── Selection ────────────────────────────────────────────── */
 
 ::selection {
-  background: rgba(216, 74, 43, 0.18);
-  color: #D84A2B;
+  background: rgba(255, 85, 51, 0.2);
+  color: var(--color-accent);
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F8F3EB;
+  background: var(--color-page);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DDD5C9;
+  background: var(--color-border-main);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #C4BAAB;
+  background: var(--color-border-strong);
 }
 
 /* ── Focus ────────────────────────────────────────────────── */
 
 :focus-visible {
-  outline: 2px solid #D84A2B;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 /* ── Shared Card & UI Utility Classes ──────────────────────── */
 
 .sp-card {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(80, 60, 40, 0.08);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(80, 50, 20, 0.03);
-  transition: all 220ms ease;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-main);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 220ms var(--ease-premium);
 }
 
 .sp-card:hover {
-  border-color: rgba(80, 60, 40, 0.14);
-  box-shadow: 0 12px 36px rgba(80, 50, 20, 0.05);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
 }
 
 .sp-glass {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(16, 21, 29, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(80, 60, 40, 0.08);
+  border: 1px solid var(--color-border-main);
   border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(80, 50, 20, 0.035);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .sp-glass-subtle {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(22, 29, 39, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(80, 60, 40, 0.06);
-  border-radius: 20px;
+  border: 1px solid var(--color-border-main);
+  border-radius: 18px;
 }
 
 .sp-btn-primary {
   height: 50px;
-  background-color: #D84A2B;
+  background-color: var(--color-accent);
   color: #FFFFFF;
   border-radius: 14px;
   font-weight: 600;
@@ -174,13 +147,13 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0 1.5rem;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(216, 74, 43, 0.20);
+  transition: all 200ms var(--ease-premium);
+  box-shadow: 0 4px 16px rgba(255, 85, 51, 0.15);
 }
 
 .sp-btn-primary:hover {
-  background-color: #C23E21;
-  box-shadow: 0 6px 20px rgba(216, 74, 43, 0.28);
+  background-color: var(--color-accent-hover);
+  box-shadow: 0 6px 20px rgba(255, 85, 51, 0.25);
 }
 
 .sp-btn-primary:active {
@@ -189,22 +162,22 @@ body {
 
 .sp-btn-secondary {
   height: 50px;
-  background-color: #FFFFFF;
-  border: 1px solid rgba(80, 60, 40, 0.12);
-  color: #1C1917;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-main);
   border-radius: 14px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0 1.5rem;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(80, 50, 20, 0.02);
+  transition: all 200ms var(--ease-premium);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .sp-btn-secondary:hover {
-  border-color: rgba(216, 74, 43, 0.3);
-  background-color: #FFFDFC;
+  border-color: var(--color-accent);
+  background-color: var(--color-surface-soft);
 }
 
 .sp-btn-secondary:active {
@@ -214,60 +187,53 @@ body {
 .sp-icon-btn {
   width: 42px;
   height: 42px;
-  background-color: #FFFFFF;
-  border: 1px solid rgba(80, 60, 40, 0.10);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border-main);
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #1C1917;
-  transition: all 200ms ease;
-  box-shadow: 0 2px 6px rgba(80, 50, 20, 0.02);
+  color: var(--color-text-main);
+  transition: all 200ms var(--ease-premium);
 }
 
 .sp-icon-btn:hover {
-  border-color: #D84A2B;
-  color: #D84A2B;
-  background-color: #FFF8F6;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background-color: var(--color-surface-soft);
 }
 
 /* ── Gradient Utility Classes ─────────────────────────────── */
 
 .sp-gradient-fade-left {
-  background: linear-gradient(
-    90deg,
-    #FBF8F3 0%,
-    rgba(251, 248, 243, 0.95) 35%,
-    rgba(251, 248, 243, 0.65) 65%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      var(--color-page) 0%,
+      rgba(8, 11, 16, 0.95) 35%,
+      rgba(8, 11, 16, 0.65) 65%,
+      transparent 100%);
 }
 
 .sp-gradient-fade-bottom {
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    #FBF8F3 100%
-  );
+  background: linear-gradient(180deg,
+      transparent 0%,
+      var(--color-page) 100%);
 }
 
 .sp-gradient-fade-top {
-  background: linear-gradient(
-    0deg,
-    transparent 0%,
-    #FBF8F3 100%
-  );
+  background: linear-gradient(0deg,
+      transparent 0%,
+      var(--color-page) 100%);
 }
 
 .sp-text-gradient {
-  background: linear-gradient(180deg, #1C1917 0%, #44403C 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #A7B0BD 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .sp-orange-gradient {
-  background: linear-gradient(135deg, #D84A2B 0%, #E86344 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #FF8F73 100%);
 }
 
 /* ── Page Transition Animations ───────────────────────────── */
@@ -277,6 +243,7 @@ body {
     opacity: 0;
     transform: translateY(12px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -284,12 +251,13 @@ body {
 }
 
 .page-enter {
-  animation: pageEnter 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: pageEnter 500ms var(--ease-premium) forwards;
 }
 
 /* ── Reduced Motion ───────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

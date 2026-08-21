@@ -25,7 +25,7 @@ export default function AdminTopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-[72px] bg-white/90 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-4 sm:px-6 lg:px-10 gap-2 sm:gap-4 select-none">
+      <header className="sticky top-0 z-40 h-[72px] bg-white/90 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-6 lg:px-10 gap-4 select-none">
         {/* Left Mobile Menu Trigger */}
         <div className="flex items-center gap-3.5 lg:hidden">
           <button
@@ -52,7 +52,7 @@ export default function AdminTopBar() {
             {getPageTitle()}
           </h1>
           <span className="text-[11px] px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] text-[#78716C] font-semibold">
-            Central Mall Grand
+            PARKNEX Operations
           </span>
         </div>
 

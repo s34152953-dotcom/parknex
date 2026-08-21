@@ -8,7 +8,7 @@ import { ParkingSlot } from "@/lib/parking/nearestSlot";
 import { Sparkles, Maximize2, Compass, RotateCcw } from "lucide-react";
 
 /**
- * Robust 3D feature detector
+ * Robust WebGL feature detector
  */
 export function isWebGLAvailable(): boolean {
   if (typeof window === "undefined") return true;
@@ -281,7 +281,7 @@ function ParkingFloorGrid({ floor }: { floor: string }) {
 
       <group position={[0, 0.01, 14]} rotation={[-Math.PI / 2, 0, 0]}>
         <Text fontSize={0.85} color="#10B981" anchorX="center" anchorY="middle" letterSpacing={0.12}>
-          MAIN ENTRANCE · LEVEL {floor}
+          ▲ ▲ MAIN ENTRANCE · LEVEL {floor}
         </Text>
       </group>
       <group position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -349,16 +349,18 @@ export default function InteractiveParkingMap3D({
   const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.matchMedia) {
-      setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    }
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
   // Strict 3.5s timeout. If `sceneReady` isn't true by then, kill WebGL and fallback.
   useEffect(() => {
     const fallbackTimer = setTimeout(() => {
       if (!sceneReady) {
-        console.warn("[InteractiveParkingMap3D] 3D initialization timeout. Triggering 2D fallback.");
+        console.warn("[InteractiveParkingMap3D] WebGL initialization timeout. Triggering 2D fallback.");
         onFallbackTo2D?.();
       }
     }, 3500);
@@ -372,7 +374,7 @@ export default function InteractiveParkingMap3D({
       <div className={`absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none transition-opacity duration-300 ${sceneReady ? 'opacity-100' : 'opacity-0'}`}>
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#E2D9CC] shadow-xs pointer-events-auto text-[12px] font-semibold text-[#1C1917]">
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          <span>3D Interactive Map ({currentFloor})</span>
+          <span>3D Interactive WebGL Map ({currentFloor})</span>
         </div>
 
         <button
@@ -392,7 +394,7 @@ export default function InteractiveParkingMap3D({
           <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-3">
             <Compass className="w-6 h-6 animate-spin-slow" />
           </div>
-          <p className="text-[14px] font-bold text-[#1C1917]">Initializing 3D Graphics...</p>
+          <p className="text-[14px] font-bold text-[#1C1917]">Initializing WebGL Graphics...</p>
           <p className="text-[12px] text-[#78716C] mt-0.5">Please wait while the 3D scene compiles</p>
         </div>
       )}

@@ -1,27 +1,47 @@
+import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
+    const isAuth = !!token;
+    const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+    const isAuthPage = req.nextUrl.pathname.startsWith("/auth/login");
 
-  // Protect /admin routes
-  if (pathname.startsWith("/admin")) {
-    const sessionCookie = request.cookies.get("parknex_admin_session");
-
-    // In production or when strictly enforcing, check session cookie
-    // Allow demo query or session cookie
-    const hasDemoBypass = request.nextUrl.searchParams.get("demo") === "true";
-
-    if (!sessionCookie && !hasDemoBypass && process.env.STRICT_ADMIN_AUTH === "true") {
-      const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+    // Redirect already-authenticated users away from login page
+    if (isAuthPage && isAuth) {
+      return NextResponse.redirect(new URL("/admin/booking", req.url));
     }
-  }
 
-  return NextResponse.next();
-}
+    // Block unauthenticated access to all /admin/* routes
+    if (!isAuth && isAdminRoute) {
+      const from = req.nextUrl.pathname + (req.nextUrl.search || "");
+      return NextResponse.redirect(
+        new URL(`/auth/login?redirect=${encodeURIComponent(from)}`, req.url)
+      );
+    }
+
+    // Ensure customer tokens cannot access admin routes
+    if (isAuth && isAdminRoute) {
+      const role = (token as any)?.role;
+      if (!role || (role !== "admin" && role !== "mall_admin" && role !== "operator")) {
+        return NextResponse.redirect(new URL("/auth/login?error=Unauthorized", req.url));
+      }
+    }
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+        if (isAdminRoute) {
+          return !!token;
+        }
+        return true;
+      },
+    },
+  }
+);
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/auth/login"],
 };

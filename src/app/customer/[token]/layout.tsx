@@ -33,7 +33,7 @@ export default function CustomerLayout({
               PARK<span className="text-[#D84A2B]">NEX</span>
             </span>
             <span className="hidden sm:inline-block text-[11px] text-[#78716C] ml-2 font-medium">
-              · Central Mall Grand
+              Parking Portal
             </span>
           </div>
         </div>

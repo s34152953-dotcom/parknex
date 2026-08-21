@@ -10,6 +10,7 @@ import {
   Settings,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
+import { signOut, useSession } from "next-auth/react";
 
 const adminNavLinks = [
   { label: "Booking", href: "/admin/booking", icon: CalendarPlus },
@@ -76,16 +77,16 @@ export default function AdminSidebar() {
       {/* Bottom Footer Actions */}
       <div className="p-4 border-t border-[#EAE3D9] flex flex-col gap-1.5">
         <div className="flex items-center justify-between px-3 py-2 text-[12px] text-[#78716C]">
-          <span>Central Mall Grand</span>
+          <span>Operator Session</span>
           <span className="w-2 h-2 rounded-full bg-[#10B981]" />
         </div>
-        <Link
-          href="/auth/login"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-[#78716C] hover:text-[#EF4444] hover:bg-[#EF4444]/[0.06] transition-all"
+        <button
+          onClick={() => signOut({ callbackUrl: "/auth/login" })}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-[#78716C] hover:text-[#EF4444] hover:bg-[#EF4444]/[0.06] transition-all"
         >
           <LogOut className="w-4 h-4" />
           <span>Operator Logout</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

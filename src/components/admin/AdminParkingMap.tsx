@@ -22,6 +22,18 @@ export default function AdminParkingMap({
   // Group slots by Zone
   const zones = Array.from(new Set(slots.map((s) => s.zone))).sort();
 
+  if (slots.length === 0) {
+    return (
+      <section className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col items-center justify-center h-full min-h-[580px] text-center">
+        <Compass className="w-12 h-12 text-[#A8A29E] mb-4" />
+        <h2 className="text-[20px] font-bold text-[#1C1917]">No parking layout has been configured.</h2>
+        <p className="text-[14px] text-[#78716C] mt-2 max-w-[400px]">
+          Configure the mall, floors, zones and spaces before accepting bookings.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section
       aria-label={`Parking Grid Floor ${currentFloor}`}

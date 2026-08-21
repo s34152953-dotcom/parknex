@@ -15,6 +15,8 @@ import {
   Navigation,
 } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 interface CustomerBookingData {
   id: string;
@@ -41,34 +43,23 @@ export default function CustomerFindMySpacePage({
 }) {
   const { token } = use(params);
 
-  const [booking, setBooking] = useState<CustomerBookingData | null>(null);
+  const [booking, setBooking] = useState<any | null>(null);
   const [slot, setSlot] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [durationStr, setDurationStr] = useState("0h 0m");
 
-  const fetchCustomerBooking = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch(`/api/customer/${token}`);
-      const data = await res.json();
-      if (data.success && data.booking) {
-        setBooking(data.booking);
-        setSlot(data.slot);
-      } else {
-        setError(data.error || "No active booking found for this session link.");
-      }
-    } catch (err: any) {
-      setError("Unable to connect to PARKNEX parking gateway.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const bookingData = useQuery(api.bookings.getBookingByToken, { token });
+  const loading = bookingData === undefined;
+  
   useEffect(() => {
-    fetchCustomerBooking();
-  }, [token]);
+    if (bookingData === null) {
+      setError("No active booking found for this session link.");
+    } else if (bookingData) {
+      setBooking(bookingData);
+      setSlot(bookingData.slotDetails);
+      setError(null);
+    }
+  }, [bookingData]);
 
   // Real-time Duration Calculated directly from Booking Timestamp
   useEffect(() => {
@@ -247,7 +238,7 @@ export default function CustomerFindMySpacePage({
         {/* QR Code Container with High-Contrast White Backing */}
         <div className="relative p-5 sm:p-6 rounded-3xl bg-white border-2 border-[#EAE3D9] shadow-md flex items-center justify-center max-w-full">
           <QRCodeSVG
-            value={booking.qrToken}
+            value={booking.customerAccessToken}
             size={230}
             level="H"
             fgColor={isCompleted ? "#78716C" : "#1C1917"}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, use } from "react";
 import { Clock, Car, CheckCircle2, RefreshCw, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 interface CustomerHistoryRecord {
   id: string;
@@ -26,29 +28,15 @@ export default function CustomerHistoryPage({
 }) {
   const { token } = use(params);
 
-  const [history, setHistory] = useState<CustomerHistoryRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const historyData = useQuery(api.bookings.getCustomerHistory, { token });
+  const loading = historyData === undefined;
+  const history = historyData || [];
 
-  const fetchCustomerHistory = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/customer/${token}/history`);
-      const data = await res.json();
-      if (data.success && data.history) {
-        setHistory(data.history);
-      }
-    } catch (err) {
-      console.error("Failed to load customer history:", err);
-    } finally {
-      setLoading(false);
-    }
+  const fetchCustomerHistory = () => {
+    // Convex automatically handles real-time updates
   };
 
-  useEffect(() => {
-    fetchCustomerHistory();
-  }, [token]);
-
-  const computeDuration = (entry: string, exit: string | null) => {
+  const computeDuration = (entry: string, exit?: string | null) => {
     const start = new Date(entry).getTime();
     const end = exit ? new Date(exit).getTime() : Date.now();
     const diffMins = Math.max(1, Math.round((end - start) / (60 * 1000)));

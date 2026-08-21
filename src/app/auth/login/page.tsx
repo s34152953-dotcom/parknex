@@ -3,7 +3,8 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 
 function LoginForm() {
@@ -21,20 +22,19 @@ function LoginForm() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password }),
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: loginEmail,
+        password: password,
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (result?.error) {
+        setErrorMsg(result.error);
+      } else if (result?.ok) {
         router.push(redirectPath);
-      } else {
-        setErrorMsg(data.error || "Authentication failed. Please verify credentials.");
       }
     } catch (err: any) {
-      router.push(redirectPath);
+      setErrorMsg("An unexpected error occurred during login.");
     } finally {
       setLoading(false);
     }
@@ -43,12 +43,6 @@ function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     await performLogin(email);
-  };
-
-  const handleDemoLogin = async () => {
-    setEmail("operator@parknex.io");
-    setPassword("demo12345");
-    await performLogin("operator@parknex.io");
   };
 
   return (
@@ -108,26 +102,6 @@ function LoginForm() {
           <ArrowRight className="w-4 h-4" />
         </button>
       </form>
-
-      {/* Quick Demo Operator Sign In */}
-      <div className="mt-5 pt-5 border-t border-[#EAE3D9] flex flex-col gap-3">
-        <button
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={loading}
-          className="w-full min-h-[46px] rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-bold flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all cursor-pointer"
-        >
-          <Sparkles className="w-4 h-4 text-[#D84A2B]" />
-          <span>One-Click Operator Demo Login</span>
-        </button>
-
-        <Link
-          href="/customer/cust_token_demo_a01"
-          className="text-center text-[12.5px] font-medium text-[#78716C] hover:text-[#D84A2B] transition-colors mt-1"
-        >
-          Looking for Customer View? <span className="font-bold underline">Open Customer Portal</span>
-        </Link>
-      </div>
     </div>
   );
 }
@@ -146,7 +120,7 @@ export default function LoginPage() {
             OPERATOR PORTAL
           </div>
           <p className="text-[13.5px] text-[#78716C]">
-            Sign in to access Central Mall Grand parking operations
+            Sign in to access PARKNEX operator operations
           </p>
         </div>
 

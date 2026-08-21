@@ -14,6 +14,8 @@ import {
   Camera,
   Search,
 } from "lucide-react";
+import { useConvex, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 interface VerificationResult {
   isValid: boolean;
@@ -31,6 +33,9 @@ export default function AdminScanExitPage() {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  
+  const convex = useConvex();
+  const completeExitMutation = useMutation(api.bookings.completeBooking);
 
   // Start Camera
   const startCamera = async () => {
@@ -78,20 +83,19 @@ export default function AdminScanExitPage() {
     setCompletedSuccess(false);
 
     try {
-      const res = await fetch("/api/bookings/verify-exit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrToken: rawToken.trim() }),
-      });
-
-      const data = await res.json();
-      if (data.success && data.verification) {
-        setResult(data.verification);
+      const booking = await convex.query(api.bookings.getBookingByToken, { token: rawToken.trim() });
+      
+      if (booking) {
+        if (booking.status === "ACTIVE") {
+          setResult({ isValid: true, status: "VALID", booking: { ...booking, id: booking._id, floor: booking.slotDetails?.floor, zone: booking.slotDetails?.zone, slotNumber: booking.slotDetails?.slotNumber } });
+        } else {
+          setResult({ isValid: false, status: "ALREADY_USED", message: "This pass has already been used to exit." });
+        }
       } else {
         setResult({
           isValid: false,
           status: "INVALID",
-          message: data.error || "Verification failed",
+          message: "No active booking found for this exit pass.",
         });
       }
     } catch (err: any) {
@@ -107,23 +111,13 @@ export default function AdminScanExitPage() {
 
   // Complete Exit
   const handleCompleteExit = async () => {
-    if (!result?.booking?.id) return;
+    if (!result?.booking?.customerAccessToken) return;
 
     setCompleting(true);
     try {
-      const res = await fetch("/api/bookings/complete-exit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: result.booking.id }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setCompletedSuccess(true);
-        setResult((prev) => (prev ? { ...prev, isValid: false, status: "ALREADY_USED" } : null));
-      } else {
-        alert(data.error || "Failed to complete exit");
-      }
+      await completeExitMutation({ token: result.booking.customerAccessToken });
+      setCompletedSuccess(true);
+      setResult((prev) => (prev ? { ...prev, isValid: false, status: "ALREADY_USED" } : null));
     } catch (err: any) {
       alert("Error completing exit. Please retry.");
     } finally {
@@ -248,32 +242,6 @@ export default function AdminScanExitPage() {
               </div>
             </div>
 
-            {/* Quick Demo Test Buttons */}
-            <div className="w-full mt-4 flex flex-col gap-1.5 text-left text-[12px]">
-              <span className="text-[#A8A29E] font-bold uppercase text-[11px]">Quick Test Passes:</span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTokenInput("exit_token_demo_a01_secure");
-                    handleVerify("exit_token_demo_a01_secure");
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] font-mono hover:border-[#D84A2B] transition-all cursor-pointer"
-                >
-                  A-01 (TS 09 AB 1234)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTokenInput("exit_token_demo_a02_secure");
-                    handleVerify("exit_token_demo_a02_secure");
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] font-mono hover:border-[#D84A2B] transition-all cursor-pointer"
-                >
-                  A-02 (KA 01 MJ 2024)
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 

@@ -154,16 +154,14 @@ export async function sendBookingSms(params: SendSmsParams): Promise<SmsResult> 
     }
   }
 
-  // 4. Default Gateway Simulation Log (When no third-party keys in env)
-  // Keeps server operational, records simulated delivery with unique ID
-  console.log(`\n────────────────────────────────────────────────────────────`);
-  console.log(`[PARKNEX SMS GATEWAY] Dispatched SMS to ${cleanPhone}:`);
-  console.log(messageBody);
-  console.log(`────────────────────────────────────────────────────────────\n`);
+  // No SMS provider configured — report failure honestly
+  // Set TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER, or
+  // FAST2SMS_API_KEY, or SMS_WEBHOOK_URL in your environment to enable SMS.
+  console.warn("[PARKNEX SMS] No SMS provider configured. Booking created but SMS not sent.");
 
   return {
-    success: true,
-    messageId: `pkx_sms_${Date.now()}`,
-    provider: "PARKNEX Gateway (Active)",
+    success: false,
+    provider: "none",
+    error: "No SMS provider configured. Set TWILIO_ACCOUNT_SID, FAST2SMS_API_KEY, or SMS_WEBHOOK_URL.",
   };
 }

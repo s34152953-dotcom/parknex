@@ -24,14 +24,7 @@ export default function Navbar() {
 
           {/* Right Action Navigation */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/customer/cust_token_demo_a01"
-              aria-label="Open Customer Demo View"
-              className="hidden sm:inline-flex items-center gap-2 h-11 px-4 rounded-xl border border-[#E2D9CC] bg-white text-[13px] font-semibold text-[#1C1917] hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all min-w-[44px]"
-            >
-              <UserCheck className="w-4 h-4 text-[#78716C]" />
-              <span>Customer View</span>
-            </Link>
+
 
             <Link
               href="/admin/booking"
