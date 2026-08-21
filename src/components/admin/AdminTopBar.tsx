@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, CalendarPlus, Clock, QrCode, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, CalendarPlus, Clock, QrCode, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 
@@ -18,8 +18,8 @@ export default function AdminTopBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const getPageTitle = () => {
-    if (pathname.includes("/admin/history")) return "Booking History";
-    if (pathname.includes("/admin/scan-exit")) return "Scan Exit Pass";
+    if (pathname.includes("/admin/history")) return "Booking History & Audit";
+    if (pathname.includes("/admin/scan-exit")) return "Scan Exit Pass Validation";
     return "Parking Booking & Slot Assignment";
   };
 
@@ -30,17 +30,17 @@ export default function AdminTopBar() {
         <div className="flex items-center gap-3.5 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-xl border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs"
-            aria-label="Open menu"
+            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs min-w-[44px]"
+            aria-label="Open mobile navigation menu"
           >
             <Menu className="w-5 h-5 text-[#1C1917]" />
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] p-1">
+            <div className="w-8 h-8 rounded-xl border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] p-1 shrink-0">
               <ParknexIcon className="w-5 h-5" />
             </div>
-            <span className="font-bold text-[15px] text-[#1C1917]">
+            <span className="font-bold text-[15px] text-[#1C1917] tracking-tight">
               PARK<span className="text-[#D84A2B]">NEX</span> ADMIN
             </span>
           </div>
@@ -57,15 +57,16 @@ export default function AdminTopBar() {
         </div>
 
         {/* Right Status Controls */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] shadow-xs">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 h-11 px-4 rounded-xl border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] shadow-xs">
             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
             <span className="text-[#1C1917] font-semibold">Gate Entrance 01</span>
           </div>
 
           <Link
             href="/admin/scan-exit"
-            className="h-10 px-4 rounded-xl bg-[#D84A2B] text-white text-[13px] font-semibold flex items-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+            aria-label="Scan Exit Pass"
+            className="h-11 px-4 sm:px-5 rounded-xl bg-[#D84A2B] text-white text-[13px] font-bold flex items-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-xs cursor-pointer min-w-[44px]"
           >
             <QrCode className="w-4 h-4" />
             <span className="hidden sm:inline">Scan Exit</span>
@@ -91,7 +92,8 @@ export default function AdminTopBar() {
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-[#E2D9CC] text-[#1C1917]"
+                aria-label="Close navigation menu"
+                className="w-11 h-11 rounded-xl flex items-center justify-center bg-white border border-[#E2D9CC] text-[#1C1917] min-w-[44px]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -105,7 +107,7 @@ export default function AdminTopBar() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all ${
+                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all min-h-[48px] ${
                       isActive
                         ? "bg-[#D84A2B]/10 text-[#D84A2B] border border-[#D84A2B]/20"
                         : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
@@ -122,7 +124,7 @@ export default function AdminTopBar() {
               <Link
                 href="/auth/login"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] text-[#EF4444] font-medium"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] text-[#EF4444] font-medium min-h-[44px]"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Operator Logout</span>

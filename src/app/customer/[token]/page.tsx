@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect, use } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import CustomerNavigationMap from "@/components/customer/CustomerNavigationMap";
+import CustomerFloorPlan2D from "@/components/customer/CustomerFloorPlan2D";
 import {
   Car,
   Clock,
   QrCode,
   CheckCircle2,
   AlertCircle,
-  Compass,
-  ArrowRight,
   ShieldCheck,
   RefreshCw,
+  ArrowRight,
+  Navigation,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -57,10 +57,10 @@ export default function CustomerFindMySpacePage({
         setBooking(data.booking);
         setSlot(data.slot);
       } else {
-        setError(data.error || "No active booking found for this session.");
+        setError(data.error || "No active booking found for this session link.");
       }
     } catch (err: any) {
-      setError("Unable to connect to PARKNEX parking system.");
+      setError("Unable to connect to PARKNEX parking gateway.");
     } finally {
       setLoading(false);
     }
@@ -70,33 +70,33 @@ export default function CustomerFindMySpacePage({
     fetchCustomerBooking();
   }, [token]);
 
-  // Dynamic Duration Ticker
+  // Real-time Duration Calculated directly from Booking Timestamp
   useEffect(() => {
     if (!booking) return;
 
-    const updateTimer = () => {
+    const calculateDuration = () => {
       const start = new Date(booking.entryTime).getTime();
       const end = booking.exitTime ? new Date(booking.exitTime).getTime() : Date.now();
-      const diffMins = Math.max(0, Math.round((end - start) / (60 * 1000)));
+      const diffMins = Math.max(0, Math.floor((end - start) / (60 * 1000)));
 
       const hours = Math.floor(diffMins / 60);
       const mins = diffMins % 60;
       setDurationStr(`${hours}h ${mins}m`);
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 30000); // update every 30s
-    return () => clearInterval(interval);
+    calculateDuration();
+    const timer = setInterval(calculateDuration, 20000);
+    return () => clearInterval(timer);
   }, [booking]);
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center" role="status" aria-live="polite">
         <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-4 animate-spin">
           <RefreshCw className="w-6 h-6" />
         </div>
-        <h2 className="text-[18px] font-bold text-[#1C1917]">Retrieving Your Parking Space...</h2>
-        <p className="text-[13px] text-[#78716C] mt-1">Connecting to PARKNEX telemetry</p>
+        <h2 className="text-[18px] font-bold text-[#1C1917]">Loading Parking Space Telemetry...</h2>
+        <p className="text-[13px] text-[#78716C] mt-1">Retrieving your verified vehicle location</p>
       </div>
     );
   }
@@ -123,14 +123,20 @@ export default function CustomerFindMySpacePage({
   }
 
   const isCompleted = booking.status === "COMPLETED";
+  const steps = slot?.walkingDirections || [
+    `Enter through Parking Lobby on Floor ${booking.floor}`,
+    `Proceed along Main Driving Lane towards ${booking.zone}`,
+    `Turn towards ${booking.pillar}`,
+    `Your vehicle is parked in Slot ${booking.slotNumber}`,
+  ];
 
   return (
     <div className="flex flex-col gap-6 w-full pb-10">
-      {/* ── Top Identity & Current Location Banner ───────────────────────── */}
-      <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col gap-5">
+      {/* ── Top Vehicle Identity & Location Banner ───────────────────────── */}
+      <section className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${isCompleted ? "bg-[#78716C]" : "bg-[#D84A2B] animate-pulse"}`} />
+            <span className={`w-2.5 h-2.5 rounded-full ${isCompleted ? "bg-[#78716C]" : "bg-[#10B981] animate-pulse"}`} />
             <span className="text-[11.5px] font-bold uppercase tracking-wider text-[#D84A2B]">
               {isCompleted ? "PARKING SESSION COMPLETED" : "ACTIVE VEHICLE LOCATION"}
             </span>
@@ -149,14 +155,14 @@ export default function CustomerFindMySpacePage({
 
         <div>
           <span className="text-[11.5px] font-bold text-[#A8A29E] uppercase tracking-wider font-mono">
-            VEHICLE NUMBER
+            REGISTERED VEHICLE
           </span>
           <h1 className="text-[32px] sm:text-[38px] font-extrabold text-[#1C1917] tracking-tight font-mono">
             {booking.vehicleNumber}
           </h1>
         </div>
 
-        {/* Large Prominent Location Highlight Card */}
+        {/* Large Location Matrix Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9]">
           <div>
             <p className="text-[10.5px] font-bold uppercase text-[#A8A29E]">Level</p>
@@ -176,7 +182,7 @@ export default function CustomerFindMySpacePage({
           </div>
         </div>
 
-        {/* Timings & Elapsed Duration */}
+        {/* Timings & Duration Calculated from entryTime */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] text-[#78716C] pt-2 border-t border-[#EAE3D9]/60">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-[#A8A29E]" />
@@ -188,22 +194,41 @@ export default function CustomerFindMySpacePage({
             Elapsed Duration: <strong className="text-[#1C1917]">{durationStr}</strong>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Indoor Navigation Wayfinding Route Card ─────────────────────── */}
+      {/* ── 2D Indoor Floor Guidance Map ─────────────────────────────────── */}
       {!isCompleted && (
-        <CustomerNavigationMap
+        <CustomerFloorPlan2D
           floor={booking.floor}
           zone={booking.zone}
           pillar={booking.pillar}
           slotNumber={booking.slotNumber}
           distanceFromEntrance={booking.distanceFromEntrance}
-          directions={slot?.walkingDirections}
         />
       )}
 
-      {/* ── Digital Exit Pass QR Module Built Directly Inside Page ───────── */}
-      <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col items-center text-center gap-5">
+      {/* ── Textual Turn-by-Turn Wayfinding Fallback ──────────────────────── */}
+      {!isCompleted && (
+        <section className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-7 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-[#D84A2B]" />
+            <h3 className="text-[16px] font-bold text-[#1C1917]">Turn-By-Turn Walking Steps</h3>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {steps.map((step: string, idx: number) => (
+              <div key={idx} className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] text-[13.5px]">
+                <span className="w-6 h-6 rounded-full bg-[#FFF5F2] border border-[#FADCD5] text-[#D84A2B] flex items-center justify-center text-[11.5px] font-bold shrink-0">
+                  {idx + 1}
+                </span>
+                <span className="text-[#1C1917] font-medium leading-tight pt-0.5">{step}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Digital Exit Pass QR Section (High-Contrast, No Overflow) ──────── */}
+      <section className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col items-center text-center gap-5">
         <div className="flex items-center justify-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B]">
             <QrCode className="w-4 h-4" />
@@ -215,12 +240,12 @@ export default function CustomerFindMySpacePage({
 
         <p className="text-[13px] text-[#78716C] max-w-[380px]">
           {isCompleted
-            ? "This pass has been scanned and verified. Exit completed successfully."
-            : "Present this QR code to the gate attendant or hold it toward the exit scanner for barrier authorization."}
+            ? "This pass has been verified at the boom barrier. Exit completed successfully."
+            : "Present this QR code to the gate attendant or hold it toward the optical exit scanner."}
         </p>
 
         {/* QR Code Container with High-Contrast White Backing */}
-        <div className="relative p-5 sm:p-6 rounded-3xl bg-white border-2 border-[#EAE3D9] shadow-md flex items-center justify-center">
+        <div className="relative p-5 sm:p-6 rounded-3xl bg-white border-2 border-[#EAE3D9] shadow-md flex items-center justify-center max-w-full">
           <QRCodeSVG
             value={booking.qrToken}
             size={230}
@@ -240,7 +265,7 @@ export default function CustomerFindMySpacePage({
           )}
         </div>
 
-        {/* Token Meta Pill */}
+        {/* Token Meta Tag */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FAF7F2] border border-[#E2D9CC]">
           <span className="text-[11px] font-mono font-bold text-[#78716C]">
             Ref: {booking.bookingNumber}
@@ -253,9 +278,9 @@ export default function CustomerFindMySpacePage({
 
         <div className="flex items-center gap-2 text-[12px] text-[#78716C] pt-2">
           <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-          <span>Cryptographically signed PARKNEX token</span>
+          <span>Cryptographically signed single-use PARKNEX token</span>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

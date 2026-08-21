@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
-import { Sparkles, Compass, Car, Check } from "lucide-react";
+import { Sparkles, Compass, Check, Lock } from "lucide-react";
 
 interface AdminParkingMapProps {
   slots: ParkingSlot[];
@@ -23,12 +23,15 @@ export default function AdminParkingMap({
   const zones = Array.from(new Set(slots.map((s) => s.zone))).sort();
 
   return (
-    <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col h-full">
+    <section
+      aria-label={`Parking Grid Floor ${currentFloor}`}
+      className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] flex flex-col h-full"
+    >
       {/* Map Header & Legend */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#EAE3D9] mb-6">
         <div>
           <h2 className="text-[18px] sm:text-[20px] font-bold text-[#1C1917] tracking-tight">
-            Floor {currentFloor} Parking Grid
+            Floor {currentFloor} 2D Parking Grid
           </h2>
           <p className="text-[13px] text-[#78716C] mt-0.5">
             Click any green available space or select the system-recommended nearest slot
@@ -95,8 +98,16 @@ export default function AdminParkingMap({
                       key={slot.id}
                       type="button"
                       disabled={!isAvailable}
+                      aria-disabled={!isAvailable}
+                      aria-label={`${slot.slotNumber}, ${slot.pillar}, ${slot.status === "available" ? "Available" : "Occupied"}`}
                       onClick={() => onSelectSlot(slot)}
-                      className={`relative flex flex-col justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 min-h-[110px] ${
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === " ") && isAvailable) {
+                          e.preventDefault();
+                          onSelectSlot(slot);
+                        }
+                      }}
+                      className={`relative flex flex-col justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 min-h-[110px] focus-visible:ring-2 focus-visible:ring-[#D84A2B] focus-visible:outline-none ${
                         isSelected
                           ? "bg-[#FFF5F2] border-[#D84A2B] ring-2 ring-[#D84A2B] shadow-md scale-[1.02] cursor-pointer"
                           : isNearest
@@ -139,7 +150,7 @@ export default function AdminParkingMap({
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                            <Lock className="w-3 h-3 text-[#EF4444]" />
                             <span className="text-[11.5px] font-medium text-[#EF4444]">
                               Occupied
                             </span>
@@ -160,6 +171,6 @@ export default function AdminParkingMap({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

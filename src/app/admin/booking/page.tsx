@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
 import AdminParkingMap from "@/components/admin/AdminParkingMap";
+import WebGLBoundary from "@/components/parking/WebGLBoundary";
+import { isWebGLAvailable } from "@/components/parking/InteractiveParkingMap3D";
 import {
   Sparkles,
   Check,
@@ -14,18 +17,41 @@ import {
   Copy,
   AlertCircle,
   Clock,
-  ShieldCheck,
   Send,
+  Layers,
+  LayoutGrid,
+  Box,
 } from "lucide-react";
 import Link from "next/link";
 
+// Lazy-load the Three.js 3D WebGL component to optimize initial load
+const InteractiveParkingMap3D = dynamic(
+  () => import("@/components/parking/InteractiveParkingMap3D"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full min-h-[540px] bg-[#FAF7F2] rounded-3xl border border-[#EAE3D9] flex flex-col items-center justify-center p-8 text-center animate-pulse">
+        <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-3">
+          <Box className="w-6 h-6 animate-bounce" />
+        </div>
+        <p className="text-[14px] font-bold text-[#1C1917]">Initializing 3D Parking Floor Space...</p>
+        <p className="text-[12px] text-[#78716C] mt-0.5">Configuring WebGL shaders and spatial geometry</p>
+      </div>
+    ),
+  }
+);
+
 export default function AdminBookingPage() {
   const [floor, setFloor] = useState<string>("B2");
+  const [viewMode, setViewMode] = useState<"2D" | "3D">("3D");
+  const [webGLSupported, setWebGLSupported] = useState(true);
+
   const [slots, setSlots] = useState<ParkingSlot[]>([]);
   const [nearestSlot, setNearestSlot] = useState<ParkingSlot | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<ParkingSlot | null>(null);
-  const [stats, setStats] = useState({ total: 0, available: 0, occupied: 0, reserved: 0 });
+  const [stats, setStats] = useState<{ total: number; available: number; occupied: number; reserved: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Form State
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -40,7 +66,32 @@ export default function AdminBookingPage() {
   const [resendingSms, setResendingSms] = useState(false);
   const [smsStatusMessage, setSmsStatusMessage] = useState<string | null>(null);
 
-  // Fetch Slots
+  // Mount & Check WebGL Support & Load Preferred View Mode
+  useEffect(() => {
+    setIsMounted(true);
+    const supported = isWebGLAvailable();
+    setWebGLSupported(supported);
+
+    const savedMode = typeof window !== "undefined" ? localStorage.getItem("parknex_view_mode") : null;
+    if (savedMode === "2D" || savedMode === "3D") {
+      setViewMode(supported ? (savedMode as "2D" | "3D") : "2D");
+    } else if (!supported) {
+      setViewMode("2D");
+    }
+  }, []);
+
+  const handleToggleViewMode = (mode: "2D" | "3D") => {
+    if (mode === "3D" && !webGLSupported) {
+      alert("WebGL 3D graphics acceleration is not supported on this device/browser.");
+      return;
+    }
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("parknex_view_mode", mode);
+    }
+  };
+
+  // Unified Fetch: Slots, Nearest Recommendation, and Stats in 1 Call
   const fetchSlots = useCallback(async (selectedFloor: string) => {
     try {
       setLoading(true);
@@ -78,25 +129,26 @@ export default function AdminBookingPage() {
     }
   };
 
-  // Handle Confirm Booking
+  // Handle Confirm Booking with validation
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) return;
 
-    const cleanPlate = vehicleNumber.trim().toUpperCase();
+    const cleanPlate = vehicleNumber.trim().toUpperCase().replace(/\s+/g, " ");
     const cleanPhone = phoneNumber.trim();
 
-    if (!cleanPlate) {
-      setFormError("Please enter vehicle number plate.");
+    if (!cleanPlate || cleanPlate.length < 4) {
+      setFormError("Please enter a valid vehicle license plate (e.g. TS 09 AB 1234).");
       return;
     }
 
-    if (!cleanPhone || cleanPhone.length < 8) {
-      setFormError("Please enter a valid customer phone number.");
+    const digitsOnly = cleanPhone.replace(/\D/g, "");
+    if (digitsOnly.length < 10) {
+      setFormError("Please enter a valid 10-digit mobile number for SMS dispatch.");
       return;
     }
 
-    const fullPhone = cleanPhone.startsWith("+") ? cleanPhone : `${countryCode} ${cleanPhone}`;
+    const fullPhone = cleanPhone.startsWith("+") ? cleanPhone : `${countryCode} ${digitsOnly}`;
 
     setSubmitting(true);
     setFormError(null);
@@ -118,13 +170,11 @@ export default function AdminBookingPage() {
 
       if (!res.ok || !data.success) {
         setFormError(data.error || "Failed to confirm booking.");
-        // Refresh slots in case of double-booking
         fetchSlots(floor);
         return;
       }
 
       setBookedResult(data.booking);
-      // Refresh slot counts & occupied state
       fetchSlots(floor);
     } catch (err: any) {
       setFormError(err.message || "Network error confirming booking.");
@@ -196,8 +246,38 @@ export default function AdminBookingPage() {
           </p>
         </div>
 
-        {/* Floor selector & stats */}
+        {/* Floor selector, 2D/3D toggle & refresh */}
         <div className="flex flex-wrap items-center gap-3">
+          {/* 2D / 3D Mode Toggle */}
+          <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-[#E2D9CC] shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleToggleViewMode("3D")}
+              className={`h-9 px-3.5 rounded-xl text-[12.5px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "3D"
+                  ? "bg-[#D84A2B] text-white shadow-xs"
+                  : "text-[#78716C] hover:text-[#1C1917]"
+              }`}
+              title="Interactive 3D WebGL Space"
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>3D Map</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleViewMode("2D")}
+              className={`h-9 px-3.5 rounded-xl text-[12.5px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "2D"
+                  ? "bg-[#D84A2B] text-white shadow-xs"
+                  : "text-[#78716C] hover:text-[#1C1917]"
+              }`}
+              title="2D Floor Layout Grid"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>2D Grid</span>
+            </button>
+          </div>
+
           {/* Floor Switcher */}
           <div className="flex items-center gap-1 bg-white p-1.5 rounded-2xl border border-[#E2D9CC] shadow-xs">
             {["B2", "B1", "G", "ALL"].map((f) => (
@@ -222,60 +302,93 @@ export default function AdminBookingPage() {
           <button
             onClick={() => fetchSlots(floor)}
             disabled={loading}
-            className="h-11 w-11 rounded-2xl bg-white border border-[#E2D9CC] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-xs cursor-pointer"
+            className="h-11 w-11 rounded-2xl bg-white border border-[#E2D9CC] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 transition-colors shadow-xs cursor-pointer min-w-[44px]"
             title="Refresh availability"
+            aria-label="Refresh availability"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#D84A2B]" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* ── Summary Stats Strip ─────────────────────────────────────────── */}
+      {/* ── Summary Stats Strip (Zero-Flashing Skeleton Protected) ───────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4.5">
+        {/* Total Spaces */}
         <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
           <p className="text-[11px] font-bold text-[#A8A29E] uppercase tracking-wider">Total Spaces</p>
-          <p className="text-[26px] font-extrabold text-[#1C1917] mt-1">{stats.total}</p>
+          {loading && !stats ? (
+            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
+          ) : (
+            <p className="text-[26px] font-extrabold text-[#1C1917] mt-1">{stats?.total ?? 0}</p>
+          )}
           <p className="text-[12px] text-[#78716C] mt-0.5">Configured layout</p>
         </div>
 
+        {/* Available */}
         <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
           <p className="text-[11px] font-bold text-[#10B981] uppercase tracking-wider">Available Spaces</p>
-          <p className="text-[26px] font-extrabold text-[#10B981] mt-1">{stats.available}</p>
+          {loading && !stats ? (
+            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
+          ) : (
+            <p className="text-[26px] font-extrabold text-[#10B981] mt-1">{stats?.available ?? 0}</p>
+          )}
           <p className="text-[12px] text-[#10B981] mt-0.5">Ready for booking</p>
         </div>
 
+        {/* Occupied */}
         <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
           <p className="text-[11px] font-bold text-[#EF4444] uppercase tracking-wider">Occupied Spaces</p>
-          <p className="text-[26px] font-extrabold text-[#EF4444] mt-1">{stats.occupied}</p>
+          {loading && !stats ? (
+            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
+          ) : (
+            <p className="text-[26px] font-extrabold text-[#EF4444] mt-1">{stats?.occupied ?? 0}</p>
+          )}
           <p className="text-[12px] text-[#78716C] mt-0.5">Active vehicles</p>
         </div>
 
+        {/* Nearest Recommended */}
         <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,50,20,0.02)]">
           <p className="text-[11px] font-bold text-[#D84A2B] uppercase tracking-wider">Recommended Nearest</p>
-          <p className="text-[22px] font-extrabold text-[#D84A2B] mt-1 truncate">
-            {nearestSlot ? `${nearestSlot.floor} · ${nearestSlot.slotNumber}` : "None on Floor"}
-          </p>
+          {loading && !nearestSlot ? (
+            <div className="h-8 w-28 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
+          ) : (
+            <p className="text-[22px] font-extrabold text-[#D84A2B] mt-1 truncate">
+              {nearestSlot ? `${nearestSlot.floor} · ${nearestSlot.slotNumber}` : "None on Floor"}
+            </p>
+          )}
           <p className="text-[12px] text-[#78716C] mt-0.5">
-            {nearestSlot ? `${nearestSlot.distanceFromEntrance}m from entrance` : "Switch level"}
+            {nearestSlot ? `${nearestSlot.distanceFromEntrance}m from entrance` : "Switch floor"}
           </p>
         </div>
       </div>
 
-      {/* ── Main Operations Workspace: 70% Map / 30% Booking Panel ──────── */}
+      {/* ── Main Operations Workspace: Map (Left) / Booking Panel (Right) ─ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left 70% Parking Map */}
+        {/* Left 68% Parking Map (WebGL 3D or 2D Grid) */}
         <div className="lg:col-span-8 h-full min-h-[580px]">
-          <AdminParkingMap
-            slots={slots}
-            selectedSlot={selectedSlot}
-            nearestSlot={nearestSlot}
-            onSelectSlot={handleSelectSlot}
-            currentFloor={floor}
-          />
+          {viewMode === "3D" && webGLSupported ? (
+            <WebGLBoundary onFallbackTo2D={() => handleToggleViewMode("2D")}>
+              <InteractiveParkingMap3D
+                slots={slots}
+                selectedSlot={selectedSlot}
+                nearestSlot={nearestSlot}
+                onSelectSlot={handleSelectSlot}
+                currentFloor={floor}
+              />
+            </WebGLBoundary>
+          ) : (
+            <AdminParkingMap
+              slots={slots}
+              selectedSlot={selectedSlot}
+              nearestSlot={nearestSlot}
+              onSelectSlot={handleSelectSlot}
+              currentFloor={floor}
+            />
+          )}
         </div>
 
-        {/* Right 30% Slot Details & Booking Panel */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* Right 32% Slot Details & Booking Panel (Sticky on Desktop) */}
+        <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24">
           {bookedResult ? (
             /* ── Booking Success Confirmation Panel ── */
             <div className="bg-white border border-[#10B981]/30 rounded-3xl p-7 shadow-[0_12px_40px_rgba(16,185,129,0.06)] flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-200">
@@ -309,6 +422,10 @@ export default function AdminBookingPage() {
                   <span className="text-[#78716C]">Customer Phone</span>
                   <span className="text-[#1C1917] font-semibold">{bookedResult.phoneNumber}</span>
                 </div>
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE3D9]">
+                  <span className="text-[#78716C]">Distance</span>
+                  <span className="text-[#1C1917] font-bold">{bookedResult.distanceFromEntrance} meters</span>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#78716C]">Entry Time</span>
                   <span className="text-[#1C1917] font-medium">
@@ -322,7 +439,7 @@ export default function AdminBookingPage() {
                 <div className="flex items-center gap-2 text-[13px]">
                   <span className={`w-2 h-2 rounded-full ${bookedResult.smsStatus === "SENT" ? "bg-[#10B981]" : "bg-[#EF4444]"}`} />
                   <span className="font-semibold text-[#1C1917]">
-                    {bookedResult.smsStatus === "SENT" ? "SMS Dispatched" : "SMS Pending / Error"}
+                    {bookedResult.smsStatus === "SENT" ? "SMS Dispatched" : "SMS Pending / Failed"}
                   </span>
                 </div>
                 <button
@@ -342,7 +459,7 @@ export default function AdminBookingPage() {
               {/* Customer Access Link & Copy */}
               <div>
                 <p className="text-[11.5px] font-bold text-[#57534E] uppercase mb-1.5">
-                  Secure Customer Link
+                  Secure Customer Access Link
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -353,7 +470,7 @@ export default function AdminBookingPage() {
                   />
                   <button
                     onClick={handleCopyLink}
-                    className="h-11 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[13px] font-semibold flex items-center gap-1.5 hover:border-[#D84A2B]/40 transition-colors cursor-pointer"
+                    className="h-11 px-4 rounded-xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[13px] font-semibold flex items-center gap-1.5 hover:border-[#D84A2B]/40 transition-colors cursor-pointer min-w-[44px]"
                   >
                     {copiedLink ? <Check className="w-4 h-4 text-[#10B981]" /> : <Copy className="w-4 h-4" />}
                     {copiedLink ? "Copied" : "Copy"}
@@ -408,24 +525,25 @@ export default function AdminBookingPage() {
 
               {/* Distance badge */}
               <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-between text-[13px]">
-                <span className="text-[#78716C]">Walking from entrance</span>
+                <span className="text-[#78716C]">Walking distance</span>
                 <span className="text-[#1C1917] font-bold">{selectedSlot.distanceFromEntrance} meters (~1.5 min)</span>
               </div>
 
               <form onSubmit={handleConfirmBooking} className="flex flex-col gap-4.5">
                 {/* Vehicle Number Plate */}
                 <div>
-                  <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                  <label htmlFor="vehicle-plate-input" className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
                     Vehicle Number Plate *
                   </label>
                   <div className="relative">
-                    <Car className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
+                    <Car className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
+                      id="vehicle-plate-input"
                       type="text"
                       value={vehicleNumber}
                       onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                       placeholder="e.g. TS 09 AB 1234"
-                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14.5px] font-mono font-bold tracking-wider focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all uppercase"
+                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14.5px] font-mono font-bold tracking-wider focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all uppercase"
                       required
                     />
                   </div>
@@ -433,13 +551,14 @@ export default function AdminBookingPage() {
 
                 {/* Customer Phone Number */}
                 <div>
-                  <label className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
+                  <label htmlFor="phone-number-input" className="block text-[12px] font-bold text-[#57534E] uppercase mb-1.5">
                     Customer Mobile Number (for SMS Pass) *
                   </label>
                   <div className="flex gap-2">
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
+                      aria-label="Country Code"
                       className="h-12 px-3 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13px] font-bold focus:border-[#D84A2B] focus:outline-none"
                     >
                       <option value="+91">+91 (IN)</option>
@@ -449,13 +568,14 @@ export default function AdminBookingPage() {
                     </select>
 
                     <div className="relative flex-1">
-                      <Phone className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Phone className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
+                        id="phone-number-input"
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="98765 43210"
-                        className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] font-medium focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
+                        className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] font-medium focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all"
                         required
                       />
                     </div>
@@ -463,7 +583,7 @@ export default function AdminBookingPage() {
                 </div>
 
                 {formError && (
-                  <div className="p-3.5 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center gap-2 text-[12.5px] text-[#EF4444] font-medium">
+                  <div className="p-3.5 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center gap-2 text-[12.5px] text-[#EF4444] font-medium" role="alert">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{formError}</span>
                   </div>
@@ -472,7 +592,7 @@ export default function AdminBookingPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full min-h-[52px] rounded-xl bg-[#D84A2B] text-white text-[15px] font-bold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 cursor-pointer mt-2"
+                  className="w-full min-h-[52px] rounded-xl bg-[#D84A2B] text-white text-[15px] font-bold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 cursor-pointer mt-2 disabled:opacity-75"
                 >
                   {submitting ? (
                     "Assigning Space & Sending SMS..."
@@ -508,7 +628,7 @@ export default function AdminBookingPage() {
                   <button
                     type="button"
                     onClick={handleSelectNearest}
-                    className="h-11 px-5 rounded-xl bg-[#D84A2B] text-white text-[13.5px] font-bold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                    className="h-11 px-5 rounded-xl bg-[#D84A2B] text-white text-[13.5px] font-bold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-xs cursor-pointer min-h-[44px]"
                   >
                     Select Nearest Space ({nearestSlot.slotNumber})
                     <ArrowRight className="w-4 h-4" />
@@ -526,7 +646,7 @@ export default function AdminBookingPage() {
                 <p className="font-bold text-[#1C1917] text-[14px]">Operator Instructions:</p>
                 <div className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">1</span>
-                  <span>Select any green space or accept the nearest recommendation.</span>
+                  <span>Select any green space directly in 3D or 2D grid mode.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">2</span>
