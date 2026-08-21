@@ -7,7 +7,6 @@ import bcrypt from "bcryptjs";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl && !convexUrl.includes("mock") ? new ConvexHttpClient(convexUrl) : null;
-const isProd = process.env.NODE_ENV === "production" || process.env.NEXTAUTH_URL?.startsWith("https://");
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,7 +14,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      checks: ["pkce"], // Prevents state cookie missing error on Vercel cross-site redirects
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           prompt: "select_account",
@@ -83,44 +82,12 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-  },
-  useSecureCookies: isProd,
-  cookies: {
-    sessionToken: {
-      name: isProd ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-      },
-    },
-    callbackUrl: {
-      name: isProd ? `__Secure-next-auth.callback-url` : `next-auth.callback-url`,
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-      },
-    },
-    csrfToken: {
-      name: isProd ? `__Host-next-auth.csrf-token` : `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-      },
-    },
-    pkceCodeVerifier: {
-      name: isProd ? `__Secure-next-auth.pkce.code_verifier` : `next-auth.pkce.code_verifier`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-        maxAge: 900,
-      },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/customer/dashboard`;
     },
   },
   pages: {
