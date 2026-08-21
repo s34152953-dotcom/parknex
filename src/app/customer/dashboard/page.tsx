@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Navigation,
   Plus,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import ParknexLogo from "@/components/ui/ParknexLogo";
@@ -27,7 +28,6 @@ function formatDuration(entryTime: string): string {
 }
 
 export default function CustomerDashboard() {
-  // 1. All hooks at the top level unconditionally
   const { data: session, status } = useSession();
   const router = useRouter();
   const [vehicleInput, setVehicleInput] = useState("");
@@ -48,7 +48,6 @@ export default function CustomerDashboard() {
     vehicleNumber ? { vehicleNumber } : "skip"
   );
 
-  // 2. Client-side navigation effect for unauthenticated state
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/customer/login");
@@ -72,200 +71,202 @@ export default function CustomerDashboard() {
     }
   };
 
-  // 3. Conditional loading/unauthenticated rendering after all hooks
-  if (status === "loading") {
+  if (status === "loading" || !session) {
     return (
-      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#D84A2B] border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#D84A2B] border-t-transparent animate-spin" />
+      <div className="min-h-[100dvh] bg-[#050507] flex items-center justify-center w-full">
+        <Loader2 className="w-8 h-8 text-[#D84A2B] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050507] text-[#F5F7FA] pb-20 selection:bg-[#D84A2B]/20 selection:text-[#D84A2B]">
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-50 bg-[#050507]/85 backdrop-blur-md border-b border-white/[0.08] px-5 sm:px-8 py-4">
-        <div className="max-w-[1000px] mx-auto flex items-center justify-between">
-          <Link href="/">
+    <div className="min-h-[100dvh] bg-[#050507] text-[#F5F7FA] selection:bg-[#D84A2B]/20 selection:text-[#D84A2B] box-border w-full flex flex-col pb-[48px]">
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-50 bg-[#050507]/90 backdrop-blur-md border-b border-white/[0.08] w-full">
+        <div className="w-full mx-auto px-[20px] h-[64px] sm:h-[72px] flex items-center justify-between">
+          <Link href="/" className="group flex items-center transition-transform hover:opacity-90 shrink-0">
             <ParknexLogo size="md" variant="dark" />
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-[13px] text-white/50 hidden sm:block">
+          <div className="flex items-center gap-[12px]">
+            <span className="text-[14px] text-white/50 hidden sm:block truncate max-w-[150px]">
               {session.user?.name || session.user?.email}
             </span>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 text-[12.5px] font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+              className="flex items-center gap-[8px] px-[16px] h-[40px] rounded-xl border border-white/15 text-[14px] font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer shrink-0"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── Main Container (max-w-[1000px]) ── */}
-      <main className="max-w-[1000px] mx-auto px-5 sm:px-8 pt-10 flex flex-col gap-8">
+      {/* ── MAIN CONTENT ── */}
+      <main className="w-full flex-1 pt-[24px]">
         {/* Welcome Section */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/[0.08]">
+        <div className="w-full px-[20px] max-w-[1000px] mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-[16px] mb-[32px]">
           <div>
-            <div className="text-[11.5px] font-bold text-[#D84A2B] uppercase tracking-wider mb-1">
+            <div className="text-[12px] font-bold text-[#D84A2B] uppercase tracking-wider mb-[8px]">
               Customer Parking Hub
             </div>
-            <h1 className="text-[28px] sm:text-[34px] font-extrabold text-white tracking-tight">
-              Hello, {session.user?.name?.split(" ")[0] || "Driver"}
+            <h1 className="text-[36px] sm:text-[42px] font-black text-white tracking-tight leading-[1.1] break-words">
+              Hello, {session.user?.name || "Driver"}
             </h1>
           </div>
           {vehicleNumber && (
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 self-start sm:self-center">
+            <div className="flex items-center gap-[12px] px-[16px] py-[10px] rounded-xl bg-white/[0.04] border border-white/15 self-start sm:self-center shrink-0">
               <Car className="w-4 h-4 text-[#D84A2B]" />
-              <span className="text-[12px] text-white/50">Vehicle:</span>
-              <span className="font-mono text-[14px] font-bold text-white tracking-wider">{vehicleNumber}</span>
+              <span className="text-[14px] text-white/50 font-medium">Vehicle:</span>
+              <span className="font-mono text-[16px] font-bold text-white tracking-wider">{vehicleNumber}</span>
             </div>
           )}
         </div>
 
         {/* Vehicle Registration (If None) */}
         {user !== undefined && !vehicleNumber && (
-          <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-7 sm:p-9 shadow-xl">
-            <div className="flex items-center gap-3.5 mb-4">
-              <div className="w-11 h-11 rounded-2xl bg-[#D84A2B]/15 flex items-center justify-center">
-                <Car className="w-5 h-5 text-[#D84A2B]" />
+          <div className="w-[calc(100%-40px)] max-w-[1000px] mx-auto bg-[#10151D] border border-white/[0.08] rounded-3xl p-[24px] shadow-xl flex flex-col gap-[18px] mb-[24px]">
+            <div className="flex items-start gap-[16px]">
+              <div className="w-[48px] h-[48px] rounded-2xl bg-[#D84A2B]/15 flex items-center justify-center shrink-0">
+                <Car className="w-[24px] h-[24px] text-[#D84A2B]" />
               </div>
-              <div>
-                <h2 className="text-[17px] font-bold text-white">Register Your Vehicle Plate</h2>
-                <p className="text-[13px] text-white/50">Your active parking assignments will link here automatically</p>
+              <div className="flex-1">
+                <h2 className="text-[24px] sm:text-[28px] font-bold text-white leading-tight mb-[4px]">
+                  Register Your Vehicle Plate
+                </h2>
+                <p className="text-[16px] text-white/50 leading-[1.5]">
+                  Your active parking assignments will link here automatically.
+                </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-[500px] mt-4">
+            
+            <div className="flex flex-col gap-[8px] w-full mt-[8px]">
+              <label htmlFor="vehiclePlate" className="text-[14px] font-semibold text-white/80 pl-[4px]">
+                Vehicle License Plate
+              </label>
               <input
+                id="vehiclePlate"
                 type="text"
                 placeholder="e.g. AA 00 BB 0000"
                 value={vehicleInput}
                 onChange={(e) => setVehicleInput(e.target.value.toUpperCase())}
-                className="flex-1 h-12 px-4 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-white/25 text-[14px] font-mono tracking-wider focus:outline-none focus:border-[#D84A2B]"
+                className="w-full h-[56px] px-[16px] rounded-xl bg-white/[0.04] border border-white/15 text-white placeholder-white/30 text-[16px] font-mono tracking-wider focus:outline-none focus:border-[#D84A2B] transition-colors"
               />
+            </div>
+            
+            <div className="w-full pt-[16px]">
               <button
                 onClick={handleSaveVehicle}
                 disabled={saving || !vehicleInput.trim()}
-                className="h-12 px-6 rounded-xl bg-[#D84A2B] text-white text-[14px] font-bold hover:bg-[#C23E21] disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto h-[56px] px-[24px] rounded-xl bg-[#D84A2B] text-white text-[16px] font-bold hover:bg-[#C23E21] disabled:opacity-50 transition-all flex items-center justify-center gap-[12px] cursor-pointer shrink-0"
               >
                 {saving ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5" />
                 )}
                 <span>Register Plate</span>
               </button>
             </div>
-            {saved && <p className="text-[12.5px] text-emerald-400 font-medium mt-3">Vehicle registered successfully!</p>}
+            {saved && <p className="text-[14px] text-emerald-400 font-medium">Vehicle registered successfully!</p>}
           </div>
         )}
 
-        {/* ── Active Parking Session (Strongest Visual Element) ── */}
-        {vehicleNumber && (
-          <section>
-            {activeBooking === undefined && (
-              <div className="bg-[#10151D] border border-white/10 rounded-3xl p-8 animate-pulse h-48" />
-            )}
+        {/* ── Active Parking Session ── */}
+        <div className="w-[calc(100%-40px)] max-w-[1000px] mx-auto">
+          {vehicleNumber && activeBooking === undefined && (
+            <div className="bg-[#10151D] border border-white/10 rounded-3xl p-[24px] animate-pulse h-[200px]" />
+          )}
 
-            {activeBooking === null && (
-              <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-10 text-center flex flex-col items-center">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center mb-4 text-white/30">
-                  <MapPin className="w-7 h-7" />
-                </div>
-                <h3 className="text-[18px] font-bold text-white">No Active Parking Session</h3>
-                <p className="text-[13.5px] text-white/40 mt-1.5 max-w-[420px] leading-relaxed">
-                  When you arrive at the parking gate, the operator will assign your slot to vehicle{" "}
-                  <span className="font-mono text-white/80 font-bold">{vehicleNumber}</span>. Your live navigation will appear here.
-                </p>
+          {vehicleNumber && activeBooking === null && (
+            <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-[24px] text-center flex flex-col items-center justify-center min-h-[200px]">
+              <div className="w-[56px] h-[56px] rounded-2xl bg-white/[0.04] flex items-center justify-center mb-[16px] text-white/30">
+                <MapPin className="w-[28px] h-[28px]" />
               </div>
-            )}
+              <h3 className="text-[22px] font-bold text-white mb-[8px]">No Active Session</h3>
+              <p className="text-[16px] text-white/50 leading-[1.5] max-w-[420px]">
+                When you arrive at the gate, your slot will be assigned to <span className="font-mono text-white/90 font-bold">{vehicleNumber}</span> and your navigation will appear here.
+              </p>
+            </div>
+          )}
 
-            {activeBooking && (
-              <div className="bg-[#10151D] border border-[#D84A2B]/40 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-black/80 flex flex-col gap-6 relative overflow-hidden">
-                {/* Accent glow */}
-                <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-[#D84A2B]/10 blur-[90px] pointer-events-none" />
+          {vehicleNumber && activeBooking && (
+            <div className="bg-[#10151D] border border-[#D84A2B]/40 rounded-3xl p-[24px] shadow-2xl flex flex-col gap-[24px] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-[#D84A2B]/10 blur-[90px] pointer-events-none" />
 
-                <div className="flex flex-wrap items-start justify-between gap-4 relative z-10">
-                  <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11.5px] font-bold uppercase tracking-wider mb-3">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>Live Parking Session</span>
-                    </div>
-                    <div className="text-[36px] sm:text-[46px] font-black text-white tracking-tight leading-none">
-                      Level {activeBooking.slotDetails?.floor} · <span className="text-[#D84A2B]">{activeBooking.slotDetails?.slotNumber}</span>
-                    </div>
-                    <div className="text-[15px] text-white/60 mt-2 font-medium">
-                      {activeBooking.slotDetails?.zone} · {activeBooking.slotDetails?.pillar} · {activeBooking.mallName}
-                    </div>
+              <div className="flex flex-col gap-[16px] relative z-10">
+                <div className="inline-flex items-center gap-[8px] px-[12px] py-[6px] rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[12px] font-bold uppercase self-start">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Live Parking Session</span>
+                </div>
+                
+                <div>
+                  <div className="text-[42px] sm:text-[48px] font-black text-white tracking-tight leading-[1.1]">
+                    Level {activeBooking.slotDetails?.floor} <br className="sm:hidden" />
+                    <span className="hidden sm:inline">· </span>
+                    <span className="text-[#D84A2B]">{activeBooking.slotDetails?.slotNumber}</span>
                   </div>
-
-                  <div className="flex items-center gap-2 text-[13.5px] text-white/50 bg-white/[0.04] px-4 py-2 rounded-xl border border-white/10 self-start">
-                    <Clock className="w-4 h-4 text-[#D84A2B]" />
-                    <span>Duration: {formatDuration(activeBooking.entryTime)}</span>
+                  <div className="text-[16px] text-white/70 mt-[8px] font-medium">
+                    {activeBooking.slotDetails?.zone} · {activeBooking.slotDetails?.pillar} · {activeBooking.mallName}
                   </div>
                 </div>
 
-                {/* Walking Directions */}
-                {activeBooking.slotDetails?.walkingDirections && activeBooking.slotDetails.walkingDirections.length > 0 && (
-                  <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 relative z-10">
-                    <div className="text-[12px] font-bold text-white/40 uppercase tracking-wider mb-3.5 flex items-center gap-2">
-                      <Navigation className="w-4 h-4 text-[#D84A2B]" />
-                      <span>Walking Directions to Space</span>
-                    </div>
-                    <div className="flex flex-col gap-2.5">
-                      {activeBooking.slotDetails.walkingDirections.map((step: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-3 text-[14px] text-white/80">
-                          <span className="w-5 h-5 rounded-full bg-[#D84A2B]/20 text-[#D84A2B] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                            {idx + 1}
-                          </span>
-                          <span>{step}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Exit QR Action */}
-                <div className="pt-2 relative z-10">
-                  <Link
-                    href={`/customer/${activeBooking.customerAccessToken}`}
-                    className="flex items-center justify-center gap-2.5 h-13 rounded-2xl bg-[#D84A2B] text-white font-bold text-[14.5px] hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-lg shadow-[#D84A2B]/20"
-                  >
-                    <QrCode className="w-5 h-5" />
-                    <span>Open Digital Exit Pass</span>
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
+                <div className="flex items-center gap-[12px] text-[14px] text-white/60 bg-white/[0.04] px-[16px] py-[12px] rounded-xl border border-white/15 self-start mt-[8px]">
+                  <Clock className="w-5 h-5 text-[#D84A2B]" />
+                  <span className="font-medium">Duration: {formatDuration(activeBooking.entryTime)}</span>
                 </div>
               </div>
-            )}
-          </section>
-        )}
+
+              {/* Walking Directions */}
+              {activeBooking.slotDetails?.walkingDirections && activeBooking.slotDetails.walkingDirections.length > 0 && (
+                <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-[20px] relative z-10 mt-[8px]">
+                  <div className="text-[14px] font-bold text-white/50 uppercase tracking-wider mb-[16px] flex items-center gap-[12px]">
+                    <Navigation className="w-5 h-5 text-[#D84A2B]" />
+                    <span>Walking Directions</span>
+                  </div>
+                  <div className="flex flex-col gap-[16px]">
+                    {activeBooking.slotDetails.walkingDirections.map((step: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-[16px] text-[16px] text-white/80 leading-[1.5]">
+                        <span className="w-[24px] h-[24px] rounded-full bg-[#D84A2B]/20 text-[#D84A2B] text-[12px] font-bold flex items-center justify-center shrink-0 mt-[2px]">
+                          {idx + 1}
+                        </span>
+                        <span>{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Exit QR Action */}
+              <div className="pt-[12px] relative z-10">
+                <Link
+                  href={`/customer/${activeBooking.customerAccessToken}`}
+                  className="flex items-center justify-center gap-[12px] w-full h-[56px] rounded-2xl bg-[#D84A2B] text-white font-bold text-[16px] hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-lg"
+                >
+                  <QrCode className="w-6 h-6" />
+                  <span>Open Digital Exit Pass</span>
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── Parking History ── */}
         {history && history.length > 0 && (
-          <section className="pt-4">
-            <h2 className="text-[18px] font-bold text-white mb-4">Past Parking History</h2>
-            <div className="flex flex-col gap-2.5">
+          <div className="w-[calc(100%-40px)] max-w-[1000px] mx-auto mt-[40px]">
+            <h2 className="text-[22px] font-bold text-white mb-[20px]">Past Parking History</h2>
+            <div className="flex flex-col gap-[16px]">
               {history.map((record: any) => (
                 <div
                   key={record._id}
-                  className="bg-[#10151D] border border-white/[0.06] rounded-2xl px-6 py-4 flex items-center justify-between"
+                  className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[20px] flex items-center justify-between"
                 >
                   <div>
-                    <div className="text-[15px] font-bold text-white">
+                    <div className="text-[16px] font-bold text-white mb-[4px]">
                       Slot {record.slotNumber || record.slotId}
                     </div>
-                    <div className="text-[12.5px] text-white/40 mt-0.5">
+                    <div className="text-[14px] text-white/50">
                       {new Date(record.entryTime).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
@@ -277,10 +278,10 @@ export default function CustomerDashboard() {
                   </div>
 
                   <span
-                    className={`text-[11.5px] font-bold px-3 py-1 rounded-full ${
+                    className={`text-[12px] font-bold px-[12px] py-[6px] rounded-full ${
                       record.status === "ACTIVE"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-white/5 text-white/40 border border-white/10"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                        : "bg-white/5 text-white/50 border border-white/10"
                     }`}
                   >
                     {record.status}
@@ -288,7 +289,7 @@ export default function CustomerDashboard() {
                 </div>
               ))}
             </div>
-          </section>
+          </div>
         )}
       </main>
     </div>

@@ -39,6 +39,12 @@
 
 :root {
   color-scheme: dark;
+  --mobile-edge: 20px;
+  --section-gap: 48px;
+  --card-padding: 24px;
+  --content-gap: 20px;
+  --field-gap: 16px;
+  --small-gap: 8px;
 }
 
 /* ── Base Styles & Layout Fixes ───────────────────────────── */
@@ -96,6 +102,22 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-strong);
+}
+
+/* ── Typography Scale & Layout Classes ──────────────────── */
+
+.hero-title {
+  font-size: clamp(42px, 12vw, 56px);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  max-width: 100%;
+  overflow-wrap: normal;
+}
+
+.hero-description {
+  font-size: 17px;
+  line-height: 1.55;
+  max-width: 34ch;
 }
 
 /* ── Focus ────────────────────────────────────────────────── */
