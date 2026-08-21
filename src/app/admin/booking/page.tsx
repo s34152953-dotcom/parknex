@@ -217,39 +217,64 @@ export default function AdminBookingPage() {
 
   return (
     <div className="w-full p-6 sm:p-8 lg:p-10 max-w-[1700px] mx-auto flex flex-col gap-8">
-      {/* ── Top Metrics & Floor Switcher Bar ─────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-6 pb-6 border-b border-[#EAE3D9]">
+      {/* ── Content Header Row ─────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE3D9]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-bold text-[#D84A2B] uppercase tracking-wider">
+            <span className="text-[11.5px] font-bold text-[#D84A2B] uppercase tracking-wider">
               OPERATIONAL BOOKING STATION
             </span>
           </div>
-          <h1 className="text-[26px] sm:text-[30px] font-bold text-[#1C1917] tracking-tight">
+          <h1 className="text-[26px] sm:text-[32px] font-extrabold text-[#1C1917] tracking-tight">
             {slots.length > 0 ? `${slots[0].mallName} Parking` : "Parking Operations"}
           </h1>
-          <p className="text-[13.5px] text-[#78716C] mt-0.5">
+          <p className="text-[14px] text-[#78716C] mt-1">
             Assign parking slots to incoming vehicles and dispatch automated SMS navigation links
           </p>
         </div>
 
-        {/* Floor selector, 2D/3D toggle & refresh */}
-        <div className="flex flex-wrap items-center gap-3">
-          {fallbackMessage && (
-            <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-[#FF5C68]/10 border border-[#FF5C68]/30 rounded-full text-[12px] font-semibold text-[#FF5C68] animate-in fade-in slide-in-from-right-4 duration-300">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {fallbackMessage}
-            </div>
-          )}
-          {/* 2D / 3D Mode Toggle */}
-          <div className="flex items-center gap-1 bg-[#FFFFFF] p-1 rounded-2xl border border-[#EAE3D9] shadow-xs">
+        {fallbackMessage && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#FF5C68]/10 border border-[#FF5C68]/30 rounded-xl text-[12.5px] font-semibold text-[#FF5C68] self-start sm:self-center">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{fallbackMessage}</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Dedicated Controls Toolbar (Floor Selector & 2D/3D Switcher) ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-2 bg-white rounded-2xl border border-[#EAE3D9] shadow-xs">
+        {/* Floor Level Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {["B2", "B1", "G", "ALL"].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => {
+                setFloor(f);
+                setSelectedSlot(null);
+              }}
+              className={`h-10 px-4 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                floor === f
+                  ? "bg-[#D84A2B] text-white shadow-sm shadow-[#D84A2B]/20"
+                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF7F2]"
+              }`}
+            >
+              {f === "ALL" ? "All Levels" : `Level ${f}`}
+            </button>
+          ))}
+        </div>
+
+        {/* View Toggle (2D/3D) and Actions */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-[#FAF7F2] p-1 rounded-xl border border-[#EAE3D9]">
             <button
               type="button"
               onClick={() => handleToggleViewMode("3D")}
-              className={`h-9 px-3.5 rounded-xl text-[12.5px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "3D"
-                  ? "bg-[#D84A2B] text-white shadow-[0_2px_10px_rgba(255,85,51,0.2)]"
-                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF7F2]"
-                }`}
+              className={`h-8 px-3 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "3D"
+                  ? "bg-white text-[#D84A2B] shadow-xs"
+                  : "text-[#78716C] hover:text-[#1C1917]"
+              }`}
               title="Interactive 3D Space"
             >
               <Box className="w-3.5 h-3.5" />
@@ -258,10 +283,11 @@ export default function AdminBookingPage() {
             <button
               type="button"
               onClick={() => handleToggleViewMode("2D")}
-              className={`h-9 px-3.5 rounded-xl text-[12.5px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "2D"
-                  ? "bg-[#D84A2B] text-white shadow-[0_2px_10px_rgba(255,85,51,0.2)]"
-                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF7F2]"
-                }`}
+              className={`h-8 px-3 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "2D"
+                  ? "bg-white text-[#D84A2B] shadow-xs"
+                  : "text-[#78716C] hover:text-[#1C1917]"
+              }`}
               title="2D Floor Layout Grid"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -269,30 +295,10 @@ export default function AdminBookingPage() {
             </button>
           </div>
 
-          {/* Floor Switcher */}
-          <div className="flex items-center gap-1 bg-[#FFFFFF] p-1.5 rounded-2xl border border-[#EAE3D9] shadow-xs">
-            {["B2", "B1", "G", "ALL"].map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => {
-                  setFloor(f);
-                  setSelectedSlot(null);
-                }}
-                className={`h-9 px-4 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${floor === f
-                    ? "bg-[#D84A2B] text-white shadow-[0_2px_10px_rgba(255,85,51,0.2)]"
-                    : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF7F2]"
-                  }`}
-              >
-                {f === "ALL" ? "All Levels" : `Floor ${f}`}
-              </button>
-            ))}
-          </div>
-
           <button
             onClick={() => {}}
             disabled={loading}
-            className="h-11 w-11 rounded-2xl bg-[#FFFFFF] border border-[#EAE3D9] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/50 hover:bg-[#FAF7F2] transition-all shadow-xs cursor-pointer min-w-[44px]"
+            className="h-10 w-10 rounded-xl bg-white border border-[#EAE3D9] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 hover:bg-[#FAF7F2] transition-all shadow-xs cursor-pointer min-w-[40px]"
             title="Refresh availability"
             aria-label="Refresh availability"
           >

@@ -13,12 +13,12 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "PARKNEX — Smarter Parking. Smoother Journeys.",
   description:
-    "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D guidance.",
-  keywords: ["parking", "smart parking", "mall parking", "find my car", "parking rewards", "PARKNEX"],
+    "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time guidance.",
+  keywords: ["parking", "smart parking", "mall parking", "find my car", "PARKNEX"],
   openGraph: {
     title: "PARKNEX — Smarter Parking. Smoother Journeys.",
     description:
-      "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time 3D guidance.",
+      "A smarter way to locate, register and retrieve your vehicle inside crowded mall parking areas with real-time guidance.",
     type: "website",
   },
 };
@@ -26,7 +26,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sora.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#FBF8F3] text-[#1C1917]">
+      <head>
+        <link rel="preload" as="image" href="/images/hero-car.jpg" fetchPriority="high" />
+      </head>
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#050507] text-[#F5F7FA]">
         <Providers>
           {children}
         </Providers>

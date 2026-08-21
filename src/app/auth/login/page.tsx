@@ -4,7 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck, Car, AlertCircle } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 
 function LoginForm() {
@@ -46,59 +46,63 @@ function LoginForm() {
   };
 
   return (
-    <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(80,50,20,0.04)]">
-      <form onSubmit={handleLogin} className="flex flex-col gap-5">
+    <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-2xl shadow-black/60">
+      <form onSubmit={handleLogin} className="flex flex-col gap-6">
         <div>
-          <label htmlFor="email-input" className="block text-[12px] font-bold text-[#57534E] uppercase mb-2">
+          <label
+            htmlFor="email-input"
+            className="block text-[12px] font-bold text-white/70 uppercase tracking-wider mb-2"
+          >
             Operator Email Address
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Mail className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               id="email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="operator@parknex.io"
-              className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all"
+              placeholder="admin@parknex.io"
+              className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder:text-white/25 text-[14px] focus:border-[#D84A2B] focus:bg-white/[0.07] focus:outline-none transition-all"
               required
             />
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label htmlFor="password-input" className="block text-[12px] font-bold text-[#57534E] uppercase">
-              Password
-            </label>
-            <span className="text-[11.5px] font-medium text-[#78716C]">
-              Operator Gate 01
-            </span>
-          </div>
+          <label
+            htmlFor="password-input"
+            className="block text-[12px] font-bold text-white/70 uppercase tracking-wider mb-2"
+          >
+            Password
+          </label>
           <div className="relative">
-            <Lock className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Lock className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               id="password-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all"
+              className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder:text-white/25 text-[14px] focus:border-[#D84A2B] focus:bg-white/[0.07] focus:outline-none transition-all"
               required
             />
           </div>
         </div>
 
         {errorMsg && (
-          <p className="text-[12.5px] text-[#EF4444] font-medium" role="alert">{errorMsg}</p>
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMsg}</span>
+          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full min-h-[50px] rounded-xl bg-[#D84A2B] text-white text-[14.5px] font-semibold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-md shadow-[#D84A2B]/20 mt-2 cursor-pointer disabled:opacity-70"
+          className="w-full h-13 rounded-xl bg-[#D84A2B] text-white text-[14.5px] font-bold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-lg shadow-[#D84A2B]/25 mt-1 cursor-pointer disabled:opacity-60"
         >
-          {loading ? "Authenticating..." : "Sign In to Admin Operations"}
+          {loading ? "Authenticating..." : "Sign In as Operator"}
           <ArrowRight className="w-4 h-4" />
         </button>
       </form>
@@ -108,25 +112,41 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-[#FBF8F3] selection:bg-[#D84A2B]/20 selection:text-[#D84A2B]">
-      <div className="w-full max-w-[440px]">
+    <main className="min-h-screen w-full flex items-center justify-center p-5 sm:p-8 bg-[#050507] text-[#F5F7FA] relative selection:bg-[#D84A2B]/20 selection:text-[#D84A2B]">
+      {/* Ambient background glow */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#D84A2B]/8 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-[460px]">
         {/* Logo Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <Link href="/" className="mb-3 group" aria-label="Go to ParkNex homepage">
-            <ParknexLogo size="lg" />
+          <Link href="/" className="mb-4 group" aria-label="Go to ParkNex homepage">
+            <ParknexLogo size="lg" variant="dark" />
           </Link>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF5F2] border border-[#FADCD5] text-[#D84A2B] text-[11.5px] font-bold uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D84A2B]/10 border border-[#D84A2B]/30 text-[#F87171] text-[11.5px] font-bold uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
-            OPERATOR PORTAL
+            OPERATOR ACCESS
           </div>
-          <p className="text-[13.5px] text-[#78716C]">
-            Sign in to access PARKNEX operator operations
+          <p className="text-[14px] text-white/50">
+            Sign in to manage parking space allocations & exit gates
           </p>
         </div>
 
-        <Suspense fallback={<div className="h-[360px] bg-white rounded-3xl animate-pulse border border-[#EAE3D9]" />}>
+        <Suspense fallback={<div className="h-[360px] bg-[#10151D] rounded-3xl animate-pulse border border-white/10" />}>
           <LoginForm />
         </Suspense>
+
+        {/* Customer Portal Link */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/customer/login"
+            className="inline-flex items-center gap-2 text-[13px] text-white/40 hover:text-white transition-colors"
+          >
+            <Car className="w-4 h-4 text-[#D84A2B]" />
+            <span>Looking for Customer Parking? Sign In here</span>
+          </Link>
+        </div>
       </div>
     </main>
   );
