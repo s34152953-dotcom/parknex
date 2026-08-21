@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// Lazy-load the Three.js 3D WebGL component to optimize initial load
+// Lazy-load the Three.js 3D component to optimize initial load
 const InteractiveParkingMap3D = dynamic(
   () => import("@/components/parking/InteractiveParkingMap3D"),
   {
@@ -35,7 +35,7 @@ const InteractiveParkingMap3D = dynamic(
           <Box className="w-6 h-6 animate-bounce" />
         </div>
         <p className="text-[14px] font-bold text-[#1C1917]">Initializing 3D Parking Floor Space...</p>
-        <p className="text-[12px] text-[#78716C] mt-0.5">Configuring WebGL shaders and spatial geometry</p>
+        <p className="text-[12px] text-[#78716C] mt-0.5">Configuring 3D shaders and spatial geometry</p>
       </div>
     ),
   }
@@ -84,7 +84,7 @@ export default function AdminBookingPage() {
 
   const handleToggleViewMode = (mode: "2D" | "3D", isFallback = false) => {
     if (mode === "3D" && !webGLSupported) {
-      alert("WebGL 3D graphics acceleration is not supported on this device/browser.");
+      alert("3D graphics acceleration is not supported on this device/browser.");
       return;
     }
     setViewMode(mode);
@@ -270,7 +270,7 @@ export default function AdminBookingPage() {
                   ? "bg-[#D84A2B] text-white shadow-xs"
                   : "text-[#78716C] hover:text-[#1C1917]"
               }`}
-              title="Interactive 3D WebGL Space"
+              title="Interactive 3D Space"
             >
               <Box className="w-3.5 h-3.5" />
               <span>3D Map</span>
@@ -376,7 +376,7 @@ export default function AdminBookingPage() {
 
       {/* ── Main Operations Workspace: Map (Left) / Booking Panel (Right) ─ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left 68% Parking Map (WebGL 3D or 2D Grid) */}
+        {/* Left 68% Parking Map (3D or 2D Grid) */}
         <div className="lg:col-span-8 h-full min-h-[580px]">
           {viewMode === "3D" && webGLSupported ? (
             <WebGLBoundary onFallbackTo2D={() => handleToggleViewMode("2D", true)}>
@@ -555,7 +555,7 @@ export default function AdminBookingPage() {
                       type="text"
                       value={vehicleNumber}
                       onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                      placeholder="e.g. TS 09 AB 1234"
+                      placeholder="Enter Vehicle Plate"
                       className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14.5px] font-mono font-bold tracking-wider focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all uppercase"
                       required
                     />
@@ -587,7 +587,7 @@ export default function AdminBookingPage() {
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="98765 43210"
+                        placeholder="Enter Phone Number"
                         className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] font-medium focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all"
                         required
                       />

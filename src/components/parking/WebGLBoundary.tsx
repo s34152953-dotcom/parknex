@@ -39,7 +39,7 @@ export default class WebGLBoundary extends Component<Props, State> {
           <div className="w-14 h-14 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-4">
             <AlertTriangle className="w-7 h-7" />
           </div>
-          <h3 className="text-[18px] font-bold text-[#1C1917]">3D WebGL Visualization Unavailable</h3>
+          <h3 className="text-[18px] font-bold text-[#1C1917]">3D Visualization Unavailable</h3>
           <p className="text-[13px] text-[#78716C] max-w-[360px] mt-1 mb-5 leading-relaxed">
             Your browser or device hardware acceleration encountered a temporary graphics limitation. You can seamlessly switch to the full-featured 2D parking grid.
           </p>

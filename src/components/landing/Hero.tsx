@@ -80,16 +80,6 @@ export default function Hero() {
               <span>Open Admin Booking</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
-
-            <Link
-              href="/customer/cust_token_demo_a01"
-              className="group inline-flex items-center justify-center gap-2.5 h-[52px] sm:h-[56px] px-6 sm:px-7 rounded-2xl border border-[#E2D9CC] bg-white text-[#1C1917] text-[14.5px] font-semibold hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] active:scale-[0.98] transition-all duration-200 shadow-xs shrink-0 cursor-pointer min-w-[44px]"
-            >
-              <span>Customer Demo View</span>
-              <div className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center group-hover:border-[#D84A2B]/30">
-                <Play className="w-2.5 h-2.5 fill-[#1C1917] text-[#1C1917] translate-x-[0.5px]" />
-              </div>
-            </Link>
           </motion.div>
         </div>
       </div>
