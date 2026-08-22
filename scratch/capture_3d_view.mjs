@@ -52,29 +52,30 @@ async function capture() {
 
   await cdp.send('Page.enable');
   await cdp.send('DOM.enable');
+  await cdp.send('Runtime.enable');
   await cdp.send('Emulation.setDeviceMetricsOverride', {
-    width: 1366,
+    width: 1280,
     height: 800,
     deviceScaleFactor: 2,
     mobile: false,
   });
 
   await cdp.send('Page.navigate', { url: 'http://localhost:3004/admin/booking' });
-  await new Promise((r) => setTimeout(r, 1500));
+  await new Promise((r) => setTimeout(r, 1200));
 
-  // Switch to Interactive View (3D)
+  // Click on "Interactive View" button
   await cdp.send('Runtime.evaluate', {
     expression: `
-      const btns = Array.from(document.querySelectorAll('button'));
-      const btn3d = btns.find(b => b.textContent.includes('Interactive View'));
-      if (btn3d) btn3d.click();
-    `
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const interactiveBtn = buttons.find(b => b.textContent.includes('Interactive View'));
+      if (interactiveBtn) interactiveBtn.click();
+    `,
   });
 
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 1500));
 
   const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' });
-  const filePath = path.join(ARTIFACT_DIR, 'interactive_view_dark_theme.png');
+  const filePath = path.join(ARTIFACT_DIR, `webgl_3d_view_updated.png`);
   fs.writeFileSync(filePath, Buffer.from(data, 'base64'));
   console.log(`Saved screenshot to ${filePath}`);
 
