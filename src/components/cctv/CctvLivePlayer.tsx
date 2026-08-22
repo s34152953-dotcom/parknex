@@ -96,24 +96,32 @@ export default function CctvLivePlayer({
       )}
 
       {/* SVG Canvas for Parking Bay Polygon Overlays */}
-      {status === "ONLINE" && showPolygons && slotPolygons.length > 0 && (
+      {status === "ONLINE" && showPolygons && Array.isArray(slotPolygons) && slotPolygons.length > 0 && (
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none z-10"
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
         >
           {slotPolygons.map((slot) => {
-            const pointsStr = slot.polygon.map(([x, y]) => `${x * 100},${y * 100}`).join(" ");
+            if (!slot || !Array.isArray(slot.polygon) || slot.polygon.length === 0) return null;
+            const pointsStr = slot.polygon
+              .filter((p) => Array.isArray(p) && p.length >= 2 && !isNaN(p[0]) && !isNaN(p[1]))
+              .map(([x, y]) => `${x * 100},${y * 100}`)
+              .join(" ");
+
+            if (!pointsStr) return null;
+
             const isOccupied = slot.status === "occupied";
             const strokeColor = isOccupied ? "#C93B2F" : "#2F7D5A";
             const fillColor = isOccupied ? "rgba(201, 59, 47, 0.25)" : "rgba(47, 125, 90, 0.20)";
 
             // Calculate center for label
-            const avgX = slot.polygon.reduce((acc, p) => acc + p[0], 0) / slot.polygon.length;
-            const avgY = slot.polygon.reduce((acc, p) => acc + p[1], 0) / slot.polygon.length;
+            const validPoints = slot.polygon.filter((p) => Array.isArray(p) && p.length >= 2);
+            const avgX = validPoints.reduce((acc, p) => acc + p[0], 0) / (validPoints.length || 1);
+            const avgY = validPoints.reduce((acc, p) => acc + p[1], 0) / (validPoints.length || 1);
 
             return (
-              <g key={slot.slotId}>
+              <g key={slot.slotId || Math.random().toString()}>
                 <polygon
                   points={pointsStr}
                   fill={fillColor}
@@ -130,7 +138,7 @@ export default function CctvLivePlayer({
                   textAnchor="middle"
                   dominantBaseline="middle"
                 >
-                  {slot.slotId.toUpperCase()}
+                  {(slot.slotId || "").toUpperCase()}
                 </text>
               </g>
             );

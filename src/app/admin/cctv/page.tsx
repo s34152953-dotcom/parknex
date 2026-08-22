@@ -54,6 +54,16 @@ export default function AdminCctvMonitoringPage() {
   const occupancyEvents =
     recentEvents?.filter((e: any) => e.eventType === "OCCUPANCY_CHANGED") || [];
 
+  const formatTimeSafe = (ts?: string) => {
+    if (!ts) return "";
+    try {
+      const d = new Date(ts);
+      return isNaN(d.getTime()) ? ts : d.toLocaleTimeString("en-IN");
+    } catch {
+      return ts || "";
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!plateSearchInput.trim()) return;
@@ -223,7 +233,7 @@ export default function AdminCctvMonitoringPage() {
                         {s.sightingType} SIGHTING
                       </span>
                       <span className="text-[11px] text-[#70675F] font-mono">
-                        {new Date(s.timestamp).toLocaleTimeString("en-IN")}
+                        {formatTimeSafe(s.timestamp)}
                       </span>
                     </div>
                     <div className="text-[13px] font-bold text-[#241F1B]">{s.cameraName}</div>
@@ -340,7 +350,7 @@ export default function AdminCctvMonitoringPage() {
                             {evt.plateNumber || "NO_PLATE"}
                           </span>
                           <span className="text-[11px] text-[#70675F]">
-                            {evt.cameraId} · {new Date(evt.timestamp).toLocaleTimeString("en-IN")}
+                            {evt.cameraId} · {formatTimeSafe(evt.timestamp)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -437,7 +447,7 @@ export default function AdminCctvMonitoringPage() {
                               Space {evt.slotId?.toUpperCase()}
                             </span>
                             <span className="text-[11px] text-[#70675F]">
-                              Floor {evt.floor} · {evt.zone} · {new Date(evt.timestamp).toLocaleTimeString("en-IN")}
+                              Floor {evt.floor} · {evt.zone} · {formatTimeSafe(evt.timestamp)}
                             </span>
                           </div>
                           <span
