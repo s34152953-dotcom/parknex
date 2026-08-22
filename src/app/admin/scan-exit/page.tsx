@@ -79,7 +79,7 @@ export default function AdminScanExitPage() {
     } catch (err: any) {
       console.warn("Camera failed:", err);
       setCameraActive(false);
-      setCameraStatusMsg("Camera unavailable — manual code entry required.");
+      setCameraStatusMsg("Camera unavailable — manual parking slot entry required.");
     }
   };
 
@@ -228,7 +228,7 @@ export default function AdminScanExitPage() {
                     <QrCode className="w-10 h-10 text-[#938980] mb-2" />
                     <p className="text-[14px] font-bold text-[#241F1B]">Scanner Standby</p>
                     <p className="text-[12px] text-[#70675F] max-w-[280px] mt-0.5">
-                      Click &ldquo;Activate Camera&rdquo; or enter customer fallback code manually.
+                      Click &ldquo;Activate Camera&rdquo; or enter parking slot name (e.g. B12) manually.
                     </p>
                   </div>
                 )}
@@ -263,25 +263,25 @@ export default function AdminScanExitPage() {
             </div>
           </div>
 
-          {/* Right Column: Manual Code Entry (5 Cols) */}
+          {/* Right Column: Manual Parking Slot Entry (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col gap-5">
             {/* Manual Entry Box */}
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
               <div className="flex items-center gap-2 pb-2 border-b border-[#DED3C7]">
                 <KeyRound className="w-4 h-4 text-[#C93B2F]" />
-                <h3 className="text-[14.5px] font-bold text-[#241F1B]">Manual Fallback Pass Entry</h3>
+                <h3 className="text-[14.5px] font-bold text-[#241F1B]">Manual Parking Slot &amp; Pass Approval</h3>
               </div>
 
               <form onSubmit={handleManualSubmit} className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11.5px] font-bold text-[#241F1B]">
-                    Fallback Alphanumeric Code or Signed Token
+                    Parking Slot Name / Space Identifier
                   </label>
                   <input
                     type="text"
                     value={manualCodeInput}
                     onChange={(e) => setManualCodeInput(e.target.value)}
-                    placeholder="e.g. PNX-7A9K2M or paste token"
+                    placeholder="e.g. B12, B-12, A-01 or Vehicle Plate"
                     className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[14px] font-mono text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                 </div>
@@ -307,12 +307,12 @@ export default function AdminScanExitPage() {
                   {isVerifying ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Validating Pass...</span>
+                      <span>Validating Exit...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Verify &amp; Open Barrier Gate</span>
+                      <span>Approve Exit &amp; Open Barrier Gate</span>
                     </>
                   )}
                 </button>

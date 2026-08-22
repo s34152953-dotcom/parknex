@@ -397,6 +397,49 @@ export const completeExitWithVerification = mutation({
       }
     }
 
+    // 2.5. Try finding by Parking Slot Identifier (e.g. B12, B-12, A-01, B2-A01, b2-a01)
+    if (!booking) {
+      const cleanSlot = input.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      if (cleanSlot.length >= 1) {
+        const activeBookings = await ctx.db
+          .query("bookings")
+          .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+          .collect();
+
+        // Check directly against booking slotId
+        booking =
+          activeBookings.find((b) => {
+            const bSlotClean = (b.slotId || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+            return (
+              bSlotClean === cleanSlot ||
+              bSlotClean.endsWith(cleanSlot) ||
+              cleanSlot.endsWith(bSlotClean) ||
+              (b.slotId && b.slotId.toUpperCase() === input.toUpperCase())
+            );
+          }) || null;
+
+        // If not found directly, check slots table slotNumber / pillar + slotNumber
+        if (!booking) {
+          const allSlots = await ctx.db.query("slots").collect();
+          const matchedSlot = allSlots.find((s) => {
+            const sNumClean = (s.slotNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+            const sIdClean = (s.slotId || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+            const sPillarClean = (s.pillar || "").replace(/[^A-Z0-9]/gi, "").toUpperCase() + sNumClean;
+            return (
+              sNumClean === cleanSlot ||
+              sIdClean === cleanSlot ||
+              sPillarClean === cleanSlot ||
+              (s.slotNumber && s.slotNumber.toUpperCase() === input.toUpperCase())
+            );
+          });
+
+          if (matchedSlot) {
+            booking = activeBookings.find((b) => b.slotId === matchedSlot.slotId) || null;
+          }
+        }
+      }
+    }
+
     // 3. Try finding directly by Convex ID if input matches an ID format
     if (!booking) {
       try {
@@ -445,7 +488,7 @@ export const completeExitWithVerification = mutation({
     }
 
     if (!booking) {
-      throw new Error("Exit pass or fallback code not found. Please check code or enter vehicle plate.");
+      throw new Error(`No active parking session found for slot "${input}" or pass token. Please verify slot name.`);
     }
 
     // Handle already completed state gracefully
