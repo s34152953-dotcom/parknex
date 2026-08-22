@@ -35,36 +35,46 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const emailClean = credentials.email.toLowerCase().trim();
-        const isMasterAdmin = (emailClean === "admin@parknex.com" || emailClean === "admin@parknex.io") && credentials.password === "admin123";
+        const isMasterAdmin =
+          (emailClean === "admin@parknex.com" || emailClean === "admin@parknex.io") &&
+          credentials.password === "admin123";
 
-        let operator: any = null;
-        if (convex) {
-          try {
-            operator = await convex.query(api.operators.getOperatorByEmail, {
-              email: emailClean,
-            });
-          } catch (e) {
-            console.error("[NextAuth] Failed to query operator from database:", e);
-          }
-        }
-
-        if (operator) {
-          const isValid = await bcrypt.compare(credentials.password, operator.passwordHash);
-          if (isValid || isMasterAdmin) {
-            return {
-              id: operator._id,
-              name: operator.name || "Operator",
-              email: operator.email,
-              role: operator.role || "operator",
-            };
-          }
-        } else if (isMasterAdmin) {
+        // Fast path for master admin - zero delay, no network blocking
+        if (isMasterAdmin) {
           return {
             id: "operator-admin-master",
             name: "Master Admin",
             email: emailClean,
             role: "operator",
           };
+        }
+
+        // Database lookup with strict timeout to prevent serverless hanging
+        if (convex) {
+          try {
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Timeout")), 2500)
+            );
+            const queryPromise = convex.query(api.operators.getOperatorByEmail, {
+              email: emailClean,
+            });
+
+            const operator: any = await Promise.race([queryPromise, timeoutPromise]);
+
+            if (operator && operator.passwordHash) {
+              const isValid = await bcrypt.compare(credentials.password, operator.passwordHash);
+              if (isValid) {
+                return {
+                  id: operator._id,
+                  name: operator.name || "Operator",
+                  email: operator.email,
+                  role: operator.role || "operator",
+                };
+              }
+            }
+          } catch (e) {
+            console.error("[NextAuth] Operator auth lookup error:", e);
+          }
         }
 
         throw new Error("Invalid email or password.");

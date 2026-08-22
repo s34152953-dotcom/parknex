@@ -23,25 +23,31 @@ function LoginForm() {
     setErrorMsg(null);
 
     try {
-      const result = await signIn("operator-credentials", {
+      // Direct signIn with a client-side timeout safety
+      const signInPromise = signIn("operator-credentials", {
         redirect: false,
         email: loginEmail.toLowerCase().trim(),
         password: password,
       });
+
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(() => resolve({ ok: false, error: "Connection took too long. Please try again." }), 6000)
+      );
+
+      const result: any = await Promise.race([signInPromise, timeoutPromise]);
 
       if (result?.error) {
         setErrorMsg(result.error || "Invalid email or password.");
         setLoading(false);
       } else if (result?.ok) {
         setSuccess(true);
-        // Clean navigation so middleware and server components receive the updated session cookies
         window.location.href = redirectPath;
       } else {
-        setErrorMsg("Unable to sign in. Please verify your credentials.");
+        setErrorMsg("Unable to authenticate. Please verify credentials.");
         setLoading(false);
       }
     } catch (err: any) {
-      setErrorMsg("An unexpected error occurred during login.");
+      setErrorMsg("An unexpected error occurred during login. Please try again.");
       setLoading(false);
     }
   };
