@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sora.variable} h-full`}>
       <head>
-        <link rel="preload" as="image" href="/images/hero-car.jpg" fetchPriority="high" />
+        <link rel="preload" as="image" href="/images/hero-indian-cars.jpg" fetchPriority="high" />
       </head>
       <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#FAF7F2] text-[#241F1B]">
         <Providers>
