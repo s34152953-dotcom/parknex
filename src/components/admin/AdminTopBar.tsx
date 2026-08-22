@@ -1,138 +1,195 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, CalendarPlus, Clock, QrCode, LogOut } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import {
+  Menu,
+  X,
+  MapPin,
+  CarFront,
+  QrCode,
+  Layers,
+  History,
+  AlertTriangle,
+  Settings,
+  ShieldCheck,
+  CheckCircle2,
+} from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 
 const adminNavLinks = [
-  { label: "Booking", href: "/admin/booking", icon: CalendarPlus },
-  { label: "Booking History", href: "/admin/history", icon: Clock },
-  { label: "Scan Exit Pass", href: "/admin/scan-exit", icon: QrCode },
+  { label: "Live Parking Map", href: "/admin/booking", icon: MapPin },
+  { label: "New Entry", href: "/admin/new-entry", icon: CarFront },
+  { label: "Gate Scanner", href: "/admin/scan-exit", icon: QrCode },
+  { label: "Active Sessions", href: "/admin/active-sessions", icon: Layers },
+  { label: "Parking History", href: "/admin/history", icon: History },
+  { label: "Customer Issues", href: "/admin/customer-issues", icon: AlertTriangle },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminTopBar() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const getPageTitle = () => {
-    if (pathname.includes("/admin/history")) return "Booking History & Audit";
-    if (pathname.includes("/admin/scan-exit")) return "Scan Exit Pass Validation";
-    return "Parking Booking & Slot Assignment";
-  };
+  // Real-time live statistics from Convex
+  const stats = useQuery(api.bookings.getLiveStats, { floor: "ALL" });
+  const openReports = useQuery(api.reports.listReports, { status: "OPEN" });
+
+  const availableCount = stats?.available ?? 0;
+  const occupiedCount = stats?.occupied ?? 0;
+  const reservedCount = stats?.reserved ?? 0;
+  const vehiclesInside = stats?.vehiclesInside ?? 0;
+  const recommendedCount = Math.min(3, availableCount);
 
   return (
-    <>
-      <header className="sticky top-0 z-40 h-[72px] bg-white/90 backdrop-blur-md border-b border-[#EAE3D9] flex items-center justify-between px-6 lg:px-10 gap-4 select-none">
-        {/* Left Mobile Menu Trigger */}
-        <div className="flex items-center gap-3.5 lg:hidden">
+    <header className="sticky top-0 z-30 bg-[#10151D] border-b border-white/[0.08] text-[#F5F7FA] select-none">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-[64px] sm:h-[70px] flex items-center justify-between gap-4">
+        {/* Left: Mobile Brand & Facility Name */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setMobileOpen(true)}
-            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E2D9CC] bg-white text-[#1C1917] hover:border-[#D84A2B]/40 transition-colors shadow-xs min-w-[44px]"
-            aria-label="Open mobile navigation menu"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.08] transition-colors"
+            aria-label="Toggle Navigation Menu"
           >
-            <Menu className="w-5 h-5 text-[#1C1917]" />
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] p-1 shrink-0">
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="w-8 h-8 rounded-xl bg-[#D84A2B]/20 border border-[#D84A2B]/40 flex items-center justify-center p-1">
               <ParknexIcon className="w-5 h-5" />
             </div>
-            <span className="font-bold text-[15px] text-[#1C1917] tracking-tight">
-              PARK<span className="text-[#D84A2B]">NEX</span> ADMIN
+            <span className="font-extrabold tracking-tight text-[16px] text-white">
+              PARK<span className="text-[#D84A2B]">NEX</span>
+            </span>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-2">
+            <span className="text-[13px] font-bold text-[rgba(245,247,250,0.6)]">
+              Central Mall Grand
+            </span>
+            <span className="text-white/20">·</span>
+            <span className="text-[12px] font-semibold px-2 py-0.5 rounded-md bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+              Live Online
             </span>
           </div>
         </div>
 
-        {/* Page Title (Desktop) */}
-        <div className="hidden lg:flex items-center gap-3">
-          <h1 className="text-[19px] font-bold text-[#1C1917] tracking-tight">
-            {getPageTitle()}
-          </h1>
-          <span className="text-[11px] px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] text-[#78716C] font-semibold">
-            PARKNEX Operations
-          </span>
-        </div>
-
-        {/* Right Status Controls */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 h-11 px-4 rounded-xl border border-[#E2D9CC] bg-white text-[13px] font-medium text-[#78716C] shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-            <span className="text-[#1C1917] font-semibold">Gate Entrance 01</span>
+        {/* Center: Live Statistics Strip (Convex Real-Time Counts) */}
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 bg-[#0A0D14] border border-white/[0.08] px-3.5 py-1.5 rounded-xl text-[12px] font-bold">
+          {/* Available */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[#10B981]">
+            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+            <span>Available:</span>
+            <span className="font-mono text-white text-[13px]">{availableCount}</span>
           </div>
 
-          <Link
-            href="/admin/scan-exit"
-            aria-label="Scan Exit Pass"
-            className="h-11 px-4 sm:px-5 rounded-xl bg-[#D84A2B] text-white text-[13px] font-bold flex items-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-xs cursor-pointer min-w-[44px]"
-          >
-            <QrCode className="w-4 h-4" />
-            <span className="hidden sm:inline">Scan Exit</span>
-          </Link>
+          <span className="text-white/20">|</span>
+
+          {/* Recommended */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[#60A5FA]">
+            <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+            <span>Recommended:</span>
+            <span className="font-mono text-white text-[13px]">{recommendedCount}</span>
+          </div>
+
+          <span className="text-white/20">|</span>
+
+          {/* Reserved */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[#F59E0B]">
+            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+            <span>Reserved:</span>
+            <span className="font-mono text-white text-[13px]">{reservedCount}</span>
+          </div>
+
+          <span className="text-white/20">|</span>
+
+          {/* Occupied */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[#EF4444]">
+            <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+            <span>Occupied:</span>
+            <span className="font-mono text-white text-[13px]">{occupiedCount}</span>
+          </div>
+
+          <span className="text-white/20">|</span>
+
+          {/* Vehicles Inside */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-white/80">
+            <span>Inside:</span>
+            <span className="font-mono text-[#D84A2B] text-[13px]">{vehiclesInside}</span>
+          </div>
         </div>
-      </header>
 
-      {/* Mobile Drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#FBF8F3]/98 backdrop-blur-xl lg:hidden flex flex-col p-6"
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3D9] mb-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl border border-[#FADCD5] flex items-center justify-center bg-[#FFF5F2] p-1">
-                  <ParknexIcon className="w-5 h-5" />
-                </div>
-                <span className="font-bold text-[16px] text-[#1C1917]">PARKNEX Admin</span>
-              </div>
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="Close navigation menu"
-                className="w-11 h-11 rounded-xl flex items-center justify-center bg-white border border-[#E2D9CC] text-[#1C1917] min-w-[44px]"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        {/* Right: Issues Alert Pill & Operator Status */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {openReports && openReports.length > 0 && (
+            <Link
+              href="/admin/customer-issues"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] text-[12px] font-bold hover:bg-[#EF4444]/25 transition-colors animate-pulse"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{openReports.length} Issue{openReports.length > 1 ? "s" : ""}</span>
+            </Link>
+          )}
+
+          <div className="flex items-center gap-2 bg-[#151B24] border border-white/[0.08] px-3 py-1.5 rounded-xl">
+            <ShieldCheck className="w-4 h-4 text-[#D84A2B]" />
+            <div className="flex flex-col text-left">
+              <span className="text-[11.5px] font-bold text-white leading-tight">Operator Station 01</span>
+              <span className="text-[10px] text-[rgba(245,247,250,0.5)] font-mono">Control Desk</span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <nav className="flex flex-col gap-2 flex-1">
-              {adminNavLinks.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all min-h-[48px] ${
-                      isActive
-                        ? "bg-[#D84A2B]/10 text-[#D84A2B] border border-[#D84A2B]/20"
-                        : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="pt-4 border-t border-[#EAE3D9]">
-              <Link
-                href="/auth/login"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] text-[#EF4444] font-medium min-h-[44px]"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Operator Logout</span>
-              </Link>
+      {/* Mobile Drawer Navigation */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-white/[0.08] bg-[#10151D] px-4 py-4 flex flex-col gap-1.5">
+          {/* Mobile Stats Ribbon */}
+          <div className="grid grid-cols-4 gap-2 pb-3 mb-2 border-b border-white/[0.08] text-center text-[11px] font-bold">
+            <div className="bg-[#0A0D14] p-2 rounded-lg border border-white/[0.06]">
+              <span className="text-[#10B981] block text-[14px] font-mono">{availableCount}</span>
+              <span className="text-white/60 text-[10px]">Available</span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            <div className="bg-[#0A0D14] p-2 rounded-lg border border-white/[0.06]">
+              <span className="text-[#60A5FA] block text-[14px] font-mono">{recommendedCount}</span>
+              <span className="text-white/60 text-[10px]">Recommended</span>
+            </div>
+            <div className="bg-[#0A0D14] p-2 rounded-lg border border-white/[0.06]">
+              <span className="text-[#EF4444] block text-[14px] font-mono">{occupiedCount}</span>
+              <span className="text-white/60 text-[10px]">Occupied</span>
+            </div>
+            <div className="bg-[#0A0D14] p-2 rounded-lg border border-white/[0.06]">
+              <span className="text-[#D84A2B] block text-[14px] font-mono">{vehiclesInside}</span>
+              <span className="text-white/60 text-[10px]">Inside</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {adminNavLinks.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all ${
+                    isActive
+                      ? "bg-[#D84A2B] text-white font-bold"
+                      : "text-[rgba(245,247,250,0.7)] hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </header>
   );
 }

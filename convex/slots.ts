@@ -7,7 +7,7 @@ export const getSlots = query({
   args: { floor: v.optional(v.string()) },
   handler: async (ctx, args) => {
     let slots;
-    if (args.floor) {
+    if (args.floor && args.floor !== "ALL") {
       slots = await ctx.db
         .query("slots")
         .withIndex("by_floor", (q) => q.eq("floor", args.floor as string))
@@ -27,6 +27,7 @@ export const getSlots = query({
       available: slots.filter(s => s.status === "available").length,
       occupied: slots.filter(s => s.status === "occupied").length,
       reserved: slots.filter(s => s.status === "reserved" || s.status === "temporarily_held").length,
+      maintenance: slots.filter(s => s.status === "maintenance").length,
     };
 
     return { slots, nearestAvailableSlot, stats };
@@ -34,7 +35,18 @@ export const getSlots = query({
 });
 
 export const updateSlotStatus = mutation({
-  args: { slotId: v.string(), status: v.union(v.literal("available"), v.literal("occupied"), v.literal("reserved"), v.literal("temporarily_held")) },
+  args: {
+    slotId: v.string(),
+    status: v.union(
+      v.literal("available"),
+      v.literal("occupied"),
+      v.literal("reserved"),
+      v.literal("temporarily_held"),
+      v.literal("maintenance")
+    ),
+    operatorEmail: v.optional(v.string()),
+    reason: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const slot = await ctx.db
       .query("slots")
@@ -45,7 +57,23 @@ export const updateSlotStatus = mutation({
       throw new Error("Slot not found");
     }
 
-    await ctx.db.patch(slot._id, { status: args.status });
+    await ctx.db.patch(slot._id, {
+      status: args.status,
+      lastOccupancySource: "operator_confirmation",
+      occupancyConfidence: 1.0,
+    });
+
+    if (args.operatorEmail) {
+      await ctx.db.insert("audit_logs", {
+        operatorEmail: args.operatorEmail,
+        action: "SLOT_STATUS_OVERRIDE",
+        targetType: "slot",
+        targetId: args.slotId,
+        reason: args.reason,
+        details: `Changed Space ${slot.slotNumber} status from ${slot.status} to ${args.status}`,
+        timestamp: new Date().toISOString(),
+      });
+    }
   },
 });
 
@@ -94,13 +122,26 @@ export const upsertSlot = mutation({
     zone: v.string(),
     pillar: v.string(),
     slotNumber: v.string(),
-    status: v.union(v.literal("available"), v.literal("occupied"), v.literal("reserved"), v.literal("temporarily_held")),
+    status: v.union(
+      v.literal("available"),
+      v.literal("occupied"),
+      v.literal("reserved"),
+      v.literal("temporarily_held"),
+      v.literal("maintenance")
+    ),
     positionX: v.number(),
     positionY: v.number(),
     positionZ: v.number(),
     rotationY: v.number(),
     distanceFromEntrance: v.number(),
     walkingDirections: v.array(v.string()),
+    vehicleConstraints: v.optional(
+      v.object({
+        maxVehicleSize: v.string(),
+        isEV: v.boolean(),
+        isHandicapped: v.boolean(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -110,8 +151,9 @@ export const upsertSlot = mutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, args);
+      return existing._id;
     } else {
-      await ctx.db.insert("slots", args);
+      return await ctx.db.insert("slots", args);
     }
   },
 });

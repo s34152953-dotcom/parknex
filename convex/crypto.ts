@@ -1,53 +1,34 @@
 // @ts-nocheck
-// ── PARKNEX Crypto Module ──
-// HMAC-SHA256 based token signing/verification for exit passes and access tokens.
-// Uses Web Crypto API (available in Convex runtime).
+const SECRET_KEY = process.env.PASS_SIGNING_SECRET || "PARKNEX_SUPER_SECRET_KEY_FOR_JWT_HMAC_DO_NOT_SHARE";
 
-const SECRET_KEY = "PARKNEX_SUPER_SECRET_KEY_FOR_JWT_HMAC_DO_NOT_SHARE";
-
-async function getHmacKey(): Promise<CryptoKey> {
+async function getCryptoKey(usage: "sign" | "verify"): Promise<CryptoKey> {
   const encoder = new TextEncoder();
-  return crypto.subtle.importKey(
+  const keyMaterial = encoder.encode(SECRET_KEY);
+  return await crypto.subtle.importKey(
     "raw",
-    encoder.encode(SECRET_KEY),
+    keyMaterial,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"]
+    [usage]
   );
 }
 
-/**
- * Generate a cryptographically random access token (URL-safe base64).
- * Used for customer dashboard links - NOT the exit pass.
- */
-export function generateAccessToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * Sign an exit pass token with HMAC-SHA256.
- * Contains: bookingPayload (slotId + timestamp), expiry (24h).
- * This is the token embedded in the QR code.
- */
-export async function signExitToken(bookingPayload: string): Promise<string> {
-  const key = await getHmacKey();
+export async function signExitToken(bookingId: string, vehicleNumber?: string, expHours: number = 24): Promise<string> {
+  const cryptoKey = await getCryptoKey("sign");
   const encoder = new TextEncoder();
 
   const payload = JSON.stringify({
-    bookingId: bookingPayload,
-    exp: Date.now() + 1000 * 60 * 60 * 24, // 24 hours expiry
+    type: "vehicle_exit",
+    bookingId,
+    vehicleNumber: vehicleNumber?.toUpperCase() || "",
+    exp: Date.now() + 1000 * 60 * 60 * expHours,
     iat: Date.now(),
-    nonce: generateAccessToken().substring(0, 16), // Unique per token
   });
   const payloadBase64 = btoa(payload);
 
   const signature = await crypto.subtle.sign(
     "HMAC",
-    key,
+    cryptoKey,
     encoder.encode(payloadBase64)
   );
 
@@ -55,23 +36,74 @@ export async function signExitToken(bookingPayload: string): Promise<string> {
   return `${payloadBase64}.${signatureBase64}`;
 }
 
-/**
- * Verify a signed exit token. Returns parsed payload or null if invalid/expired.
- */
-export async function verifyExitToken(token: string): Promise<{ bookingId: string } | null> {
+export async function signEntryToken(vehicleNumber: string, email?: string, expHours: number = 72): Promise<string> {
+  const cryptoKey = await getCryptoKey("sign");
+  const encoder = new TextEncoder();
+
+  const payload = JSON.stringify({
+    type: "preregistered_entry",
+    vehicleNumber: vehicleNumber.toUpperCase(),
+    email: email || "",
+    exp: Date.now() + 1000 * 60 * 60 * expHours,
+    iat: Date.now(),
+  });
+  const payloadBase64 = btoa(payload);
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    encoder.encode(payloadBase64)
+  );
+
+  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return `${payloadBase64}.${signatureBase64}`;
+}
+
+export async function signPillarToken(pillarData: {
+  mallId: string;
+  floor: string;
+  zone: string;
+  pillar: string;
+  slotNumber?: string;
+}): Promise<string> {
+  const cryptoKey = await getCryptoKey("sign");
+  const encoder = new TextEncoder();
+
+  const payload = JSON.stringify({
+    type: "pillar_location",
+    ...pillarData,
+    exp: Date.now() + 1000 * 60 * 60 * 24 * 365, // 1 year for physical pillar signs
+    iat: Date.now(),
+  });
+  const payloadBase64 = btoa(payload);
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    encoder.encode(payloadBase64)
+  );
+
+  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return `${payloadBase64}.${signatureBase64}`;
+}
+
+export async function verifyTypedToken(
+  token: string,
+  expectedType: "vehicle_exit" | "pillar_location" | "preregistered_entry"
+): Promise<any | null> {
   try {
-    const parts = token.split(".");
+    const parts = token.trim().split(".");
     if (parts.length !== 2) return null;
     const [payloadBase64, signatureBase64] = parts;
     if (!payloadBase64 || !signatureBase64) return null;
 
-    const key = await getHmacKey();
+    const cryptoKey = await getCryptoKey("verify");
     const encoder = new TextEncoder();
     const signature = Uint8Array.from(atob(signatureBase64), (c) => c.charCodeAt(0));
 
     const isValid = await crypto.subtle.verify(
       "HMAC",
-      key,
+      cryptoKey,
       signature,
       encoder.encode(payloadBase64)
     );
@@ -79,10 +111,58 @@ export async function verifyExitToken(token: string): Promise<{ bookingId: strin
     if (!isValid) return null;
 
     const payload = JSON.parse(atob(payloadBase64));
-    if (payload.exp < Date.now()) return null; // Expired
+    if (payload.exp && payload.exp < Date.now()) return null; // Expired
 
-    return { bookingId: payload.bookingId };
-  } catch (err) {
+    // Enforce strict token type segregation
+    if (expectedType === "vehicle_exit") {
+      if (payload.type && payload.type !== "vehicle_exit") return null;
+      if (!payload.bookingId) return null;
+    } else if (expectedType === "pillar_location") {
+      if (payload.type !== "pillar_location") return null;
+    } else if (expectedType === "preregistered_entry") {
+      if (payload.type !== "preregistered_entry") return null;
+    }
+
+    return payload;
+  } catch {
     return null;
   }
+}
+
+export async function verifyExitToken(token: string): Promise<any | null> {
+  return verifyTypedToken(token, "vehicle_exit");
+}
+
+export async function verifyPillarToken(token: string): Promise<any | null> {
+  return verifyTypedToken(token, "pillar_location");
+}
+
+export async function verifyEntryToken(token: string): Promise<any | null> {
+  return verifyTypedToken(token, "preregistered_entry");
+}
+
+/**
+ * Generates a cryptographically secure, non-guessable fallback code (e.g. PNX-7A9K2M)
+ * Uses crypto.getRandomValues (never Math.random())
+ */
+export function generateSecureFallbackCode(prefix = "PNX"): string {
+  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // Excludes ambiguous 0, 1, O, I
+  const randomBytes = new Uint8Array(6);
+  crypto.getRandomValues(randomBytes);
+  let code = "";
+  for (let i = 0; i < randomBytes.length; i++) {
+    code += chars[randomBytes[i] % chars.length];
+  }
+  return `${prefix}-${code}`;
+}
+
+/**
+ * Generates a cryptographically secure 6-digit numeric OTP
+ * Uses crypto.getRandomValues (never Math.random())
+ */
+export function generateSecureOtp(): string {
+  const randomValues = new Uint32Array(1);
+  crypto.getRandomValues(randomValues);
+  const otpNum = 100000 + (randomValues[0] % 900000);
+  return otpNum.toString();
 }

@@ -1,755 +1,480 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import dynamic from "next/dynamic";
-import { ParkingSlot } from "@/lib/parking/nearestSlot";
-import AdminParkingMap from "@/components/admin/AdminParkingMap";
-import WebGLBoundary from "@/components/parking/WebGLBoundary";
-import { isWebGLAvailable } from "@/components/parking/InteractiveParkingMap3D";
-import {
-  Sparkles,
-  Check,
-  Car,
-  Phone,
-  ArrowRight,
-  RefreshCw,
-  ExternalLink,
-  Copy,
-  AlertCircle,
-  Clock,
-  Send,
-  Layers,
-  LayoutGrid,
-  Box,
-} from "lucide-react";
-import Link from "next/link";
-import { useQuery, useMutation, useConvex } from "convex/react";
+import React, { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import Link from "next/link";
+import {
+  Layers,
+  MapPin,
+  CarFront,
+  CheckCircle2,
+  RefreshCw,
+  Wrench,
+  Eye,
+  SlidersHorizontal,
+  Navigation,
+  Compass,
+} from "lucide-react";
+import AdminFloorPlan2D, { ParkingSlot2D } from "@/components/admin/AdminFloorPlan2D";
+import InteractiveParkingMap3D from "@/components/parking/InteractiveParkingMap3D";
+import { getTop3Recommendations, SlotRecommendationInput } from "@/lib/parking/recommendation";
 
-// Lazy-load the Three.js 3D component to optimize initial load
-const InteractiveParkingMap3D = dynamic(
-  () => import("@/components/parking/InteractiveParkingMap3D"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-full min-h-[540px] bg-[#FBF8F3] rounded-[24px] border border-[#EAE3D9] flex flex-col items-center justify-center p-8 text-center animate-pulse">
-        <div className="w-12 h-12 rounded-[16px] bg-[#FAF7F2] border border-[#E2D9CC] flex items-center justify-center text-[#D84A2B] mb-3">
-          <Box className="w-6 h-6 animate-bounce" />
-        </div>
-        <p className="text-[14px] font-bold text-[#1C1917]">Initializing 3D Parking Floor Space...</p>
-        <p className="text-[12px] text-[#78716C] mt-0.5">Configuring 3D shaders and spatial geometry</p>
-      </div>
-    ),
-  }
-);
+export default function AdminLiveParkingMapPage() {
+  const [selectedFloor, setSelectedFloor] = useState<string>("B2");
+  const [selectedZone, setSelectedZone] = useState<string>("ALL");
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
+  const [selectedSlot, setSelectedSlot] = useState<ParkingSlot2D | null>(null);
+  const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+  const [overrideStatus, setOverrideStatus] = useState<"available" | "maintenance" | "occupied">("maintenance");
+  const [overrideReason, setOverrideReason] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-export default function AdminBookingPage() {
-  const [floor, setFloor] = useState<string>("B2");
-  const [viewMode, setViewMode] = useState<"2D" | "3D">("3D");
-  const [webGLSupported, setWebGLSupported] = useState(true);
+  // Fetch slots from Convex
+  const slotsData = useQuery(api.slots.getSlots, {
+    floor: selectedFloor === "ALL" ? undefined : selectedFloor,
+  });
+  const rawSlots = slotsData?.slots || [];
 
-  // Convex Real-Time Queries
-  const slotsData = useQuery(api.slots.getSlots, { floor });
-  const createBooking = useMutation(api.bookings.createBooking);
-  const holdSlotMutation = useMutation(api.slots.holdSlot);
-  const updateSlotStatus = useMutation(api.slots.updateSlotStatus);
-  const retrySmsMutation = useMutation(api.bookings.retrySms);
-  const updateSmsStatus = useMutation(api.bookings.updateSmsStatus);
-  const submittingRef = useRef(false);
+  // Mutations
+  const updateStatusMutation = useMutation(api.slots.updateSlotStatus);
 
-  const slots = (slotsData?.slots || []).map((s: any) => ({ ...s, id: s.slotId }));
-  const nearestSlot = slotsData?.nearestAvailableSlot ? { ...slotsData.nearestAvailableSlot, id: slotsData.nearestAvailableSlot.slotId } : null;
-  const stats = slotsData?.stats || null;
-  const loading = slotsData === undefined;
-  
-  const [selectedSlot, setSelectedSlot] = useState<ParkingSlot | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  // Map slots to Recommendation input
+  const recommendationInputs: SlotRecommendationInput[] = useMemo(() => {
+    return rawSlots.map((s) => ({
+      slotId: s.slotId,
+      slotNumber: s.slotNumber,
+      floor: s.floor,
+      zone: s.zone,
+      pillar: s.pillar,
+      status: s.status as any,
+      distanceFromEntrance: s.distanceFromEntrance,
+      positionX: s.positionX,
+      positionZ: s.positionZ,
+      vehicleConstraints: s.vehicleConstraints,
+    }));
+  }, [rawSlots]);
 
-  // Form State
-  const [vehicleNumber, setVehicleNumber] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  // Calculate top 3 recommendations
+  const topRecommendations = useMemo(() => {
+    return getTop3Recommendations(recommendationInputs);
+  }, [recommendationInputs]);
 
-  // Success State
-  const [bookedResult, setBookedResult] = useState<any | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [resendingSms, setResendingSms] = useState(false);
-  const [smsStatusMessage, setSmsStatusMessage] = useState<string | null>(null);
+  const recommendedSlotIds = useMemo(() => {
+    return topRecommendations.map((r) => r.slot.slotId);
+  }, [topRecommendations]);
 
-  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
+  const selectedRecommendation = useMemo(() => {
+    if (!selectedSlot) return null;
+    return topRecommendations.find((r) => r.slot.slotId === selectedSlot.slotId);
+  }, [selectedSlot, topRecommendations]);
 
-  // Mount & Check WebGL Support & Load Preferred View Mode
-  useEffect(() => {
-    setIsMounted(true);
-    const supported = isWebGLAvailable();
-    setWebGLSupported(supported);
-
-    const savedMode = typeof window !== "undefined" ? localStorage.getItem("parknex_view_mode") : null;
-    if (savedMode === "2D" || savedMode === "3D") {
-      setViewMode(supported ? (savedMode as "2D" | "3D") : "2D");
-    } else if (!supported) {
-      setViewMode("2D");
-    }
-  }, []);
-
-  const handleToggleViewMode = (mode: "2D" | "3D", isFallback = false) => {
-    if (mode === "3D" && !webGLSupported) {
-      setFallbackMessage("3D graphics acceleration is not supported on this device.");
-      return;
-    }
-    setViewMode(mode);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("parknex_view_mode", mode);
-    }
-    if (isFallback) {
-      setFallbackMessage("3D unavailable on this device. Switched to 2D fallback.");
-      setTimeout(() => setFallbackMessage(null), 5000);
-    }
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // Automatic real-time updates from Convex completely replace manual fetching!
-
-  // Handle slot selection
-  const handleSelectSlot = async (slot: ParkingSlot) => {
-    // Release previous if changing
-    if (selectedSlot && selectedSlot.id !== slot.id) {
-      try { await updateSlotStatus({ slotId: selectedSlot.id, status: "available" }); } catch (e) {}
-    }
-    setSelectedSlot(slot);
-    setFormError(null);
-    setBookedResult(null);
-    try {
-      await holdSlotMutation({ slotId: slot.id });
-    } catch (e: any) {
-      setFormError(e.message || "Slot just taken. Please select another.");
-      setSelectedSlot(null);
-    }
-  };
-
-  // Handle Quick Select Nearest
-  const handleSelectNearest = async () => {
-    if (nearestSlot) {
-      await handleSelectSlot(nearestSlot);
-    }
-  };
-
-  // Handle Confirm Booking with validation + SMS dispatch
-  const handleConfirmBooking = async (e: React.FormEvent) => {
+  const handleStatusOverride = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) return;
-    // Prevent duplicate submissions
-    if (submittingRef.current) return;
-
-    const cleanPlate = vehicleNumber.trim().toUpperCase().replace(/\s+/g, " ");
-    const cleanPhone = phoneNumber.trim();
-
-    if (!cleanPlate || cleanPlate.length < 4) {
-      setFormError("Please enter a valid vehicle registration number (e.g. AA 00 BB 0000).");
-      return;
-    }
-
-    const digitsOnly = cleanPhone.replace(/\D/g, "");
-    if (digitsOnly.length < 10) {
-      setFormError("Please enter a valid 10-digit mobile number for SMS dispatch.");
-      return;
-    }
-
-    const fullPhone = cleanPhone.startsWith("+") ? cleanPhone : `${countryCode}${digitsOnly}`;
-
-    setSubmitting(true);
-    submittingRef.current = true;
-    setFormError(null);
-
+    setIsUpdating(true);
     try {
-      // Step 1: Create booking in Convex (atomic - reserves slot + generates tokens)
-      const result = await createBooking({
-        vehicleNumber: cleanPlate,
-        phoneNumber: fullPhone,
-        slotId: selectedSlot.id,
-        mallName: selectedSlot.mallName,
+      await updateStatusMutation({
+        slotId: selectedSlot.slotId,
+        status: overrideStatus,
+        operatorEmail: "operator:desk01",
+        reason: overrideReason || "Manual status change from Live Parking Map",
       });
-
-      const customerLink = `${typeof window !== "undefined" ? window.location.origin : ""}/customer/${result.customerAccessToken}`;
-
-      // Step 2: Dispatch SMS via Next.js API route (calls real SMS provider)
-      let smsStatus = "PENDING";
-      let smsProvider = "none";
-      let smsMessageId = "";
-      let smsError = "";
-
-      try {
-        const smsRes = await fetch("/api/bookings/send-sms", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: result.bookingId,
-            phoneNumber: fullPhone,
-            vehicleNumber: cleanPlate,
-            customerAccessToken: result.customerAccessToken,
-            floor: result.floor,
-            zone: result.zone,
-            pillar: result.pillar,
-            slotNumber: result.slotNumber,
-          }),
-        });
-
-        const smsData = await smsRes.json();
-        smsStatus = smsData.smsStatus || "FAILED";
-        smsProvider = smsData.provider || "none";
-        smsMessageId = smsData.messageId || "";
-        smsError = smsData.error || "";
-      } catch (smsErr: any) {
-        smsStatus = "FAILED";
-        smsError = smsErr.message || "Network error sending SMS.";
-      }
-
-      // Step 3: Update Convex with SMS delivery status
-      try {
-        await updateSmsStatus({
-          bookingId: result.bookingId,
-          smsStatus: smsStatus as "SENT" | "FAILED" | "PENDING",
-          smsMessageId: smsMessageId || undefined,
-          smsProvider: smsProvider || undefined,
-        });
-      } catch (e) {
-        // Non-critical: booking was already created successfully
-      }
-
-      setBookedResult({
-        id: result.bookingId,
-        vehicleNumber: cleanPlate,
-        phoneNumber: fullPhone,
-        slotNumber: result.slotNumber,
-        floor: result.floor,
-        zone: result.zone,
-        pillar: result.pillar,
-        distanceFromEntrance: result.distanceFromEntrance,
-        customerAccessToken: result.customerAccessToken,
-        customerLink,
-        entryTime: new Date().toISOString(),
-        smsStatus,
-        smsProvider,
-        smsError,
-      });
+      setOverrideModalOpen(false);
+      setOverrideReason("");
+      setSelectedSlot((prev) => (prev ? { ...prev, status: overrideStatus } : null));
     } catch (err: any) {
-      setFormError(err.message || "Error confirming booking.");
+      alert("Failed to update space status: " + err.message);
     } finally {
-      setSubmitting(false);
-      submittingRef.current = false;
+      setIsUpdating(false);
     }
-  };
-
-  // Resend SMS via API (reuses existing booking + customer access token)
-  const handleResendSms = async () => {
-    if (!bookedResult?.id) return;
-    setResendingSms(true);
-    setSmsStatusMessage(null);
-    try {
-      // Mark as pending in Convex
-      const retryData = await retrySmsMutation({ bookingId: bookedResult.id });
-
-      // Actually send the SMS via API
-      const smsRes = await fetch("/api/bookings/send-sms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: bookedResult.id,
-          phoneNumber: retryData.phoneNumber || bookedResult.phoneNumber,
-          vehicleNumber: retryData.vehicleNumber || bookedResult.vehicleNumber,
-          customerAccessToken: retryData.customerAccessToken || bookedResult.customerAccessToken,
-          floor: retryData.floor || bookedResult.floor,
-          zone: retryData.zone || bookedResult.zone,
-          pillar: retryData.pillar || bookedResult.pillar,
-          slotNumber: retryData.slotNumber || bookedResult.slotNumber,
-        }),
-      });
-
-      const smsData = await smsRes.json();
-      if (smsData.success) {
-        setSmsStatusMessage(`SMS sent via ${smsData.provider}.`);
-        setBookedResult((prev: any) => prev ? { ...prev, smsStatus: "SENT", smsProvider: smsData.provider } : prev);
-        await updateSmsStatus({
-          bookingId: bookedResult.id,
-          smsStatus: "SENT",
-          smsMessageId: smsData.messageId || undefined,
-          smsProvider: smsData.provider || undefined,
-        });
-      } else {
-        setSmsStatusMessage(`SMS failed: ${smsData.error || "Unknown error"}. Use Copy Link to share manually.`);
-        await updateSmsStatus({ bookingId: bookedResult.id, smsStatus: "FAILED" });
-      }
-    } catch (err: any) {
-      setSmsStatusMessage(err.message || "Failed to send SMS. Use Copy Link instead.");
-    } finally {
-      setResendingSms(false);
-    }
-  };
-
-  const handleCopyLink = () => {
-    if (bookedResult?.customerLink) {
-      navigator.clipboard.writeText(bookedResult.customerLink);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    }
-  };
-
-  const handleBookAnother = async () => {
-    if (selectedSlot && !bookedResult) {
-       // Release hold if canceling mid-booking
-       try { await updateSlotStatus({ slotId: selectedSlot.id, status: "available" }); } catch (e) {}
-    }
-    setSelectedSlot(null);
-    setBookedResult(null);
-    setVehicleNumber("");
-    setPhoneNumber("");
-    setFormError(null);
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 lg:p-10 max-w-[1700px] mx-auto flex flex-col gap-8">
-      {/* ── Content Header Row ─────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE3D9]">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6 select-none text-[#F5F7FA]">
+      {/* ── MAP HEADER CONTROLS ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-white/[0.08]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11.5px] font-bold text-[#D84A2B] uppercase tracking-wider">
-              OPERATIONAL BOOKING STATION
+          <h1 className="text-[22px] sm:text-[26px] font-black text-white tracking-tight">
+            Live Parking Map
+          </h1>
+          <p className="text-[13px] text-[rgba(245,247,250,0.6)] mt-0.5">
+            Real-time space occupancy and bay management.
+          </p>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Floor Selector */}
+          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+            {["B2", "B1", "G", "ALL"].map((fl) => (
+              <button
+                key={fl}
+                onClick={() => {
+                  setSelectedFloor(fl);
+                  setSelectedSlot(null);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                  selectedFloor === fl
+                    ? "bg-[#D84A2B] text-white shadow-xs"
+                    : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                }`}
+              >
+                {fl === "ALL" ? "All Floors" : `Level ${fl}`}
+              </button>
+            ))}
+          </div>
+
+          {/* Zone Selector */}
+          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+            {[
+              { id: "ALL", label: "All Zones" },
+              { id: "Zone A", label: "Zone A" },
+              { id: "Zone B", label: "Zone B" },
+            ].map((z) => (
+              <button
+                key={z.id}
+                onClick={() => setSelectedZone(z.id)}
+                className={`px-2.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                  selectedZone === z.id
+                    ? "bg-white/[0.12] text-white"
+                    : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                }`}
+              >
+                {z.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Floor Plan (2D) / Interactive View (3D) Toggle */}
+          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode("2d")}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "2d"
+                  ? "bg-white/[0.14] text-white"
+                  : "text-[rgba(245,247,250,0.6)] hover:text-white"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Floor Plan</span>
+            </button>
+            <button
+              onClick={() => setViewMode("3d")}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "3d"
+                  ? "bg-white/[0.14] text-white"
+                  : "text-[rgba(245,247,250,0.6)] hover:text-white"
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Interactive View</span>
+            </button>
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="p-2 rounded-xl bg-[#10151D] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </button>
+
+          {/* New Entry Button */}
+          <Link
+            href="/admin/new-entry"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[12.5px] shadow-[0_2px_12px_rgba(216,74,43,0.3)] transition-all cursor-pointer"
+          >
+            <CarFront className="w-4 h-4" />
+            <span>New Entry</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── TOP RECOMMENDED SPACES ── */}
+      {topRecommendations.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-white/60">
+              Recommended Spaces
+            </span>
+            <span className="text-[11.5px] text-white/40">
+              Ranked by entry proximity and lift walking distance
             </span>
           </div>
-          <h1 className="text-[26px] sm:text-[32px] font-extrabold text-[#1C1917] tracking-tight">
-            {slots.length > 0 ? `${slots[0].mallName} Parking` : "Parking Operations"}
-          </h1>
-          <p className="text-[14px] text-[#78716C] mt-1">
-            Assign parking slots to incoming vehicles and dispatch automated SMS navigation links
-          </p>
-        </div>
 
-        {fallbackMessage && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#FF5C68]/10 border border-[#FF5C68]/30 rounded-xl text-[12.5px] font-semibold text-[#FF5C68] self-start sm:self-center">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{fallbackMessage}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {topRecommendations.map((rec) => (
+              <button
+                key={rec.slot.slotId}
+                onClick={() => setSelectedSlot(rec.slot as any)}
+                className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  selectedSlot?.slotId === rec.slot.slotId
+                    ? "bg-[#151B24] border-[#2563EB] ring-2 ring-[#2563EB]/40 shadow-lg"
+                    : "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white text-[11px] font-black flex items-center justify-center">
+                      #{rec.rank}
+                    </span>
+                    <span className="font-mono font-extrabold text-[15px] text-white">
+                      Space {rec.slot.slotNumber}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#60A5FA] bg-[#2563EB]/15 px-2.5 py-0.5 rounded-full border border-[#2563EB]/30">
+                    {rec.score}/100 Match
+                  </span>
+                </div>
+
+                <p className="text-[11.5px] text-white/70 line-clamp-1 mt-2">
+                  {rec.reason}
+                </p>
+
+                <div className="flex items-center justify-between text-[11px] text-white/50 mt-2.5 pt-2 border-t border-white/[0.04]">
+                  <span>Level {rec.slot.floor} · {rec.slot.pillar}</span>
+                  <span className="text-[#3B82F6] font-semibold">Select Space →</span>
+                </div>
+              </button>
+            ))}
           </div>
-        )}
-      </div>
-
-      {/* ── Dedicated Controls Toolbar (Floor Selector & 2D/3D Switcher) ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-2 bg-white rounded-2xl border border-[#EAE3D9] shadow-xs">
-        {/* Floor Level Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {["B2", "B1", "G", "ALL"].map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => {
-                setFloor(f);
-                setSelectedSlot(null);
-              }}
-              className={`h-10 px-4 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
-                floor === f
-                  ? "bg-[#D84A2B] text-white shadow-sm shadow-[#D84A2B]/20"
-                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF7F2]"
-              }`}
-            >
-              {f === "ALL" ? "All Levels" : `Level ${f}`}
-            </button>
-          ))}
         </div>
+      )}
 
-        {/* View Toggle (2D/3D) and Actions */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-[#FAF7F2] p-1 rounded-xl border border-[#EAE3D9]">
-            <button
-              type="button"
-              onClick={() => handleToggleViewMode("3D")}
-              className={`h-8 px-3 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
-                viewMode === "3D"
-                  ? "bg-white text-[#D84A2B] shadow-xs"
-                  : "text-[#78716C] hover:text-[#1C1917]"
-              }`}
-              title="Interactive 3D Space"
-            >
-              <Box className="w-3.5 h-3.5" />
-              <span>3D Map</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleToggleViewMode("2D")}
-              className={`h-8 px-3 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
-                viewMode === "2D"
-                  ? "bg-white text-[#D84A2B] shadow-xs"
-                  : "text-[#78716C] hover:text-[#1C1917]"
-              }`}
-              title="2D Floor Layout Grid"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>2D Grid</span>
-            </button>
-          </div>
-
-          <button
-            onClick={() => {}}
-            disabled={loading}
-            className="h-10 w-10 rounded-xl bg-white border border-[#EAE3D9] flex items-center justify-center text-[#78716C] hover:text-[#D84A2B] hover:border-[#D84A2B]/40 hover:bg-[#FAF7F2] transition-all shadow-xs cursor-pointer min-w-[40px]"
-            title="Refresh availability"
-            aria-label="Refresh availability"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#D84A2B]" : ""}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Summary Stats Strip (Zero-Flashing Skeleton Protected) ───────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
-        {/* Total Spaces */}
-        <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] min-w-0">
-          <p className="text-[10px] sm:text-[11px] font-bold text-[#A8A29E] uppercase tracking-wider truncate">Total Spaces</p>
-          {loading && !stats ? (
-            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
-          ) : (
-            <p className="text-[26px] font-extrabold text-[#1C1917] mt-1">{stats?.total ?? 0}</p>
-          )}
-          <p className="text-[12px] text-[#78716C] mt-0.5">Configured layout</p>
-        </div>
-
-        {/* Available */}
-        <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] min-w-0">
-          <p className="text-[10px] sm:text-[11px] font-bold text-[#10B981] uppercase tracking-wider truncate">Available Spaces</p>
-          {loading && !stats ? (
-            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
-          ) : (
-            <p className="text-[26px] font-extrabold text-[#10B981] mt-1">{stats?.available ?? 0}</p>
-          )}
-          <p className="text-[12px] text-[#10B981] mt-0.5 opacity-80">Ready for booking</p>
-        </div>
-
-        {/* Occupied */}
-        <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] min-w-0">
-          <p className="text-[10px] sm:text-[11px] font-bold text-[#EF4444] uppercase tracking-wider truncate">Occupied Spaces</p>
-          {loading && !stats ? (
-            <div className="h-8 w-16 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
-          ) : (
-            <p className="text-[26px] font-extrabold text-[#EF4444] mt-1">{stats?.occupied ?? 0}</p>
-          )}
-          <p className="text-[12px] text-[#78716C] mt-0.5">Active vehicles</p>
-        </div>
-
-        {/* Nearest Recommended */}
-        <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] min-w-0 border-[#D84A2B]/30 bg-gradient-to-br from-[#FFFFFF] to-[#D84A2B]/5">
-          <p className="text-[10px] sm:text-[11px] font-bold text-[#D84A2B] uppercase tracking-wider truncate">Recommended Nearest</p>
-          {loading && !nearestSlot ? (
-            <div className="h-8 w-28 bg-[#FAF7F2] rounded-lg animate-pulse my-1" />
-          ) : (
-            <p className="text-[22px] font-extrabold text-[#D84A2B] mt-1 truncate drop-shadow-[0_0_8px_rgba(255,85,51,0.2)]">
-              {nearestSlot ? `${nearestSlot.floor} · ${nearestSlot.slotNumber}` : "None on Floor"}
-            </p>
-          )}
-          <p className="text-[12px] text-[#78716C] mt-0.5">
-            {nearestSlot ? `${nearestSlot.distanceFromEntrance}m from entrance` : "Switch floor"}
-          </p>
-        </div>
-      </div>
-
-      {/* ── Main Operations Workspace: Map (Left) / Booking Panel (Right) ─ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left 68% Parking Map (3D or 2D Grid) */}
-        <div className="lg:col-span-8 h-full min-h-[580px]">
-          {viewMode === "3D" && webGLSupported ? (
-            <WebGLBoundary onFallbackTo2D={() => handleToggleViewMode("2D", true)}>
-              <InteractiveParkingMap3D
-                slots={slots}
-                selectedSlot={selectedSlot}
-                nearestSlot={nearestSlot}
-                onSelectSlot={handleSelectSlot}
-                currentFloor={floor}
-                onFallbackTo2D={() => handleToggleViewMode("2D", true)}
-              />
-            </WebGLBoundary>
-          ) : (
-            <AdminParkingMap
-              slots={slots}
-              selectedSlot={selectedSlot}
-              nearestSlot={nearestSlot}
-              onSelectSlot={handleSelectSlot}
-              currentFloor={floor}
+      {/* ── DESKTOP GRID: LARGE MAP ON LEFT + DETAILS PANEL ON RIGHT ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+        {/* Left: Large Live Parking Map */}
+        <div className="w-full">
+          {viewMode === "2d" ? (
+            <AdminFloorPlan2D
+              slots={rawSlots as any}
+              selectedSlotId={selectedSlot?.slotId || null}
+              recommendedSlotIds={recommendedSlotIds}
+              onSelectSlot={(slot) => setSelectedSlot(slot)}
+              floor={selectedFloor}
+              zoneFilter={selectedZone}
             />
+          ) : (
+            <div className="w-full min-h-[380px] sm:min-h-[500px] lg:min-h-[650px] rounded-3xl border border-white/10 bg-[#10151D] overflow-hidden shadow-xl shadow-black/20">
+              <InteractiveParkingMap3D
+                slots={rawSlots.map((s) => ({
+                  id: s.slotId,
+                  slotId: s.slotId,
+                  mallId: s.mallId || "central_mall",
+                  mallName: s.mallName || "Central Mall Grand",
+                  slotNumber: s.slotNumber,
+                  floor: s.floor,
+                  zone: s.zone,
+                  pillar: s.pillar,
+                  status: s.status as any,
+                  positionX: s.positionX,
+                  positionY: s.positionY,
+                  positionZ: s.positionZ,
+                  rotationY: s.rotationY || 0,
+                  distanceFromEntrance: s.distanceFromEntrance,
+                  walkingDirections: s.walkingDirections || [],
+                }))}
+                selectedSlot={selectedSlot ? ({ id: selectedSlot.slotId, ...selectedSlot } as any) : null}
+                nearestSlot={topRecommendations[0] ? ({ id: topRecommendations[0].slot.slotId, ...topRecommendations[0].slot } as any) : null}
+                recommendedSlotIds={recommendedSlotIds}
+                onSelectSlot={(slot: any) => setSelectedSlot(slot)}
+                currentFloor={selectedFloor}
+                onFallbackTo2D={() => setViewMode("2d")}
+              />
+            </div>
           )}
         </div>
 
-        {/* Right 32% Slot Details & Booking Panel (Sticky on Desktop) */}
-        <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24">
-          {bookedResult ? (
-            /* ── Booking Success Confirmation Panel ── */
-            <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] border-[#10B981]/30 shadow-[0_8px_32px_rgba(34,211,154,0.1)] flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-[16px] bg-[#10B981]/15 text-[#10B981] flex items-center justify-center shrink-0">
-                  <Check className="w-6 h-6" strokeWidth={2.5} />
-                </div>
+        {/* Right: Space Details & Assignment Panel (360px) */}
+        <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-xl shadow-black/20">
+          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+            <h2 className="text-[14px] font-bold text-white flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#D84A2B]" />
+              <span>Space Details</span>
+            </h2>
+            {selectedSlot && (
+              <span className="text-[11px] font-mono text-white/50">
+                {selectedSlot.slotId}
+              </span>
+            )}
+          </div>
+
+          {selectedSlot ? (
+            <div className="flex flex-col gap-3.5">
+              {/* Space Header Card */}
+              <div className="bg-[#0A0D14] border border-white/[0.08] rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#10B981]">
-                    PARKING CONFIRMED & BOOKED
+                  <span className="text-[10.5px] font-bold text-white/50 uppercase tracking-wider block">
+                    Space Number
                   </span>
-                  <h3 className="text-[20px] font-extrabold text-[#1C1917]">
-                    {bookedResult.vehicleNumber}
-                  </h3>
+                  <span className="text-[22px] font-mono font-black text-white">
+                    {selectedSlot.slotNumber}
+                  </span>
+                  <span className="text-[11.5px] text-white/60 block mt-0.5">
+                    Level {selectedSlot.floor} · {selectedSlot.zone}
+                  </span>
+                </div>
+
+                {/* Status Badge */}
+                <div>
+                  {selectedSlot.status === "available" && (
+                    <span className="px-3 py-1.5 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 text-[#10B981] text-[11px] font-extrabold">
+                      AVAILABLE
+                    </span>
+                  )}
+                  {selectedSlot.status === "occupied" && (
+                    <span className="px-3 py-1.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[11px] font-extrabold">
+                      OCCUPIED
+                    </span>
+                  )}
+                  {(selectedSlot.status === "reserved" || selectedSlot.status === "temporarily_held") && (
+                    <span className="px-3 py-1.5 rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/40 text-[#F59E0B] text-[11px] font-extrabold">
+                      RESERVED
+                    </span>
+                  )}
+                  {selectedSlot.status === "maintenance" && (
+                    <span className="px-3 py-1.5 rounded-full bg-[#6B7280]/20 border border-[#6B7280]/40 text-[#9CA3AF] text-[11px] font-extrabold">
+                      MAINTENANCE
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Booking Summary Box */}
-              <div className="p-5 rounded-[18px] bg-[#FAF7F2] border border-[#EAE3D9] flex flex-col gap-3 text-[13.5px]">
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE3D9]">
-                  <span className="text-[#78716C]">Assigned Space</span>
-                  <span className="text-[#D84A2B] font-extrabold text-[15px]">
-                    Floor {bookedResult.floor} · {bookedResult.zone} · {bookedResult.slotNumber}
-                  </span>
+              {/* Recommendation Card */}
+              {selectedRecommendation && (
+                <div className="bg-[#2563EB]/10 border border-[#2563EB]/30 rounded-xl p-3 text-[12px]">
+                  <div className="flex items-center gap-1.5 text-[#60A5FA] font-bold mb-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Match Score: {selectedRecommendation.score}/100</span>
+                  </div>
+                  <p className="text-white/80 leading-relaxed">
+                    {selectedRecommendation.reason}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE3D9]">
-                  <span className="text-[#78716C]">Pillar Marker</span>
-                  <span className="text-[#1C1917] font-bold">{bookedResult.pillar}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE3D9]">
-                  <span className="text-[#78716C]">Customer Phone</span>
-                  <span className="text-[#1C1917] font-semibold">{bookedResult.phoneNumber}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE3D9]">
-                  <span className="text-[#78716C]">Distance</span>
-                  <span className="text-[#1C1917] font-bold">{bookedResult.distanceFromEntrance} meters</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#78716C]">Entry Time</span>
-                  <span className="text-[#1C1917] font-medium">
-                    {new Date(bookedResult.entryTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-              </div>
-
-              {/* SMS Dispatch Status & Action */}
-              <div className="p-4 rounded-[18px] bg-[#FFFFFF] border border-[#EAE3D9] flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-[13px]">
-                  <span className={`w-2 h-2 rounded-full ${bookedResult.smsStatus === "SENT" ? "bg-[#10B981]" : "bg-[#EF4444]"}`} />
-                  <span className="font-semibold text-[#1C1917]">
-                    {bookedResult.smsStatus === "SENT" ? "SMS Dispatched" : "SMS Pending / Failed"}
-                  </span>
-                </div>
-                <button
-                  onClick={handleResendSms}
-                  disabled={resendingSms}
-                  className="h-8 px-3 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#D84A2B] text-[12px] font-bold flex items-center gap-1.5 hover:bg-[#F5EFE6] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <Send className="w-3 h-3" />
-                  {resendingSms ? "Sending..." : "Resend SMS"}
-                </button>
-              </div>
-
-              {smsStatusMessage && (
-                <p className="text-[12px] text-center font-medium text-[#10B981] -mt-2">{smsStatusMessage}</p>
               )}
 
-              {/* Customer Access Link & Copy */}
-              <div>
-                <p className="text-[11.5px] font-bold text-[#A8A29E] uppercase mb-1.5">
-                  Secure Customer Access Link
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={bookedResult.customerLink || ""}
-                    className="flex-1 h-11 px-3.5 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[12.5px] text-[#78716C] font-mono truncate"
-                  />
-                  <button
-                    onClick={handleCopyLink}
-                    className="h-11 px-4 rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13px] font-semibold flex items-center gap-1.5 hover:border-[#D84A2B]/40 transition-colors cursor-pointer min-w-[44px]"
-                  >
-                    {copiedLink ? <Check className="w-4 h-4 text-[#10B981]" /> : <Copy className="w-4 h-4" />}
-                    {copiedLink ? "Copied" : "Copy"}
-                  </button>
+              {/* Specs Cards */}
+              <div className="grid grid-cols-2 gap-2 text-[12px]">
+                <div className="bg-[#151B24] p-3 rounded-xl border border-white/[0.06]">
+                  <span className="text-white/50 block text-[10.5px]">Pillar</span>
+                  <span className="font-semibold text-white">{selectedSlot.pillar}</span>
+                </div>
+                <div className="bg-[#151B24] p-3 rounded-xl border border-white/[0.06]">
+                  <span className="text-white/50 block text-[10.5px]">Shortest Route</span>
+                  <span className="font-semibold text-white">~{selectedSlot.distanceFromEntrance}m from Gate A</span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-3 pt-4">
-                <Link
-                  href={`/customer/${bookedResult.customerAccessToken}`}
-                  target="_blank"
-                  className="w-full min-h-[48px] rounded-xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-semibold flex items-center justify-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#F5EFE6] transition-all cursor-pointer"
-                >
-                  <ExternalLink className="w-4 h-4 text-[#D84A2B]" />
-                  Preview Customer Portal View
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={handleBookAnother}
-                  className="h-11 px-6 rounded-2xl bg-[#D84A2B] text-white font-bold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] transition-all shadow-md cursor-pointer w-full min-h-[50px] text-[14.5px]"
-                >
-                  Book Another Parking Space
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : selectedSlot ? (
-            /* ── Selected Slot Booking Form ── */
-            <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] flex flex-col gap-6">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11.5px] font-bold text-[#D84A2B] uppercase tracking-wider">
-                    SELECTED SPACE
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSlot(null)}
-                    className="text-[12px] text-[#78716C] hover:text-[#EF4444] font-medium cursor-pointer transition-colors"
+              <div className="flex flex-col gap-2 pt-2">
+                {selectedSlot.status === "available" && (
+                  <Link
+                    href={`/admin/new-entry?slotId=${selectedSlot.slotId}`}
+                    className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[13.5px] shadow-[0_2px_12px_rgba(216,74,43,0.3)] transition-all cursor-pointer"
                   >
-                    Cancel Selection
-                  </button>
-                </div>
-                <h3 className="text-[24px] font-extrabold text-[#1C1917] tracking-tight">
-                  {selectedSlot.slotNumber}
-                </h3>
-                <p className="text-[13.5px] text-[#78716C]">
-                  Floor {selectedSlot.floor} · {selectedSlot.zone} · {selectedSlot.pillar}
-                </p>
-              </div>
-
-              {/* Distance badge */}
-              <div className="p-4 rounded-[18px] bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-between text-[13px]">
-                <span className="text-[#78716C]">Walking distance</span>
-                <span className="text-[#1C1917] font-bold">{selectedSlot.distanceFromEntrance} meters (~1.5 min)</span>
-              </div>
-
-              <form onSubmit={handleConfirmBooking} className="flex flex-col gap-5">
-                {/* Vehicle Number Plate */}
-                <div>
-                  <label htmlFor="vehicle-plate-input" className="block text-[12px] font-bold text-[#A8A29E] uppercase mb-1.5">
-                    Vehicle Number Plate *
-                  </label>
-                  <div className="relative">
-                    <Car className="w-4 h-4 text-[#78716C] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      id="vehicle-plate-input"
-                      type="text"
-                      value={vehicleNumber}
-                      onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                      placeholder="Enter Vehicle Plate"
-                      className="w-full h-12 pl-11 pr-4 rounded-[14px] bg-[#FAF7F2] border border-[#EAE3D9] text-[#1C1917] placeholder:text-[#A8A29E] text-[14.5px] font-mono font-bold tracking-wider focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all uppercase"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Customer Phone Number */}
-                <div>
-                  <label htmlFor="phone-number-input" className="block text-[12px] font-bold text-[#A8A29E] uppercase mb-1.5">
-                    Customer Mobile Number (for SMS Pass) *
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      aria-label="Country Code"
-                      className="h-12 px-3 rounded-[14px] bg-[#FAF7F2] border border-[#EAE3D9] text-[#1C1917] text-[13px] font-bold focus:border-[#D84A2B] focus:outline-none"
-                    >
-                      <option value="+91">+91 (IN)</option>
-                      <option value="+1">+1 (US)</option>
-                      <option value="+44">+44 (UK)</option>
-                      <option value="+971">+971 (UAE)</option>
-                    </select>
-
-                    <div className="relative flex-1">
-                      <Phone className="w-4 h-4 text-[#78716C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        id="phone-number-input"
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="Enter Phone Number"
-                        className="w-full h-12 pl-10 pr-4 rounded-[14px] bg-[#FAF7F2] border border-[#EAE3D9] text-[#1C1917] placeholder:text-[#A8A29E] text-[14px] font-medium focus:border-[#D84A2B] focus-visible:ring-2 focus-visible:ring-[#D84A2B]/20 focus:outline-none transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {formError && (
-                  <div className="p-4 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center gap-2 text-[12.5px] text-[#EF4444] font-medium" role="alert">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{formError}</span>
-                  </div>
+                    <CarFront className="w-4 h-4" />
+                    <span>Assign Space {selectedSlot.slotNumber}</span>
+                  </Link>
                 )}
 
                 <button
-                  type="submit"
-                  disabled={submitting}
-                  className="h-11 px-6 rounded-2xl bg-[#D84A2B] text-white font-bold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] transition-all shadow-md cursor-pointer w-full min-h-[52px] text-[15px] mt-2 disabled:opacity-50"
+                  type="button"
+                  onClick={() => {
+                    setOverrideStatus(selectedSlot.status === "maintenance" ? "available" : "maintenance");
+                    setOverrideModalOpen(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white font-semibold text-[12px] transition-all cursor-pointer"
                 >
-                  {submitting ? (
-                    "Assigning Space & Sending SMS..."
-                  ) : (
-                    <>
-                      Confirm Booking & Send SMS
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  <Wrench className="w-3.5 h-3.5 text-white/60" />
+                  <span>
+                    {selectedSlot.status === "maintenance" ? "Restore to Available" : "Set to Maintenance"}
+                  </span>
                 </button>
-              </form>
+              </div>
             </div>
           ) : (
-            /* ── Default Recommendation & Selection Prompt ── */
-            <div className="bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(80,50,20,0.03)] border border-[#EAE3D9] flex flex-col gap-6">
-              {/* Nearest Space Banner */}
-              {nearestSlot ? (
-                <div className="p-5 rounded-[18px] bg-[#FAF7F2] border border-[#E2D9CC] flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-[#D84A2B]">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="text-[11.5px] font-extrabold uppercase tracking-wider">
-                      PARKNEX Nearest Space Recommendation
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[24px] font-extrabold text-[#1C1917]">
-                      {nearestSlot.slotNumber} · {nearestSlot.pillar}
-                    </p>
-                    <p className="text-[13px] text-[#78716C] mt-0.5">
-                      Floor {nearestSlot.floor} · {nearestSlot.zone} · <strong className="text-[#1C1917]">{nearestSlot.distanceFromEntrance}m</strong> from entrance
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSelectNearest}
-                    className="h-11 px-6 rounded-2xl bg-[#D84A2B] text-white font-bold inline-flex items-center justify-center gap-2 hover:bg-[#C23E21] transition-all shadow-md cursor-pointer h-11 w-full"
-                  >
-                    Select Nearest Space ({nearestSlot.slotNumber})
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="p-5 rounded-[18px] bg-[#FAF7F2] border border-[#EAE3D9] text-center">
-                  <p className="text-[14px] font-bold text-[#1C1917]">No Available Spaces on Floor {floor}</p>
-                  <p className="text-[12.5px] text-[#78716C] mt-1">Please select another floor from the switcher above.</p>
-                </div>
-              )}
-
-              {/* Instructions */}
-              <div className="flex flex-col gap-3 text-[13px] text-[#78716C]">
-                <p className="font-bold text-[#1C1917] text-[14px]">Operator Instructions:</p>
-                <div className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">1</span>
-                  <span>Select any green space directly in 3D or 2D grid mode.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">2</span>
-                  <span>Enter incoming vehicle license plate and customer phone.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] flex items-center justify-center text-[11px] font-bold text-[#1C1917] shrink-0">3</span>
-                  <span>Confirm to dispatch the live navigation link and Exit QR via SMS.</span>
-                </div>
-              </div>
+            <div className="flex flex-col items-center justify-center py-16 text-center text-white/40">
+              <MapPin className="w-9 h-9 text-white/20 mb-2" />
+              <p className="text-[13.5px] font-semibold text-white/80">No Space Selected</p>
+              <p className="text-[11.5px] text-white/50 max-w-[200px] mt-1">
+                Click any bay on the floor plan to view details and assign.
+              </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* ── STATUS OVERRIDE MODAL ── */}
+      {overrideModalOpen && selectedSlot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#10151D] border border-white/[0.15] rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <h3 className="text-[17px] font-bold text-white mb-1.5">
+              Change Status for Space {selectedSlot.slotNumber}
+            </h3>
+            <p className="text-[12.5px] text-white/60 mb-4">
+              Status changes are recorded in the operator audit log.
+            </p>
+
+            <form onSubmit={handleStatusOverride} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-[12px] font-bold text-white/80 mb-1.5">
+                  Target Status
+                </label>
+                <select
+                  value={overrideStatus}
+                  onChange={(e: any) => setOverrideStatus(e.target.value)}
+                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+                >
+                  <option value="available">Available</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="occupied">Occupied</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-white/80 mb-1.5">
+                  Reason for Status Change
+                </label>
+                <textarea
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="e.g., Space maintenance, Reserved allocation, Sensor check"
+                  required
+                  rows={3}
+                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl p-3 text-[13px] text-white focus:outline-none focus:border-[#D84A2B] placeholder:text-white/30 resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOverrideModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-white/[0.05] text-white text-[12.5px] font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-xl bg-[#D84A2B] text-white text-[12.5px] font-bold hover:bg-[#C64024] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isUpdating ? "Applying..." : "Confirm Status"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

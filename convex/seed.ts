@@ -25,34 +25,3 @@ export const seedSlots = mutation({
     return "Seeded successfully.";
   },
 });
-
-export const seedOperators = mutation({
-  handler: async (ctx) => {
-    const defaultPasswordHash = "$2b$10$i4gqvOzl5jV7QJwRul5k0eJvs9uwTezQU2R9RF01i.PxaPOb5O7Mq"; // admin123
-    
-    const accounts = [
-      { email: "admin@parknex.com", name: "Admin Operator", role: "operator" },
-      { email: "admin@parknex.io", name: "Lead Operator", role: "operator" },
-    ];
-
-    let count = 0;
-    for (const acc of accounts) {
-      const existing = await ctx.db
-        .query("operators")
-        .withIndex("by_email", (q) => q.eq("email", acc.email))
-        .first();
-
-      if (!existing) {
-        await ctx.db.insert("operators", {
-          email: acc.email,
-          name: acc.name,
-          role: acc.role,
-          passwordHash: defaultPasswordHash,
-        });
-        count++;
-      }
-    }
-    return `Seeded ${count} operators.`;
-  },
-});
-

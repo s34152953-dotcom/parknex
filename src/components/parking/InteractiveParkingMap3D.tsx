@@ -5,7 +5,7 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
-import { Sparkles, Maximize2, Compass, RotateCcw } from "lucide-react";
+import { Maximize2, Compass, RotateCcw } from "lucide-react";
 
 /**
  * Robust WebGL feature detector
@@ -131,30 +131,43 @@ function ParkingSlot3D({
   slot,
   isSelected,
   isNearest,
+  recommendedSlotIds,
   onSelect,
   reducedMotion,
 }: {
   slot: ParkingSlot;
   isSelected: boolean;
   isNearest: boolean;
+  recommendedSlotIds?: string[];
   onSelect: (slot: ParkingSlot) => void;
   reducedMotion: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isAvailable = slot.status === "available";
 
+  const isRecommended = Boolean(
+    (recommendedSlotIds && (recommendedSlotIds.includes(slot.id) || (slot.slotId && recommendedSlotIds.includes(slot.slotId)))) ||
+    isNearest
+  );
+
   const statusColor = useMemo(() => {
+    if (isRecommended && slot.status === "available") {
+      return "#2563EB"; // Blue for AI Recommended
+    }
     switch (slot.status) {
       case "available":
         return "#10B981"; // Emerald Green
       case "occupied":
         return "#EF4444"; // Red / Coral
       case "reserved":
+      case "temporarily_held":
         return "#F59E0B"; // Amber
+      case "maintenance":
+        return "#6B7280"; // Grey Maintenance
       default:
         return "#78716C";
     }
-  }, [slot.status]);
+  }, [slot.status, isRecommended]);
 
   const carColor = useMemo(() => {
     const colors = ["#1E293B", "#334155", "#475569", "#1E1B4B", "#2A324B", "#3D3A45", "#52525B"];
@@ -333,6 +346,7 @@ export default function InteractiveParkingMap3D({
   slots = [],
   selectedSlot,
   nearestSlot,
+  recommendedSlotIds,
   onSelectSlot,
   currentFloor = "B2",
   onFallbackTo2D,
@@ -340,6 +354,7 @@ export default function InteractiveParkingMap3D({
   slots: ParkingSlot[];
   selectedSlot: ParkingSlot | null;
   nearestSlot: ParkingSlot | null;
+  recommendedSlotIds?: string[];
   onSelectSlot: (slot: ParkingSlot) => void;
   currentFloor?: string;
   onFallbackTo2D?: () => void;
@@ -374,14 +389,14 @@ export default function InteractiveParkingMap3D({
       <div className={`absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none transition-opacity duration-300 ${sceneReady ? 'opacity-100' : 'opacity-0'}`}>
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#E2D9CC] shadow-xs pointer-events-auto text-[12px] font-semibold text-[#1C1917]">
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          <span>3D Interactive WebGL Map ({currentFloor})</span>
+          <span>Interactive View ({currentFloor})</span>
         </div>
 
         <button
           type="button"
           onClick={() => setRecenterCount((c) => c + 1)}
           className="flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E2D9CC] text-[#1C1917] text-[12px] font-bold shadow-xs hover:border-[#D84A2B]/40 transition-colors pointer-events-auto cursor-pointer"
-          title="Recenter 3D Camera"
+          title="Recenter Camera"
         >
           <RotateCcw className="w-3.5 h-3.5 text-[#D84A2B]" />
           <span>Recenter Camera</span>
@@ -394,8 +409,8 @@ export default function InteractiveParkingMap3D({
           <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-3">
             <Compass className="w-6 h-6 animate-spin-slow" />
           </div>
-          <p className="text-[14px] font-bold text-[#1C1917]">Initializing WebGL Graphics...</p>
-          <p className="text-[12px] text-[#78716C] mt-0.5">Please wait while the 3D scene compiles</p>
+          <p className="text-[14px] font-bold text-[#1C1917]">Loading Interactive View...</p>
+          <p className="text-[12px] text-[#78716C] mt-0.5">Please wait while space geometry compiles</p>
         </div>
       )}
 
@@ -423,6 +438,7 @@ export default function InteractiveParkingMap3D({
               slot={slot}
               isSelected={selectedSlot?.id === slot.id}
               isNearest={nearestSlot?.id === slot.id}
+              recommendedSlotIds={recommendedSlotIds}
               onSelect={onSelectSlot}
               reducedMotion={reducedMotion}
             />

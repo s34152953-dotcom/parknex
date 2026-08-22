@@ -23,61 +23,62 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
-    // Operators sign in with email + bcrypt password
+    // Operators sign in with email / username + password
     CredentialsProvider({
       id: "operator-credentials",
       name: "Operator Login",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const inputId = credentials.email.toLowerCase().trim();
+        const inputPassword = credentials.password;
 
-        const emailClean = credentials.email.toLowerCase().trim();
-        const isMasterAdmin =
-          (emailClean === "admin@parknex.com" || emailClean === "admin@parknex.io") &&
-          credentials.password === "admin123";
+        // Primary Operator Credentials: parknexadmin.com / admin123
+        const isDefaultAdmin =
+          (inputId === "parknexadmin.com" ||
+            inputId === "admin@parknexadmin.com" ||
+            inputId === "operator@parknexadmin.com" ||
+            inputId === "admin@parknex.io" ||
+            inputId === "admin@parknex.com" ||
+            inputId === "admin") &&
+          inputPassword === "admin123";
 
-        // Fast path for master admin - zero delay, no network blocking
-        if (isMasterAdmin) {
+        if (isDefaultAdmin) {
           return {
-            id: "operator-admin-master",
-            name: "Master Admin",
-            email: emailClean,
+            id: "operator-parknex-admin",
+            name: "ParkNex Administrator",
+            email: "parknexadmin.com",
             role: "operator",
           };
         }
 
-        // Database lookup with strict timeout to prevent serverless hanging
+        // Database lookup for any additional registered operators
         if (convex) {
           try {
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Timeout")), 2500)
-            );
-            const queryPromise = convex.query(api.operators.getOperatorByEmail, {
-              email: emailClean,
+            const operator = await convex.query(api.operators.getOperatorByEmail, {
+              email: inputId,
             });
 
-            const operator: any = await Promise.race([queryPromise, timeoutPromise]);
-
             if (operator && operator.passwordHash) {
-              const isValid = await bcrypt.compare(credentials.password, operator.passwordHash);
+              const isValid = await bcrypt.compare(inputPassword, operator.passwordHash);
               if (isValid) {
                 return {
                   id: operator._id,
-                  name: operator.name || "Operator",
+                  name: operator.name,
                   email: operator.email,
                   role: operator.role || "operator",
                 };
               }
             }
-          } catch (e) {
-            console.error("[NextAuth] Operator auth lookup error:", e);
+          } catch (err) {
+            console.error("[NextAuth] Operator lookup error:", err);
           }
         }
 
-        throw new Error("Invalid email or password.");
+        throw new Error("Invalid operator credentials. Use parknexadmin.com and admin123");
       },
     }),
   ],

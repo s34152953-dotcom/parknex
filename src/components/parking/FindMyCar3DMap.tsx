@@ -1,24 +1,24 @@
 "use client";
 
 import React, { useRef, useMemo, Suspense } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Float, Text, Line } from "@react-three/drei";
 import * as THREE from "three";
 
-// ── Realistic User Luxury Vehicle for Find My Car ────────────────────────────
+// ── Realistic User Vehicle for Find My Car ───────────────────────────────────
 function UserCarModel() {
   return (
     <group position={[0, 0.22, 0]}>
       {/* Ground Contact Shadow */}
       <mesh position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.0, 3.8]} />
-        <meshBasicMaterial color="#3D3024" transparent opacity={0.4} />
+        <meshBasicMaterial color="#0A0E14" transparent opacity={0.5} />
       </mesh>
 
       {/* Burnt Orange Floor Underglow */}
       <mesh position={[0, -0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.4, 4.2]} />
-        <meshBasicMaterial color="#D84A2B" transparent opacity={0.25} />
+        <meshBasicMaterial color="#D84A2B" transparent opacity={0.35} />
       </mesh>
 
       {/* Main Body */}
@@ -36,7 +36,7 @@ function UserCarModel() {
       {/* Cabin Roof & Windows */}
       <mesh castShadow position={[0, 0.44, -0.1]}>
         <boxGeometry args={[1.38, 0.34, 1.8]} />
-        <meshStandardMaterial color="#1C2128" roughness={0.05} metalness={0.95} />
+        <meshStandardMaterial color="#10151D" roughness={0.05} metalness={0.95} />
       </mesh>
 
       {/* Front Xenon Headlights */}
@@ -47,7 +47,7 @@ function UserCarModel() {
         </mesh>
       ))}
 
-      {/* Rear Red/Orange Lightbar */}
+      {/* Rear Lightbar */}
       <mesh position={[0, 0.2, -1.66]}>
         <boxGeometry args={[1.48, 0.08, 0.02]} />
         <meshStandardMaterial color="#D84A2B" emissive="#D84A2B" emissiveIntensity={2.0} />
@@ -59,7 +59,7 @@ function UserCarModel() {
           <group key={`${i}-${j}`} position={[x, -0.04, z]} rotation={[0, 0, Math.PI / 2]}>
             <mesh>
               <cylinderGeometry args={[0.24, 0.24, 0.18, 16]} />
-              <meshStandardMaterial color="#2B303A" roughness={0.9} />
+              <meshStandardMaterial color="#161D27" roughness={0.9} />
             </mesh>
             <mesh position={[0, i === 0 ? -0.09 : 0.09, 0]}>
               <cylinderGeometry args={[0.15, 0.15, 0.02, 12]} />
@@ -73,7 +73,7 @@ function UserCarModel() {
 }
 
 // ── Background Parked Vehicles ───────────────────────────────────────────────
-function AmbientParkedCar({ position, color = "#334155" }: { position: [number, number, number]; color?: string }) {
+function AmbientParkedCar({ position, color = "#1E2530" }: { position: [number, number, number]; color?: string }) {
   return (
     <group position={position} rotation={[0, Math.PI / 2, 0]}>
       <mesh position={[0, 0.15, 0]}>
@@ -82,42 +82,32 @@ function AmbientParkedCar({ position, color = "#334155" }: { position: [number, 
       </mesh>
       <mesh position={[0, 0.42, -0.1]}>
         <boxGeometry args={[1.35, 0.3, 1.7]} />
-        <meshStandardMaterial color="#1C2128" roughness={0.1} metalness={0.9} />
+        <meshStandardMaterial color="#0A0E14" roughness={0.1} metalness={0.9} />
       </mesh>
     </group>
   );
 }
 
 // ── Burnt Orange Navigation Route Polyline ──────────────────────────────────
-function NavigationPath({ points, isNavigating }: { points: [number, number, number][]; isNavigating: boolean }) {
+function NavigationPath({ points }: { points: [number, number, number][] }) {
   const linePoints = useMemo(() => points.map((p) => new THREE.Vector3(...p)), [points]);
 
   return (
     <group>
       {/* Outer Glow Line */}
-      <Line
-        points={linePoints}
-        color="#BA3C20"
-        lineWidth={8}
-        dashed={false}
-      />
+      <Line points={linePoints} color="#BA3C20" lineWidth={6} dashed={false} />
       {/* Inner Crisp Burnt Orange Core */}
-      <Line
-        points={linePoints}
-        color="#D84A2B"
-        lineWidth={4}
-        dashed={false}
-      />
+      <Line points={linePoints} color="#D84A2B" lineWidth={3.5} dashed={false} />
 
       {/* Waypoint turn nodes with pulsing rings */}
       {points.map((pt, i) => (
         <group key={i} position={pt}>
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.35, 24]} />
+            <circleGeometry args={[0.3, 24]} />
             <meshBasicMaterial color="#D84A2B" transparent opacity={0.45} />
           </mesh>
           <mesh position={[0, 0.05, 0]}>
-            <cylinderGeometry args={[0.15, 0.15, 0.08, 16]} />
+            <cylinderGeometry args={[0.12, 0.12, 0.08, 16]} />
             <meshStandardMaterial color="#FFFFFF" emissive="#D84A2B" emissiveIntensity={1.8} />
           </mesh>
         </group>
@@ -126,84 +116,105 @@ function NavigationPath({ points, isNavigating }: { points: [number, number, num
   );
 }
 
-// ── 3D Navigation Scene ──────────────────────────────────────────────────────
-export default function FindMyCar3DMap({
-  isNavigating = false,
-}: {
+interface FindMyCar3DMapProps {
+  routePoints?: [number, number, number][];
   isNavigating?: boolean;
-}) {
-  // Navigation Route from Mall Entrance Lobby [0, 0.1, 15] to User Car [-4.0, 0.1, 0]
-  const routePoints: [number, number, number][] = useMemo(
-    () => [
-      [0, 0.12, 15],  // Mall Elevator & Glass Lobby
-      [0, 0.12, 7],   // Down Central Main Driving Corridor
-      [-4.0, 0.12, 7], // Turn Left into Aisle A
-      [-4.0, 0.12, 0], // Reached Slot A-18
-    ],
-    []
-  );
+  slotNumber?: string;
+  floor?: string;
+  zone?: string;
+  pillar?: string;
+  startLandmarkName?: string;
+  startLandmarkPos?: [number, number, number];
+}
+
+export default function FindMyCar3DMap({
+  routePoints,
+  isNavigating = false,
+  slotNumber = "B-03",
+  floor = "B2",
+  zone = "Zone B",
+  pillar = "Pillar 18",
+  startLandmarkName = "Mall Entrance Lobby",
+  startLandmarkPos = [0, 0.1, 15],
+}: FindMyCar3DMapProps) {
+  // Default route points fallback if none provided
+  const activeRoutePoints: [number, number, number][] = useMemo(() => {
+    if (routePoints && routePoints.length >= 2) return routePoints;
+    return [
+      startLandmarkPos || [0, 0.12, 15],
+      [0, 0.12, 7],
+      [-4.0, 0.12, 7],
+      [-4.0, 0.12, 0],
+    ];
+  }, [routePoints, startLandmarkPos]);
+
+  const targetPoint = activeRoutePoints[activeRoutePoints.length - 1] || [-4.0, 0.12, 0];
 
   return (
-    <div className="relative w-full h-full bg-[#F8F4ED] overflow-hidden select-none">
+    <div className="relative w-full h-full min-h-[360px] sm:min-h-[460px] bg-[#0A0E14] overflow-hidden select-none rounded-2xl">
       <Canvas
-        camera={{ position: [11, 15, 17], fov: 34 }}
+        camera={{ position: [12, 16, 18], fov: 36 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         shadows
       >
-        <color attach="background" args={["#F8F4ED"]} />
+        <color attach="background" args={["#0A0E14"]} />
 
         {/* Ambient & Directional Lighting */}
-        <ambientLight intensity={0.9} color="#FFF8EF" />
-        <directionalLight position={[15, 25, 15]} intensity={1.3} color="#FFF7ED" castShadow />
-        <pointLight position={[-4.0, 6, 0]} intensity={1.5} color="#D84A2B" distance={20} />
-        <pointLight position={[0, 6, 15]} intensity={1.5} color="#10B981" distance={18} />
+        <ambientLight intensity={0.6} color="#F5F7FA" />
+        <directionalLight position={[15, 25, 15]} intensity={1.1} color="#F5F7FA" castShadow />
+        <pointLight position={[targetPoint[0], 6, targetPoint[2]]} intensity={1.8} color="#D84A2B" distance={20} />
+        <pointLight position={[startLandmarkPos[0], 6, startLandmarkPos[2]]} intensity={1.5} color="#10B981" distance={18} />
 
         <Suspense fallback={null}>
           {/* Main Floor Slab */}
           <mesh receiveShadow position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[42, 40]} />
-            <meshStandardMaterial color="#ECE5DA" roughness={0.7} />
+            <planeGeometry args={[44, 42]} />
+            <meshStandardMaterial color="#10151D" roughness={0.7} />
           </mesh>
 
           {/* Central Main Lane */}
           <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[6.5, 38]} />
-            <meshStandardMaterial color="#E4DDD2" roughness={0.6} />
+            <meshStandardMaterial color="#161D27" roughness={0.6} />
           </mesh>
 
-          {/* Left Aisle Track */}
-          <mesh position={[-4.0, -0.04, 3.5]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[3.5, 12]} />
-            <meshStandardMaterial color="#E4DDD2" roughness={0.6} />
+          {/* Left & Right Aisle Tracks */}
+          <mesh position={[-4.0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4.5, 38]} />
+            <meshStandardMaterial color="#131922" roughness={0.6} />
+          </mesh>
+          <mesh position={[4.0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4.5, 38]} />
+            <meshStandardMaterial color="#131922" roughness={0.6} />
           </mesh>
 
-          {/* Mall Entrance Elevator / Lobby Pavilion */}
-          <group position={[0, 0, 15]}>
+          {/* Start Landmark Pavilion */}
+          <group position={startLandmarkPos}>
             <mesh position={[0, 1.2, 0]}>
-              <boxGeometry args={[4.2, 2.4, 2.5]} />
-              <meshStandardMaterial color="#FAF5EE" roughness={0.3} metalness={0.2} />
+              <boxGeometry args={[3.8, 2.4, 2.2]} />
+              <meshStandardMaterial color="#151B24" roughness={0.3} metalness={0.2} />
             </mesh>
             <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[1.8, 32]} />
-              <meshBasicMaterial color="#10B981" transparent opacity={0.3} />
+              <meshBasicMaterial color="#10B981" transparent opacity={0.25} />
             </mesh>
             <Text
               position={[0, 2.7, 0]}
-              fontSize={0.42}
+              fontSize={0.36}
               color="#10B981"
               anchorX="center"
               anchorY="bottom"
-              letterSpacing={0.08}
+              letterSpacing={0.06}
             >
-              MALL ENTRANCE LOBBY
+              {startLandmarkName.toUpperCase()}
             </Text>
           </group>
 
-          {/* Glowing Animated Navigation Polyline */}
-          <NavigationPath points={routePoints} isNavigating={isNavigating} />
+          {/* Dynamic Navigation Polyline */}
+          <NavigationPath points={activeRoutePoints} />
 
-          {/* Destination Slot A-18 & User Vehicle */}
-          <group position={[-4.0, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+          {/* Destination Slot & User Vehicle */}
+          <group position={targetPoint} rotation={[0, Math.PI / 2, 0]}>
             {/* Slot Ground Marking */}
             <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[2.2, 4.2]} />
@@ -212,7 +223,7 @@ export default function FindMyCar3DMap({
 
             <UserCarModel />
 
-            {/* High-Vis Glowing Orange Beacon Pin */}
+            {/* Glowing Orange Beacon Pin */}
             <Float speed={2.5} rotationIntensity={0.2} floatIntensity={0.6}>
               <group position={[0, 2.4, 0]}>
                 <mesh position={[0, 0.35, 0]}>
@@ -220,7 +231,7 @@ export default function FindMyCar3DMap({
                   <meshStandardMaterial
                     color="#D84A2B"
                     emissive="#D84A2B"
-                    emissiveIntensity={2.0}
+                    emissiveIntensity={2.2}
                   />
                 </mesh>
                 <mesh position={[0, 0.08, 0]} rotation={[Math.PI, 0, 0]}>
@@ -228,46 +239,46 @@ export default function FindMyCar3DMap({
                   <meshStandardMaterial
                     color="#D84A2B"
                     emissive="#D84A2B"
-                    emissiveIntensity={2.0}
+                    emissiveIntensity={2.2}
                   />
                 </mesh>
               </group>
             </Float>
           </group>
 
-          {/* Other Ambient Parked Cars in the Garage */}
-          <AmbientParkedCar position={[-4.0, 0, -5]} color="#2A324B" />
-          <AmbientParkedCar position={[-4.0, 0, -10]} color="#475569" />
-          <AmbientParkedCar position={[4.0, 0, 0]} color="#1E293B" />
-          <AmbientParkedCar position={[4.0, 0, 5]} color="#52525B" />
-          <AmbientParkedCar position={[4.0, 0, -5]} color="#334155" />
+          {/* Other Ambient Parked Cars */}
+          <AmbientParkedCar position={[-4.0, 0, -6]} color="#1E2530" />
+          <AmbientParkedCar position={[-4.0, 0, -11]} color="#252D3A" />
+          <AmbientParkedCar position={[4.0, 0, 2]} color="#1A202A" />
+          <AmbientParkedCar position={[4.0, 0, 8]} color="#212936" />
+          <AmbientParkedCar position={[4.0, 0, -6]} color="#1A202A" />
 
-          {/* Cream Concrete Pillars with Burnt Orange Accent */}
-          <group position={[-6.0, 1.8, 0]}>
+          {/* Concrete Pillars with Burnt Orange Accent */}
+          <group position={[-6.0, 1.8, -4]}>
             <mesh>
               <boxGeometry args={[0.8, 3.6, 0.8]} />
-              <meshStandardMaterial color="#FAF5EE" />
+              <meshStandardMaterial color="#161D27" />
             </mesh>
             <mesh position={[0, -1.45, 0]}>
               <boxGeometry args={[0.82, 0.3, 0.82]} />
               <meshStandardMaterial color="#D84A2B" />
             </mesh>
-            <Text position={[0, 0.6, 0.42]} fontSize={0.22} color="#1C1917">
-              P18 · ZONE A
+            <Text position={[0, 0.6, 0.42]} fontSize={0.22} color="#F5F7FA">
+              P06 · ZONE A
             </Text>
           </group>
 
-          <group position={[6.0, 1.8, 0]}>
+          <group position={[-6.0, 1.8, 4]}>
             <mesh>
               <boxGeometry args={[0.8, 3.6, 0.8]} />
-              <meshStandardMaterial color="#FAF5EE" />
+              <meshStandardMaterial color="#161D27" />
             </mesh>
             <mesh position={[0, -1.45, 0]}>
               <boxGeometry args={[0.82, 0.3, 0.82]} />
               <meshStandardMaterial color="#D84A2B" />
             </mesh>
-            <Text position={[0, 0.6, -0.42]} rotation={[0, Math.PI, 0]} fontSize={0.22} color="#1C1917">
-              P21 · ZONE A
+            <Text position={[0, 0.6, 0.42]} fontSize={0.22} color="#F5F7FA">
+              P18 · ZONE B
             </Text>
           </group>
 
@@ -275,9 +286,9 @@ export default function FindMyCar3DMap({
             enableDamping
             dampingFactor={0.08}
             maxPolarAngle={Math.PI / 2 - 0.1}
-            minDistance={8}
-            maxDistance={40}
-            target={[-1.0, 0, 5.0]}
+            minDistance={6}
+            maxDistance={38}
+            target={[targetPoint[0] / 2, 0, (startLandmarkPos[2] + targetPoint[2]) / 2]}
           />
         </Suspense>
       </Canvas>

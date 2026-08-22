@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
-import { Sparkles, Compass, Check, Lock } from "lucide-react";
+import { CheckCircle2, Compass, Check, Lock } from "lucide-react";
 
 interface AdminParkingMapProps {
   slots: ParkingSlot[];
@@ -43,10 +43,10 @@ export default function AdminParkingMap({
       <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#EAE3D9] mb-6">
         <div>
           <h2 className="text-[18px] sm:text-[20px] font-bold text-[#1C1917] tracking-tight">
-            Floor {currentFloor} 2D Parking Grid
+            Floor Plan ({currentFloor})
           </h2>
           <p className="text-[13px] text-[#78716C] mt-0.5">
-            Click any green available space or select the system-recommended nearest slot
+            Click any green available space or select the recommended space
           </p>
         </div>
 
@@ -60,9 +60,9 @@ export default function AdminParkingMap({
             <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
             Occupied
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D84A2B]/10 border border-[#D84A2B]/30 text-[#D84A2B] font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-[#D84A2B]" />
-            Nearest Recommended
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#2563EB]/10 border border-[#2563EB]/30 text-[#2563EB] font-bold">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB]" />
+            Recommended
           </div>
         </div>
       </div>
@@ -144,9 +144,9 @@ export default function AdminParkingMap({
                         </span>
 
                         {isNearest && (
-                          <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#D84A2B] text-white uppercase tracking-wider flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            NEAREST
+                          <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#2563EB] text-white uppercase tracking-wider flex items-center gap-1">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            RECOMMENDED
                           </span>
                         )}
                       </div>

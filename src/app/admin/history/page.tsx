@@ -1,82 +1,41 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import {
   Clock,
   Search,
   CheckCircle2,
   AlertCircle,
-  Car,
+  CarFront,
   Phone,
-  RefreshCw,
-  ExternalLink,
+  ShieldCheck,
   Calendar,
-  Filter,
-  MessageSquare,
+  Layers,
+  History,
+  FileText,
+  UserCheck,
 } from "lucide-react";
-import Link from "next/link";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-
-interface BookingItem {
-  id: string;
-  bookingNumber: string;
-  vehicleNumber: string;
-  phoneNumber: string;
-  mallName: string;
-  floor: string;
-  zone: string;
-  pillar: string;
-  slotNumber: string;
-  entryTime: string;
-  exitTime: string | null;
-  status: "ACTIVE" | "COMPLETED" | "CANCELLED";
-  customerAccessToken: string;
-}
 
 export default function AdminHistoryPage() {
-  // Filters
+  const [activeTab, setActiveTab] = useState<"sessions" | "audit">("sessions");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [floorFilter, setFloorFilter] = useState("ALL");
-  const [dateFilter, setDateFilter] = useState("");
-  const [retryStatus, setRetryStatus] = useState<Record<string, "retrying" | "success" | "error">>({});
 
   const bookings = useQuery(api.bookings.listBookings, {
     status: statusFilter === "ALL" ? undefined : statusFilter,
     floor: floorFilter === "ALL" ? undefined : floorFilter,
     query: searchQuery.trim() || undefined,
-    date: dateFilter || undefined,
   }) || [];
-  
-  const retrySmsMutation = useMutation(api.bookings.retrySms);
-  
-  const loading = bookings.length === 0 && useQuery(api.bookings.listBookings, {}) === undefined; // approximate loading state
 
-  const fetchBookings = () => {
-    // Convex is real-time, no manual refresh needed, but we can reset filters if they click refresh
-  };
+  const auditLogs = useQuery(api.audit.listAuditLogs, { limit: 100 }) || [];
 
-  // Mask Phone for privacy (e.g. +91 ••••••4821)
-  const maskPhone = (phone: string) => {
-    if (!phone) return "";
-    const parts = phone.split(" ");
-    if (parts.length > 1) {
-      const country = parts[0];
-      const rest = parts.slice(1).join("");
-      if (rest.length > 4) {
-        return `${country} ••••••${rest.slice(-4)}`;
-      }
-    }
-    return phone.length > 4 ? `••••••${phone.slice(-4)}` : phone;
-  };
-
-  // Compute duration
   const computeDuration = (entry: string, exit?: string | null) => {
     const start = new Date(entry).getTime();
     const end = exit ? new Date(exit).getTime() : Date.now();
     const diffMins = Math.max(1, Math.round((end - start) / (60 * 1000)));
-
     const hours = Math.floor(diffMins / 60);
     const mins = diffMins % 60;
     if (hours === 0) return `${mins}m`;
@@ -84,220 +43,230 @@ export default function AdminHistoryPage() {
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 lg:p-10 max-w-[1700px] mx-auto flex flex-col gap-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#EAE3D9]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-bold text-[#D84A2B] uppercase tracking-wider">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D84A2B] bg-[#D84A2B]/10 px-2 py-0.5 rounded border border-[#D84A2B]/20">
               OPERATIONAL AUDIT
             </span>
+            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">· Activity Logs</span>
           </div>
-          <h1 className="text-[26px] sm:text-[30px] font-bold text-[#1C1917] tracking-tight">
-            Booking History & Parking Log
+          <h1 className="text-[24px] sm:text-[28px] font-black text-[#F5F7FA] tracking-tight">
+            Parking History &amp; Audit Trail
           </h1>
-          <p className="text-[13.5px] text-[#78716C] mt-0.5">
-            Full audit log of active and completed parking allocations
+          <p className="text-[13.5px] text-[rgba(245,247,250,0.65)] mt-0.5">
+            Immutable log of all active, completed allocations, barrier scans, and operator overrides.
           </p>
         </div>
 
-        <button
-          onClick={fetchBookings}
-          disabled={loading}
-          className="h-11 px-5 rounded-2xl bg-white border border-[#E2D9CC] text-[#1C1917] text-[13.5px] font-semibold inline-flex items-center gap-2 hover:border-[#D84A2B]/40 hover:bg-[#FFFDFC] transition-all shadow-xs cursor-pointer"
-        >
-          <RefreshCw className={`w-4 h-4 text-[#D84A2B] ${loading ? "animate-spin" : ""}`} />
-          Refresh Log
-        </button>
+        {/* Tab Switcher */}
+        <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+          <button
+            onClick={() => setActiveTab("sessions")}
+            className={`px-4 py-2 rounded-lg text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
+              activeTab === "sessions"
+                ? "bg-[#D84A2B] text-white shadow-xs"
+                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>Parking Sessions ({bookings.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("audit")}
+            className={`px-4 py-2 rounded-lg text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
+              activeTab === "audit"
+                ? "bg-[#D84A2B] text-white shadow-xs"
+                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Operator Audit Log ({auditLogs.length})</span>
+          </button>
+        </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl p-5 sm:p-6 shadow-[0_6px_28px_rgba(80,50,20,0.025)] flex flex-wrap items-center justify-between gap-4">
-        {/* Search Bar */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="w-4 h-4 text-[#A8A29E] absolute left-4 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search license plate, phone, booking ID, or pillar..."
-            className="w-full h-11 pl-11 pr-4 rounded-2xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] placeholder:text-[#A8A29E] text-[13.5px] focus:border-[#D84A2B] focus:ring-2 focus:ring-[#D84A2B]/20 focus:outline-none transition-all"
-          />
-        </div>
+      {activeTab === "sessions" ? (
+        <div className="flex flex-col gap-4">
+          {/* Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#10151D] border border-white/[0.08] p-3 rounded-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-[240px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search plate, phone..."
+                  className="w-full bg-[#0A0D14] border border-white/[0.1] rounded-xl pl-9 pr-3 py-2 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                />
+              </div>
 
-        {/* Dropdown Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-11 px-4 rounded-2xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13px] font-medium focus:border-[#D84A2B] focus:outline-none cursor-pointer"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active Parking</option>
-            <option value="COMPLETED">Completed Exit</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-[#0A0D14] border border-white/[0.1] rounded-xl px-3 py-2 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
 
-          {/* Floor Filter */}
-          <select
-            value={floorFilter}
-            onChange={(e) => setFloorFilter(e.target.value)}
-            className="h-11 px-4 rounded-2xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13px] font-medium focus:border-[#D84A2B] focus:outline-none cursor-pointer"
-          >
-            <option value="ALL">All Floors</option>
-            <option value="B2">Floor B2</option>
-            <option value="B1">Floor B1</option>
-            <option value="G">Ground Level</option>
-          </select>
+              <select
+                value={floorFilter}
+                onChange={(e) => setFloorFilter(e.target.value)}
+                className="bg-[#0A0D14] border border-white/[0.1] rounded-xl px-3 py-2 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+              >
+                <option value="ALL">All Floors</option>
+                <option value="B2">Level B2</option>
+                <option value="B1">Level B1</option>
+                <option value="G">Level G</option>
+              </select>
+            </div>
 
-          {/* Date Filter */}
-          <div className="relative">
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="h-11 px-4 rounded-2xl bg-[#FAF7F2] border border-[#E2D9CC] text-[#1C1917] text-[13px] font-medium focus:border-[#D84A2B] focus:outline-none cursor-pointer"
-            />
+            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">
+              Showing {bookings.length} record{bookings.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          {(searchQuery || statusFilter !== "ALL" || floorFilter !== "ALL" || dateFilter) && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setStatusFilter("ALL");
-                setFloorFilter("ALL");
-                setDateFilter("");
-              }}
-              className="text-[12.5px] font-bold text-[#D84A2B] hover:underline px-2 cursor-pointer"
-            >
-              Reset Filters
-            </button>
-          )}
+          {/* Sessions Table */}
+          <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[13px] text-[rgba(245,247,250,0.85)]">
+                <thead className="bg-[#0A0D14] text-[11.5px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.5)] border-b border-white/[0.08]">
+                  <tr>
+                    <th className="px-5 py-4">Booking Ref</th>
+                    <th className="px-5 py-4">Vehicle Plate</th>
+                    <th className="px-5 py-4">Space Allocated</th>
+                    <th className="px-5 py-4">Entry / Exit Times</th>
+                    <th className="px-5 py-4">Duration</th>
+                    <th className="px-5 py-4 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {bookings.length > 0 ? (
+                    bookings.map((b: any) => (
+                      <tr key={b.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-5 py-4 font-mono font-bold text-white text-[12.5px]">
+                          #{b.bookingNumber}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <CarFront className="w-4 h-4 text-[#D84A2B]" />
+                            <div>
+                              <span className="font-mono font-black text-white block">
+                                {b.vehicleNumber}
+                              </span>
+                              <span className="text-[11px] text-[rgba(245,247,250,0.5)]">
+                                {b.phoneNumber || b.email || "Walk-In"}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="font-mono font-bold text-white block">
+                            Slot {b.slotNumber}
+                          </span>
+                          <span className="text-[11px] text-[rgba(245,247,250,0.6)]">
+                            Level {b.floor} · {b.pillar}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-[12px]">
+                          <span className="text-white block">
+                            In: {new Date(b.entryTime).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                          </span>
+                          <span className="text-[rgba(245,247,250,0.5)]">
+                            Out: {b.exitTime ? new Date(b.exitTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Active Inside"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 font-mono text-white">
+                          {computeDuration(b.entryTime, b.exitTime)}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                              b.status === "ACTIVE"
+                                ? "bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]"
+                                : b.status === "COMPLETED"
+                                ? "bg-white/[0.08] border-white/[0.15] text-[rgba(245,247,250,0.8)]"
+                                : "bg-[#EF4444]/15 border-[#EF4444]/30 text-[#EF4444]"
+                            }`}
+                          >
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-12 text-center text-[rgba(245,247,250,0.5)]">
+                        No parking records matching the criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Bookings Table */}
-      <div className="bg-white border border-[rgba(80,60,40,0.08)] rounded-3xl shadow-[0_8px_32px_rgba(80,50,20,0.03)] overflow-hidden w-full">
-        {bookings.length > 0 ? (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-[13.5px] min-w-[840px]">
-              <thead className="border-b border-[#EAE3D9] text-[#78716C] uppercase text-[11px] font-bold bg-[#FAF7F2]">
+      ) : (
+        /* Operator Audit Log View */
+        <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px] text-[rgba(245,247,250,0.85)]">
+              <thead className="bg-[#0A0D14] text-[11.5px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.5)] border-b border-white/[0.08]">
                 <tr>
-                  <th className="py-4.5 px-6 sm:px-8">Booking & Plate</th>
-                  <th className="py-4.5 px-6">Customer Phone</th>
-                  <th className="py-4.5 px-6">Space Assigned</th>
-                  <th className="py-4.5 px-6">Entry Time</th>
-                  <th className="py-4.5 px-6">Exit Time</th>
-                  <th className="py-4.5 px-6">Duration</th>
-                  <th className="py-4.5 px-6">Status</th>
-                  <th className="py-4.5 px-6 sm:px-8 text-right">Actions</th>
+                  <th className="px-5 py-4">Timestamp</th>
+                  <th className="px-5 py-4">Operator</th>
+                  <th className="px-5 py-4">Action</th>
+                  <th className="px-5 py-4">Details &amp; Reason</th>
+                  <th className="px-5 py-4 text-right">Target</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#EAE3D9] text-[#57534E]">
-                {bookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-[#FAF7F2]/80 transition-colors">
-                    <td className="py-5 px-6 sm:px-8">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] font-bold shrink-0">
-                          <Car className="w-4.5 h-4.5" />
-                        </div>
-                        <div>
-                          <p className="text-[#1C1917] font-extrabold font-mono text-[14.5px]">
-                            {b.vehicleNumber}
+              <tbody className="divide-y divide-white/[0.04]">
+                {auditLogs.length > 0 ? (
+                  auditLogs.map((log: any) => (
+                    <tr key={log._id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-5 py-4 font-mono text-[12px] text-white/70">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-white flex items-center gap-2">
+                        <UserCheck className="w-3.5 h-3.5 text-[#D84A2B]" />
+                        <span>{log.operatorEmail}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="font-mono font-bold text-[11.5px] px-2 py-0.5 rounded bg-white/[0.06] text-white">
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-[12.5px] text-white leading-snug">{log.details || "-"}</p>
+                        {log.reason && (
+                          <p className="text-[11.5px] text-[#F59E0B] italic mt-0.5">
+                            Reason: &ldquo;{log.reason}&rdquo;
                           </p>
-                          <p className="text-[12px] text-[#A8A29E] font-medium font-mono">{b.bookingNumber}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="py-5 px-6 font-medium text-[#1C1917]">
-                      {maskPhone(b.phoneNumber)}
-                    </td>
-
-                    <td className="py-5 px-6">
-                      <p className="text-[#1C1917] font-bold text-[14px]">
-                        Floor {b.floor} · {b.slotNumber}
-                      </p>
-                      <p className="text-[12px] text-[#78716C]">{b.zone} ({b.pillar})</p>
-                    </td>
-
-                    <td className="py-5 px-6 text-[#1C1917] font-medium">
-                      {new Date(b.entryTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      <p className="text-[11.5px] text-[#A8A29E]">
-                        {new Date(b.entryTime).toLocaleDateString()}
-                      </p>
-                    </td>
-
-                    <td className="py-5 px-6 text-[#1C1917] font-medium">
-                      {b.exitTime ? (
-                        <>
-                          {new Date(b.exitTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          <p className="text-[11.5px] text-[#A8A29E]">
-                            {new Date(b.exitTime).toLocaleDateString()}
-                          </p>
-                        </>
-                      ) : (
-                        <span className="text-[#A8A29E] italic text-[12.5px]">— Active —</span>
-                      )}
-                    </td>
-
-                    <td className="py-5 px-6 font-bold text-[#1C1917]">
-                      {computeDuration(b.entryTime, b.exitTime)}
-                    </td>
-
-                    <td className="py-5 px-6">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-bold ${
-                          b.status === "ACTIVE"
-                            ? "bg-[#D84A2B]/10 text-[#D84A2B] border border-[#D84A2B]/20 animate-pulse"
-                            : b.status === "COMPLETED"
-                            ? "bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20"
-                            : "bg-[#78716C]/10 text-[#78716C] border border-[#78716C]/20"
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${b.status === "ACTIVE" ? "bg-[#D84A2B]" : b.status === "COMPLETED" ? "bg-[#10B981]" : "bg-[#78716C]"}`} />
-                        {b.status}
-                      </span>
-                    </td>
-
-                    <td className="py-5 px-6 sm:px-8 text-right">
-                      {b.status === "ACTIVE" && (
-                        <button
-                          disabled={retryStatus[b.id] === "retrying"}
-                          onClick={async () => {
-                            setRetryStatus(prev => ({ ...prev, [b.id]: "retrying" }));
-                            try {
-                              await retrySmsMutation({ bookingId: b.id });
-                              setRetryStatus(prev => ({ ...prev, [b.id]: "success" }));
-                              setTimeout(() => setRetryStatus(prev => ({ ...prev, [b.id]: undefined as any })), 3000);
-                            } catch (e: any) {
-                              setRetryStatus(prev => ({ ...prev, [b.id]: "error" }));
-                              setTimeout(() => setRetryStatus(prev => ({ ...prev, [b.id]: undefined as any })), 3000);
-                            }
-                          }}
-                          className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[#D84A2B] hover:underline disabled:opacity-50"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>{retryStatus[b.id] === "retrying" ? "Retrying..." : retryStatus[b.id] === "success" ? "Sent!" : retryStatus[b.id] === "error" ? "Failed" : "Retry SMS"}</span>
-                        </button>
-                      )}
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-right font-mono text-[11.5px] text-white/50">
+                        {log.targetType} ({log.targetId.substring(0, 10)})
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-12 text-center text-[rgba(245,247,250,0.5)]">
+                      No audit log records recorded yet.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="p-12 text-center flex flex-col items-center justify-center">
-            <Clock className="w-12 h-12 text-[#A8A29E] mb-3" strokeWidth={1.5} />
-            <h3 className="text-[17px] font-bold text-[#1C1917]">No Bookings Found</h3>
-            <p className="text-[13px] text-[#78716C] mt-1 max-w-[340px]">
-              No booking records match the selected filters. Clear filters or assign a parking slot on the Booking page.
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

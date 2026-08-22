@@ -16,38 +16,26 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const performLogin = async (loginEmail: string) => {
     setLoading(true);
     setErrorMsg(null);
 
     try {
-      // Direct signIn with a client-side timeout safety
-      const signInPromise = signIn("operator-credentials", {
+      const result = await signIn("operator-credentials", {
         redirect: false,
-        email: loginEmail.toLowerCase().trim(),
+        email: loginEmail,
         password: password,
       });
 
-      const timeoutPromise = new Promise((resolve) =>
-        setTimeout(() => resolve({ ok: false, error: "Connection took too long. Please try again." }), 6000)
-      );
-
-      const result: any = await Promise.race([signInPromise, timeoutPromise]);
-
       if (result?.error) {
-        setErrorMsg(result.error || "Invalid email or password.");
-        setLoading(false);
+        setErrorMsg(result.error);
       } else if (result?.ok) {
-        setSuccess(true);
-        window.location.href = redirectPath;
-      } else {
-        setErrorMsg("Unable to authenticate. Please verify credentials.");
-        setLoading(false);
+        router.push(redirectPath);
       }
     } catch (err: any) {
-      setErrorMsg("An unexpected error occurred during login. Please try again.");
+      setErrorMsg("An unexpected error occurred during login.");
+    } finally {
       setLoading(false);
     }
   };
@@ -65,16 +53,16 @@ function LoginForm() {
             htmlFor="email-input"
             className="block text-[12px] font-bold text-white/70 uppercase tracking-wider mb-2"
           >
-            Operator Email Address
+            Operator Email or Username
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               id="email-input"
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@parknex.io"
+              placeholder="parknexadmin.com"
               className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder:text-white/25 text-[14px] focus:border-[#D84A2B] focus:bg-white/[0.07] focus:outline-none transition-all"
               required
             />
@@ -102,6 +90,24 @@ function LoginForm() {
           </div>
         </div>
 
+        {/* Quick Credentials Info */}
+        <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-[11.5px] text-white/50">
+          <div>
+            <span>Default: </span>
+            <code className="text-white/80 font-mono">parknexadmin.com</code> / <code className="text-white/80 font-mono">admin123</code>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("parknexadmin.com");
+              setPassword("admin123");
+            }}
+            className="text-[#D84A2B] hover:underline font-semibold cursor-pointer"
+          >
+            Fill
+          </button>
+        </div>
+
         {errorMsg && (
           <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -111,10 +117,10 @@ function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading || success}
+          disabled={loading}
           className="w-full h-13 rounded-xl bg-[#D84A2B] text-white text-[14.5px] font-bold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-lg shadow-[#D84A2B]/25 mt-1 cursor-pointer disabled:opacity-60"
         >
-          {success ? "Access Granted. Opening Operations Hub..." : loading ? "Authenticating..." : "Sign In as Operator"}
+          {loading ? "Authenticating..." : "Sign In as Operator"}
           <ArrowRight className="w-4 h-4" />
         </button>
       </form>

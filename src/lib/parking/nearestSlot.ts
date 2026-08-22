@@ -1,11 +1,12 @@
 // ── PARKNEX Real Parking Slot Data & Nearest Recommendation Engine ──
 
-export type SlotStatus = "available" | "occupied" | "reserved" | "temporarily_held";
+export type SlotStatus = "available" | "occupied" | "reserved" | "temporarily_held" | "maintenance";
 
 export interface ParkingSlot {
   id: string;
-  mallId: string;
-  mallName: string;
+  slotId?: string;
+  mallId?: string;
+  mallName?: string;
   floor: string; // e.g. "B2", "B1", "G"
   zone: string; // e.g. "Zone A", "Zone B"
   pillar: string; // e.g. "Pillar 08"
@@ -14,16 +15,20 @@ export interface ParkingSlot {
   positionX: number;
   positionY: number;
   positionZ: number;
-  rotationY: number;
+  rotationY?: number;
   distanceFromEntrance: number; // in meters
-  walkingDirections: string[];
+  walkingDirections?: string[];
+  vehicleConstraints?: {
+    maxVehicleSize?: string;
+    isEV?: boolean;
+    isHandicapped?: boolean;
+  };
 }
 
 // Entrance gate coordinates (x: 0, z: -12) at each floor lobby
 export const ENTRANCE_POINT = { x: 0, y: 0, z: -12 };
 
 export const INITIAL_PARKING_SLOTS: ParkingSlot[] = [];
-
 
 /**
  * Calculates the exact Euclidean / layout path distance from entrance to a slot.
@@ -43,18 +48,14 @@ export function findNearestAvailableSlot(
   floor?: string,
   entrance = ENTRANCE_POINT
 ): ParkingSlot | null {
-  const candidateSlots = slots.filter((s) => {
-    const floorMatch = floor ? s.floor === floor : true;
-    return floorMatch && s.status === "available";
+  const filtered = floor && floor !== "ALL" ? slots.filter((s) => s.floor === floor) : slots;
+  const availableSlots = filtered.filter((s) => s.status === "available");
+
+  if (availableSlots.length === 0) return null;
+
+  return availableSlots.reduce((best, curr) => {
+    const bestDist = computeSlotDistance(best, entrance);
+    const currDist = computeSlotDistance(curr, entrance);
+    return currDist < bestDist ? curr : best;
   });
-
-  if (candidateSlots.length === 0) return null;
-
-  const sorted = [...candidateSlots].sort((a, b) => {
-    const distA = a.distanceFromEntrance || computeSlotDistance(a, entrance);
-    const distB = b.distanceFromEntrance || computeSlotDistance(b, entrance);
-    return distA - distB;
-  });
-
-  return sorted[0];
 }

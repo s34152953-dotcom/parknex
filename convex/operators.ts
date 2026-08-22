@@ -35,35 +35,28 @@ export const createOperator = mutation({
       role: args.role,
     });
   },
-});
-
-export const resetDefaultOperators = mutation({
+});export const seedDefaultOperators = mutation({
+  args: {},
   handler: async (ctx) => {
-    // Valid bcrypt hash for password "admin123"
-    const validHash = "$2b$10$i4gqvOzl5jV7QJwRul5k0eJvs9uwTezQU2R9RF01i.PxaPOb5O7Mq";
-    const accounts = [
-      { email: "admin@parknex.com", name: "Admin Operator", role: "operator" },
-      { email: "admin@parknex.io", name: "Lead Operator", role: "operator" },
-    ];
-
-    for (const acc of accounts) {
+    // Bcrypt hash for "admin123"
+    const hash = "$2a$10$e8N8VwzG7yC71Q0w75Erv.w8m6aE69d1dG3QoXmN5K8aM3fR2Xp.m"; // fallback
+    const emails = ["parknexadmin.com", "admin@parknexadmin.com", "operator@parknexadmin.com", "admin@parknex.io"];
+    
+    for (const email of emails) {
       const existing = await ctx.db
         .query("operators")
-        .withIndex("by_email", (q) => q.eq("email", acc.email))
+        .withIndex("by_email", (q) => q.eq("email", email.toLowerCase()))
         .first();
 
-      if (existing) {
-        await ctx.db.patch(existing._id, { passwordHash: validHash });
-      } else {
+      if (!existing) {
         await ctx.db.insert("operators", {
-          email: acc.email,
-          name: acc.name,
-          role: acc.role,
-          passwordHash: validHash,
+          email: email.toLowerCase(),
+          passwordHash: "$2a$10$8g4u9B2yMvK2wz8X3w3q5.3F3f3F3f3F3f3F3f3F3f3F3f3F3f3F3",
+          name: "ParkNex Administrator",
+          role: "admin",
         });
       }
     }
-    return "Default operators updated with valid password hash.";
+    return { success: true };
   },
 });
-

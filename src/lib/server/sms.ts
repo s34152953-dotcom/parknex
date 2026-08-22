@@ -102,23 +102,17 @@ export async function sendBookingSms(params: SendSmsParams): Promise<SmsResult> 
       });
 
       const data = await res.json();
-      if (data.return === true || data.status_code === 200) {
+      if (data.return) {
         return {
           success: true,
           messageId: data.request_id || `f2s_${Date.now()}`,
           provider: "Fast2SMS",
         };
       } else {
-        const errorMessage = Array.isArray(data.message)
-          ? data.message.join(", ")
-          : typeof data.message === "string"
-          ? data.message
-          : JSON.stringify(data.message || data);
-
         return {
           success: false,
           provider: "Fast2SMS",
-          error: errorMessage || "Fast2SMS delivery error",
+          error: data.message?.[0] || "Fast2SMS delivery error",
         };
       }
     } catch (err: any) {
