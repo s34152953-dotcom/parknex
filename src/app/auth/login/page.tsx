@@ -16,6 +16,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const performLogin = async (loginEmail: string) => {
     setLoading(true);
@@ -24,18 +25,23 @@ function LoginForm() {
     try {
       const result = await signIn("operator-credentials", {
         redirect: false,
-        email: loginEmail,
+        email: loginEmail.toLowerCase().trim(),
         password: password,
       });
 
       if (result?.error) {
-        setErrorMsg(result.error);
+        setErrorMsg(result.error || "Invalid email or password.");
+        setLoading(false);
       } else if (result?.ok) {
-        router.push(redirectPath);
+        setSuccess(true);
+        // Clean navigation so middleware and server components receive the updated session cookies
+        window.location.href = redirectPath;
+      } else {
+        setErrorMsg("Unable to sign in. Please verify your credentials.");
+        setLoading(false);
       }
     } catch (err: any) {
       setErrorMsg("An unexpected error occurred during login.");
-    } finally {
       setLoading(false);
     }
   };
@@ -99,10 +105,10 @@ function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || success}
           className="w-full h-13 rounded-xl bg-[#D84A2B] text-white text-[14.5px] font-bold flex items-center justify-center gap-2 hover:bg-[#C23E21] active:scale-[0.98] transition-all shadow-lg shadow-[#D84A2B]/25 mt-1 cursor-pointer disabled:opacity-60"
         >
-          {loading ? "Authenticating..." : "Sign In as Operator"}
+          {success ? "Access Granted. Opening Operations Hub..." : loading ? "Authenticating..." : "Sign In as Operator"}
           <ArrowRight className="w-4 h-4" />
         </button>
       </form>
