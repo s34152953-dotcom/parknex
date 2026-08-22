@@ -28,7 +28,7 @@ export const seedSlots = mutation({
 
 export const seedOperators = mutation({
   handler: async (ctx) => {
-    const defaultPasswordHash = "$2b$10$T72DsJmLW7MHDhrTzacZEewvG.0o/4UfkXWKwezHIOuLBzF3n.1ca"; // admin123
+    const defaultPasswordHash = "$2b$10$i4gqvOzl5jV7QJwRul5k0eJvs9uwTezQU2R9RF01i.PxaPOb5O7Mq"; // admin123
     
     const accounts = [
       { email: "admin@parknex.com", name: "Admin Operator", role: "operator" },
