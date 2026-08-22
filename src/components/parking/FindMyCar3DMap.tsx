@@ -137,16 +137,18 @@ export default function FindMyCar3DMap({
   startLandmarkName = "Mall Entrance Lobby",
   startLandmarkPos = [0, 0.1, 15],
 }: FindMyCar3DMapProps) {
+  const safeStartPos: [number, number, number] = startLandmarkPos || [0, 0.1, 15];
+
   // Default route points fallback if none provided
   const activeRoutePoints: [number, number, number][] = useMemo(() => {
     if (routePoints && routePoints.length >= 2) return routePoints;
     return [
-      startLandmarkPos || [0, 0.12, 15],
+      safeStartPos,
       [0, 0.12, 7],
       [-4.0, 0.12, 7],
       [-4.0, 0.12, 0],
     ];
-  }, [routePoints, startLandmarkPos]);
+  }, [routePoints, safeStartPos]);
 
   const targetPoint = activeRoutePoints[activeRoutePoints.length - 1] || [-4.0, 0.12, 0];
 
@@ -163,7 +165,7 @@ export default function FindMyCar3DMap({
         <ambientLight intensity={0.7} color="#FFFFFF" />
         <directionalLight position={[15, 25, 15]} intensity={1.2} color="#FFFFFF" castShadow />
         <pointLight position={[targetPoint[0], 6, targetPoint[2]]} intensity={1.8} color="#C93B2F" distance={20} />
-        <pointLight position={[startLandmarkPos[0], 6, startLandmarkPos[2]]} intensity={1.5} color="#2F7D5A" distance={18} />
+        <pointLight position={[safeStartPos[0], 6, safeStartPos[2]]} intensity={1.5} color="#2F7D5A" distance={18} />
 
         <Suspense fallback={null}>
           {/* Main Floor Slab */}
@@ -189,7 +191,7 @@ export default function FindMyCar3DMap({
           </mesh>
 
           {/* Start Landmark Pavilion */}
-          <group position={startLandmarkPos}>
+          <group position={safeStartPos}>
             <mesh position={[0, 1.2, 0]}>
               <boxGeometry args={[3.8, 2.4, 2.2]} />
               <meshStandardMaterial color="#FAF5EE" roughness={0.3} metalness={0.1} />
@@ -288,7 +290,7 @@ export default function FindMyCar3DMap({
             maxPolarAngle={Math.PI / 2 - 0.1}
             minDistance={6}
             maxDistance={38}
-            target={[targetPoint[0] / 2, 0, (startLandmarkPos[2] + targetPoint[2]) / 2]}
+            target={[(targetPoint[0] || 0) / 2, 0, ((safeStartPos[2] || 0) + (targetPoint[2] || 0)) / 2]}
           />
         </Suspense>
       </Canvas>

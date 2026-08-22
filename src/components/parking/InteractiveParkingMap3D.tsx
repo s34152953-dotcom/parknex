@@ -144,36 +144,37 @@ function ParkingSlot3D({
 }) {
   const [hovered, setHovered] = useState(false);
   const isAvailable = slot.status === "available";
+  const slotKey = slot.slotId || slot.id || (slot as any)._id || slot.slotNumber || "slot";
 
   const isRecommended = Boolean(
-    (recommendedSlotIds && (recommendedSlotIds.includes(slot.id) || (slot.slotId && recommendedSlotIds.includes(slot.slotId)))) ||
+    (recommendedSlotIds && (recommendedSlotIds.includes(slotKey) || (slot.slotId && recommendedSlotIds.includes(slot.slotId)))) ||
     isNearest
   );
 
   const statusColor = useMemo(() => {
     if (isRecommended && slot.status === "available") {
-      return "#2563EB"; // Blue for AI Recommended
+      return "#3569A8"; // Blue for Recommended
     }
     switch (slot.status) {
       case "available":
-        return "#10B981"; // Emerald Green
+        return "#2F7D5A"; // Green
       case "occupied":
-        return "#EF4444"; // Red / Coral
+        return "#C93B2F"; // Red
       case "reserved":
       case "temporarily_held":
-        return "#F59E0B"; // Amber
+        return "#B7791F"; // Amber
       case "maintenance":
-        return "#6B7280"; // Grey Maintenance
+        return "#70675F"; // Grey
       default:
-        return "#78716C";
+        return "#70675F";
     }
   }, [slot.status, isRecommended]);
 
   const carColor = useMemo(() => {
-    const colors = ["#1E293B", "#334155", "#475569", "#1E1B4B", "#2A324B", "#3D3A45", "#52525B"];
-    const hash = slot.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = ["#241F1B", "#3D3A35", "#57534E", "#70675F", "#8C827A", "#4A4036"];
+    const hash = slotKey.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
-  }, [slot.id]);
+  }, [slotKey]);
 
   const outlineMat = useMemo(
     () =>
@@ -432,17 +433,29 @@ export default function InteractiveParkingMap3D({
           <ParkingFloorGrid floor={currentFloor} />
 
           {/* Render All Parking Slots in 3D */}
-          {slots.map((slot) => (
-            <ParkingSlot3D
-              key={slot.id}
-              slot={slot}
-              isSelected={selectedSlot?.id === slot.id}
-              isNearest={nearestSlot?.id === slot.id}
-              recommendedSlotIds={recommendedSlotIds}
-              onSelect={onSelectSlot}
-              reducedMotion={reducedMotion}
-            />
-          ))}
+          {slots.map((slot) => {
+            const slotKey = slot.slotId || slot.id || (slot as any)._id || slot.slotNumber;
+            const isSelected = Boolean(
+              selectedSlot &&
+              (selectedSlot.slotId || selectedSlot.id || (selectedSlot as any)._id) === slotKey
+            );
+            const isNearest = Boolean(
+              nearestSlot &&
+              (nearestSlot.slotId || nearestSlot.id || (nearestSlot as any)._id) === slotKey
+            );
+
+            return (
+              <ParkingSlot3D
+                key={slotKey}
+                slot={slot}
+                isSelected={isSelected}
+                isNearest={isNearest}
+                recommendedSlotIds={recommendedSlotIds}
+                onSelect={onSelectSlot}
+                reducedMotion={reducedMotion}
+              />
+            );
+          })}
 
           {/* Concrete Pillars */}
           <ConcretePillar position={[-7.5, 0, -10.0]} label="P01" sub="Zone A" />

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
@@ -13,10 +14,24 @@ import {
   Wrench,
   Navigation,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import AdminFloorPlan2D, { ParkingSlot2D } from "@/components/admin/AdminFloorPlan2D";
-import InteractiveParkingMap3D from "@/components/parking/InteractiveParkingMap3D";
 import { getTop3Recommendations, SlotRecommendationInput } from "@/lib/parking/recommendation";
+
+const InteractiveParkingMap3D = dynamic(
+  () => import("@/components/parking/InteractiveParkingMap3D"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full min-h-[540px] sm:min-h-[580px] lg:min-h-[660px] bg-[#FAF7F2] rounded-2xl border border-[#DED3C7] flex flex-col items-center justify-center p-6 text-center animate-pulse">
+        <Loader2 className="w-8 h-8 text-[#C93B2F] animate-spin mb-2" />
+        <p className="text-[14px] font-bold text-[#241F1B]">Loading Interactive Map...</p>
+        <p className="text-[12px] text-[#70675F] mt-1">Initializing 3D spatial coordinates and floor layout</p>
+      </div>
+    ),
+  }
+);
 
 export default function AdminLiveParkingMapPage() {
   const [selectedFloor, setSelectedFloor] = useState<string>("B2");
