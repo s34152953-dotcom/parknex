@@ -79,6 +79,24 @@ export default defineSchema({
     exitDetectedPlate: v.optional(v.string()),
     recommendationScore: v.optional(v.number()),
     recommendationReason: v.optional(v.string()),
+    verificationStatus: v.optional(
+      v.union(
+        v.literal("NOT_CHECKED"),
+        v.literal("CHECKING"),
+        v.literal("VERIFIED"),
+        v.literal("INVALID"),
+        v.literal("MISMATCH"),
+        v.literal("UNAVAILABLE"),
+        v.literal("MANUAL_VERIFIED")
+      )
+    ),
+    vehicleMake: v.optional(v.string()),
+    vehicleModel: v.optional(v.string()),
+    vehicleColour: v.optional(v.string()),
+    vehicleClass: v.optional(v.string()),
+    fuelType: v.optional(v.string()),
+    verifiedAt: v.optional(v.string()),
+    manualVerificationReason: v.optional(v.string()),
   })
     .index("by_slotId", ["slotId"])
     .index("by_customerAccessToken", ["customerAccessToken"])

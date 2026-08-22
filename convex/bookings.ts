@@ -31,10 +31,13 @@ export const getBookingByToken = query({
 export const getActiveBookingByVehicle = query({
   args: { vehicleNumber: v.string() },
   handler: async (ctx, args) => {
+    const cleanPlate = args.vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    if (!cleanPlate) return null;
+
     const booking = await ctx.db
       .query("bookings")
       .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
-      .filter((q) => q.eq(q.field("vehicleNumber"), args.vehicleNumber.toUpperCase()))
+      .filter((q) => q.eq(q.field("vehicleNumber"), cleanPlate))
       .first();
 
     if (!booking) return null;
@@ -45,6 +48,42 @@ export const getActiveBookingByVehicle = query({
       .first();
 
     return { ...booking, slotDetails: slot };
+  },
+});
+
+export const recordManualVehicleVerification = mutation({
+  args: {
+    vehicleNumber: v.string(),
+    operatorEmail: v.string(),
+    reason: v.string(),
+    physicalMake: v.optional(v.string()),
+    physicalModel: v.optional(v.string()),
+    physicalColour: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const cleanPlate = args.vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const timestamp = new Date().toISOString();
+
+    if (!args.reason || args.reason.trim().length < 4) {
+      throw new Error("A valid mandatory reason (at least 4 characters) is required for manual verification.");
+    }
+
+    const auditId = await ctx.db.insert("audit_logs", {
+      operatorEmail: args.operatorEmail,
+      action: "MANUAL_VEHICLE_VERIFICATION",
+      targetType: "vehicle",
+      targetId: cleanPlate,
+      reason: args.reason.trim(),
+      timestamp,
+      details: `Operator manually verified RC/registration for ${cleanPlate}. Physical match: ${args.physicalMake || "N/A"} ${args.physicalModel || ""} ${args.physicalColour || ""}`,
+    });
+
+    return {
+      success: true,
+      auditId,
+      status: "MANUAL_VERIFIED",
+      verifiedAt: timestamp,
+    };
   },
 });
 
@@ -190,9 +229,27 @@ export const createWalkInEntry = mutation({
     entryPlateConfidence: v.optional(v.number()),
     recommendationScore: v.optional(v.number()),
     recommendationReason: v.optional(v.string()),
+    verificationStatus: v.optional(
+      v.union(
+        v.literal("NOT_CHECKED"),
+        v.literal("CHECKING"),
+        v.literal("VERIFIED"),
+        v.literal("INVALID"),
+        v.literal("MISMATCH"),
+        v.literal("UNAVAILABLE"),
+        v.literal("MANUAL_VERIFIED")
+      )
+    ),
+    vehicleMake: v.optional(v.string()),
+    vehicleModel: v.optional(v.string()),
+    vehicleColour: v.optional(v.string()),
+    vehicleClass: v.optional(v.string()),
+    fuelType: v.optional(v.string()),
+    verifiedAt: v.optional(v.string()),
+    manualVerificationReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const cleanPlate = args.vehicleNumber.toUpperCase().trim();
+    const cleanPlate = args.vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
 
     // 1. Enforce active-plate rule on the server (Block duplicate active sessions)
     const existingActive = await ctx.db
@@ -238,6 +295,14 @@ export const createWalkInEntry = mutation({
       entryPlateConfidence: args.entryPlateConfidence,
       recommendationScore: args.recommendationScore,
       recommendationReason: args.recommendationReason,
+      verificationStatus: args.verificationStatus || "NOT_CHECKED",
+      vehicleMake: args.vehicleMake,
+      vehicleModel: args.vehicleModel,
+      vehicleColour: args.vehicleColour,
+      vehicleClass: args.vehicleClass,
+      fuelType: args.fuelType,
+      verifiedAt: args.verifiedAt,
+      manualVerificationReason: args.manualVerificationReason,
     });
 
     // 4. Generate signed cryptographic exit token
