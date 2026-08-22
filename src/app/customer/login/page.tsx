@@ -90,9 +90,18 @@ function CustomerLoginForm() {
 
 export default function CustomerLogin() {
   return (
-    <main className="min-h-[100dvh] bg-[#FAF7F2] text-[#241F1B] flex flex-col box-border w-full selection:bg-[#F9E3DE] selection:text-[#C93B2F] pb-12">
+    <main className="min-h-[100dvh] bg-[#FAF7F2] text-[#241F1B] flex flex-col box-border w-full selection:bg-[#F9E3DE] selection:text-[#C93B2F] pb-12 relative overflow-hidden">
+      {/* Background Indian Cars Image with soft blur */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-15 pointer-events-none blur-[2px]"
+        style={{
+          backgroundImage: 'url("/images/hero-indian-cars.jpg")',
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-[#FAF7F2]/80 pointer-events-none" />
+
       {/* Top Header */}
-      <header className="w-full bg-[#FFFFFF] border-b border-[#DED3C7] py-4 px-4 sm:px-8 mb-8">
+      <header className="relative z-10 w-full bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#DED3C7] py-4 px-4 sm:px-8 mb-8">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between">
           <Link href="/" className="group">
             <ParknexLogo size="md" variant="light" />
@@ -107,7 +116,7 @@ export default function CustomerLogin() {
       </header>
 
       {/* Form Container */}
-      <div className="w-full flex-1 flex items-center justify-center px-4 sm:px-6">
+      <div className="relative z-10 w-full flex-1 flex items-center justify-center px-4 sm:px-6">
         <Suspense fallback={<div className="h-[360px] max-w-[480px] w-full bg-[#FFFFFF] rounded-2xl animate-pulse border border-[#DED3C7]" />}>
           <CustomerLoginForm />
         </Suspense>

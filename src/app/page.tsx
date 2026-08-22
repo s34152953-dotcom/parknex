@@ -29,25 +29,26 @@ export default function HomePage() {
       </header>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative min-h-[max(calc(100dvh-72px),620px)] w-full flex flex-col justify-center py-12 lg:py-16">
-        {/* Background Car Image + Warm Beige Editorial Overlay */}
+      <section className="relative min-h-[max(calc(100dvh-72px),640px)] w-full flex flex-col justify-center py-12 lg:py-20 overflow-hidden">
+        {/* Background Indian Cars Image + Warm Beige Editorial Overlay */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-no-repeat bg-[center_top] lg:bg-[left_20%_center] w-full h-full opacity-35"
+          className="absolute inset-0 z-0 bg-cover bg-no-repeat bg-[center_right_20%] sm:bg-[center_right_15%] lg:bg-[right_center] w-full h-full opacity-45"
           style={{
-            backgroundImage: 'url("/images/hero-car.jpg")',
+            backgroundImage: 'url("/images/hero-indian-cars.jpg")',
           }}
         />
 
-        {/* Gradient Overlay to guarantee high contrast */}
+        {/* Gradient Overlay for high text contrast and editorial aesthetics */}
         <div
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 z-0 pointer-events-none"
           style={{
             background: `
               linear-gradient(
                 to right,
                 #FAF7F2 0%,
-                rgba(250, 247, 242, 0.95) 45%,
-                rgba(250, 247, 242, 0.6) 100%
+                rgba(250, 247, 242, 0.97) 38%,
+                rgba(250, 247, 242, 0.75) 60%,
+                rgba(250, 247, 242, 0.25) 100%
               )
             `,
           }}

@@ -130,7 +130,16 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 bg-[#FAF7F2] text-[#241F1B] relative selection:bg-[#F9E3DE] selection:text-[#C93B2F]">
+    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 bg-[#FAF7F2] text-[#241F1B] relative selection:bg-[#F9E3DE] selection:text-[#C93B2F] overflow-hidden">
+      {/* Background Indian Cars Image with soft blur */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-15 pointer-events-none blur-[2px]"
+        style={{
+          backgroundImage: 'url("/images/hero-indian-cars.jpg")',
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-[#FAF7F2]/80 pointer-events-none" />
+
       <div className="relative z-10 w-full max-w-[480px]">
         {/* Logo Header */}
         <div className="flex flex-col items-center text-center mb-8">
