@@ -43,10 +43,10 @@ const FindMyCar3DMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[360px] sm:h-[460px] bg-[#10151D] rounded-2xl border border-white/[0.08] flex flex-col items-center justify-center p-[24px] text-center animate-pulse">
-        <Loader2 className="w-8 h-8 text-[#D84A2B] animate-spin mb-2" />
-        <p className="text-[14px] font-bold text-[#F5F7FA]">Loading 3D Parking Floor Space...</p>
-        <p className="text-[12px] text-[rgba(245,247,250,0.58)] mt-1">Initializing spatial coordinates and lighting</p>
+      <div className="w-full h-[360px] sm:h-[460px] bg-[#FAF7F2] rounded-2xl border border-[#DED3C7] flex flex-col items-center justify-center p-6 text-center animate-pulse">
+        <Loader2 className="w-8 h-8 text-[#C93B2F] animate-spin mb-2" />
+        <p className="text-[14px] font-bold text-[#241F1B]">Loading Interactive Map...</p>
+        <p className="text-[12px] text-[#70675F] mt-1">Initializing spatial coordinates and floor layout</p>
       </div>
     ),
   }
@@ -118,19 +118,44 @@ export default function CustomerDashboard() {
     if (!vehicleInput.trim() || !userEmail) return;
     setSavingVehicle(true);
     setVehicleSavedMsg(false);
+
     try {
       await upsertUser({
         email: userEmail,
-        name: session?.user?.name || userEmail,
-        vehicleNumber: vehicleInput.trim().toUpperCase(),
+        name: session?.user?.name || "Customer",
+        vehicleNumber: vehicleInput.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim(),
       });
       setVehicleSavedMsg(true);
       setVehicleInput("");
-      setTimeout(() => setVehicleSavedMsg(false), 4000);
-    } catch (err) {
-      console.error("Failed to save vehicle:", err);
+    } catch (err: any) {
+      alert("Failed to save vehicle: " + err.message);
     } finally {
       setSavingVehicle(false);
+    }
+  };
+
+  const handleConfirmPillar = async (codeOrToken: string) => {
+    if (!activeBooking?._id) {
+      return { success: false, error: "No active parking session found." };
+    }
+
+    try {
+      const res = await confirmPillarMutation({
+        bookingId: activeBooking._id,
+        pillarTokenOrCode: codeOrToken.trim(),
+      });
+
+      if (res.success) {
+        setActiveTab("find-my-car");
+        return {
+          success: true,
+          confirmedPillar: res.confirmedPillar || activeBooking.slotDetails?.pillar || "Confirmed",
+        };
+      } else {
+        return { success: false, error: (res as any).error || "Pillar verification failed." };
+      }
+    } catch (err: any) {
+      return { success: false, error: err.message || "Failed to confirm pillar." };
     }
   };
 
@@ -141,89 +166,60 @@ export default function CustomerDashboard() {
     }, 600);
   };
 
-  const handleConfirmPillar = async (codeOrToken: string) => {
-    if (!activeBooking) {
-      return { success: false, error: "No active parking session found" };
-    }
-    try {
-      const res = await confirmPillarMutation({
-        bookingId: activeBooking._id,
-        pillarTokenOrCode: codeOrToken,
-      });
-      return { success: true, confirmedPillar: res.confirmedPillar };
-    } catch (err: any) {
-      return { success: false, error: err.message || "Failed to confirm pillar code" };
-    }
-  };
-
-  // Dijkstra spatial pathfinding calculation
+  // Turn-by-turn routing calculation
   const routeData = useMemo(() => {
     if (!activeBooking?.slotDetails) return null;
+    const targetSlot = activeBooking.slotDetails;
     return calculateDijkstraRoute(
       selectedLandmarkId,
-      activeBooking.slotDetails.slotNumber || activeBooking.slotId,
+      targetSlot.slotNumber || targetSlot.slotId,
       {
-        floor: activeBooking.slotDetails.floor,
-        zone: activeBooking.slotDetails.zone,
-        pillar: activeBooking.pillarConfirmedAt ? (activeBooking.confirmedPillar || activeBooking.slotDetails.pillar) : activeBooking.slotDetails.pillar,
-        slotNumber: activeBooking.slotDetails.slotNumber,
+        floor: targetSlot.floor,
+        zone: targetSlot.zone,
+        pillar: activeBooking.confirmedPillar || targetSlot.pillar,
+        slotNumber: targetSlot.slotNumber,
       }
     );
-  }, [selectedLandmarkId, activeBooking]);
+  }, [activeBooking, selectedLandmarkId]);
 
-  // Pagination for history
-  const PAGE_SIZE = 5;
-  const totalHistoryPages = Math.ceil((historyRecords?.length || 0) / PAGE_SIZE) || 1;
-  const paginatedHistory = useMemo(() => {
-    if (!historyRecords) return [];
-    const start = (historyPage - 1) * PAGE_SIZE;
-    return historyRecords.slice(start, start + PAGE_SIZE);
-  }, [historyRecords, historyPage]);
+  const customerDisplayName = session?.user?.name || session?.user?.email?.split("@")[0] || "Customer";
 
-  if (status === "loading" || !session) {
-    return (
-      <div className="min-h-[100dvh] bg-[#050507] flex items-center justify-center w-full">
-        <Loader2 className="w-8 h-8 text-[#D84A2B] animate-spin" />
-      </div>
-    );
-  }
-
-  const customerDisplayName = session.user?.name || session.user?.email?.split("@")[0] || "Driver";
+  // Pagination for History
+  const itemsPerPage = 6;
+  const totalHistoryPages = Math.ceil((historyRecords?.length || 0) / itemsPerPage) || 1;
+  const paginatedHistory = (historyRecords || []).slice(
+    (historyPage - 1) * itemsPerPage,
+    historyPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-[100dvh] bg-[#050507] text-[#F5F7FA] selection:bg-[#D84A2B]/20 selection:text-[#D84A2B] box-border w-full flex flex-col font-['Sora',sans-serif]">
-      {/* ── 1. COMPACT HEADER ── */}
-      <header className="sticky top-0 z-40 bg-[#050507]/95 backdrop-blur-md border-b border-white/[0.10] w-full h-[64px] sm:h-[72px]">
-        <div className="w-full max-w-[1180px] mx-auto px-[12px] sm:px-[24px] lg:px-[32px] h-full flex items-center justify-between gap-[8px] sm:gap-[12px]">
-          {/* Logo */}
-          <Link href="/" className="group flex items-center transition-transform hover:opacity-90 shrink-0">
-            <div className="sm:hidden">
-              <ParknexLogo size="sm" variant="dark" />
-            </div>
-            <div className="hidden sm:block">
-              <ParknexLogo size="md" variant="dark" />
-            </div>
+    <div className="min-h-screen bg-[#FAF7F2] text-[#241F1B] selection:bg-[#F9E3DE] selection:text-[#C93B2F] flex flex-col font-[family-name:var(--font-sora)]">
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-40 bg-[#FFFFFF] border-b border-[#DED3C7] w-full shadow-xs">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-[64px] sm:h-[72px] flex items-center justify-between">
+          <Link href="/customer/dashboard" className="group flex items-center shrink-0">
+            <ParknexLogo size="md" variant="light" />
           </Link>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-[6px] sm:gap-[12px] shrink-0">
-            <span className="hidden sm:inline text-[13px] sm:text-[14px] text-[rgba(245,247,250,0.58)] truncate max-w-[140px]">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="hidden sm:inline text-[13.5px] text-[#70675F] font-medium truncate max-w-[150px]">
               {customerDisplayName}
             </span>
 
             {vehicleNumber && (
-              <div className="flex items-center gap-[4px] sm:gap-[6px] px-[8px] sm:px-[10px] py-[4px] sm:py-[5px] rounded-full bg-[#151B24] border border-white/[0.10] shrink-0 font-mono text-[11px] sm:text-[12px] font-bold text-white/90">
-                <Car className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D84A2B]" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EAE0] border border-[#DED3C7] shrink-0 font-mono text-[12px] font-bold text-[#241F1B]">
+                <Car className="w-3.5 h-3.5 text-[#C93B2F]" />
                 <span>{vehicleNumber}</span>
               </div>
             )}
 
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-[4px] sm:gap-[6px] h-[34px] sm:h-[40px] px-[10px] sm:px-[16px] rounded-xl border border-white/[0.10] bg-white/[0.04] text-[12px] sm:text-[14px] font-semibold text-[rgba(245,247,250,0.7)] hover:text-white hover:bg-white/10 transition-all cursor-pointer shrink-0"
+              className="flex items-center gap-1.5 h-[38px] px-3.5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[13px] font-bold text-[#70675F] hover:text-[#241F1B] transition-all cursor-pointer shrink-0 shadow-xs"
               title="Sign Out"
             >
-              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
@@ -231,28 +227,28 @@ export default function CustomerDashboard() {
       </header>
 
       {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="w-full max-w-[1180px] mx-auto px-[12px] sm:px-[24px] lg:px-[32px] pt-[20px] sm:pt-[32px] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-[48px] flex-1 flex flex-col gap-[20px] sm:gap-[24px] min-w-0">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 flex flex-col gap-6 min-w-0">
         {/* ── 2. DASHBOARD WELCOME AREA ── */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-[12px] sm:gap-[16px] pb-[4px]">
-          <div className="min-w-0">
-            <div className="text-[11px] sm:text-[12px] font-bold text-[#D84A2B] uppercase tracking-wider mb-[2px]">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2 border-b border-[#DED3C7]">
+          <div>
+            <div className="text-[11.5px] font-bold text-[#C93B2F] uppercase tracking-wider mb-1">
               Customer Parking Hub
             </div>
-            <h1 className="text-[22px] sm:text-[34px] font-bold text-[#F5F7FA] tracking-tight leading-tight truncate">
+            <h1 className="text-[24px] sm:text-[32px] font-black text-[#241F1B] tracking-tight leading-tight">
               Hello, {customerDisplayName}
             </h1>
-            <p className="text-[13.5px] sm:text-[15px] text-[rgba(245,247,250,0.58)] mt-[2px] leading-snug">
-              Manage live navigation, physical pillar verification and digital exit passes.
+            <p className="text-[14px] text-[#70675F] mt-0.5">
+              Manage live navigation, pillar verification, and digital exit passes.
             </p>
           </div>
 
-          <div className="flex items-center gap-[10px] self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="h-[38px] sm:h-[40px] px-[12px] sm:px-[14px] rounded-xl bg-[#10151D] border border-white/[0.10] text-[12.5px] sm:text-[13px] font-semibold text-[rgba(245,247,250,0.7)] hover:text-white hover:bg-[#151B24] transition-all flex items-center gap-[6px] cursor-pointer shrink-0"
+              className="h-[40px] px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[13px] font-bold text-[#241F1B] hover:bg-[#F3EAE0] transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-xs"
             >
-              <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D84A2B] ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-[#C93B2F] ${refreshing ? "animate-spin" : ""}`} />
               <span>Refresh Status</span>
             </button>
           </div>
@@ -260,30 +256,30 @@ export default function CustomerDashboard() {
 
         {/* Vehicle Registration Banner if user has no vehicle assigned */}
         {user !== undefined && !vehicleNumber && (
-          <div className="bg-[#10151D] border border-white/[0.10] rounded-2xl p-[16px] sm:p-[24px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-[14px]">
-            <div className="flex items-start gap-[12px]">
-              <div className="w-[40px] h-[40px] rounded-xl bg-[#D84A2B]/15 border border-[#D84A2B]/30 flex items-center justify-center shrink-0 text-[#D84A2B]">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
                 <Car className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-[15px] sm:text-[16px] font-bold text-white">Register Vehicle License Plate</h3>
-                <p className="text-[12.5px] sm:text-[13.5px] text-[rgba(245,247,250,0.58)] mt-[2px]">
+                <h3 className="text-[15px] sm:text-[16px] font-bold text-[#241F1B]">Register Vehicle License Plate</h3>
+                <p className="text-[13px] text-[#70675F] mt-0.5">
                   Link your license plate to automatically sync incoming parking assignments.
                 </p>
               </div>
             </div>
-            <form onSubmit={handleSaveVehicle} className="flex items-center gap-[8px] w-full sm:w-auto">
+            <form onSubmit={handleSaveVehicle} className="flex items-center gap-2 w-full sm:w-auto">
               <input
                 type="text"
                 value={vehicleInput}
                 onChange={(e) => setVehicleInput(e.target.value.toUpperCase())}
-                placeholder="e.g. KA 01 AB 1234"
-                className="h-[40px] sm:h-[44px] px-[12px] rounded-xl bg-[#151B24] border border-white/15 text-white font-mono text-[13px] sm:text-[14px] focus:outline-none focus:border-[#D84A2B] transition-colors w-full sm:w-[200px]"
+                placeholder="e.g. MH02AB1234"
+                className="h-11 px-3 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[13.5px] font-bold uppercase focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE] w-full sm:w-[200px]"
               />
               <button
                 type="submit"
                 disabled={savingVehicle || !vehicleInput.trim()}
-                className="h-[40px] sm:h-[44px] px-[16px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] disabled:opacity-50 text-white font-bold text-[13px] sm:text-[14px] flex items-center gap-[6px] shrink-0 transition-all cursor-pointer"
+                className="h-11 px-4 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] disabled:opacity-50 text-white font-bold text-[13.5px] flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
               >
                 {savingVehicle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 <span>Save</span>
@@ -292,7 +288,7 @@ export default function CustomerDashboard() {
           </div>
         )}
         {vehicleSavedMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[13px] px-[16px] py-[10px] rounded-xl flex items-center gap-[8px]">
+          <div className="bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[13px] font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" />
             <span>Vehicle plate registered successfully! Active bookings will link automatically.</span>
           </div>
@@ -300,165 +296,161 @@ export default function CustomerDashboard() {
 
         {/* ── 3. ACTIVE-PARKING SUMMARY / NO-ACTIVE-SESSION ── */}
         {hasActiveSession && activeBooking ? (
-          <div className="bg-[#10151D] border border-white/[0.10] rounded-2xl p-[16px] sm:p-[24px] flex flex-col gap-[16px] sm:gap-[20px] shadow-xl relative overflow-hidden">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-7 flex flex-col gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)] relative overflow-hidden">
             {/* Header row */}
-            <div className="flex flex-wrap items-center justify-between gap-[10px] pb-[12px] sm:pb-[16px] border-b border-white/[0.08]">
-              <div className="flex items-center gap-[8px] sm:gap-[10px] min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-[11.5px] sm:text-[12px] font-bold uppercase tracking-wider text-emerald-400 truncate">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-[#DED3C7]">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2F7D5A] animate-pulse shrink-0" />
+                <span className="text-[12px] font-black uppercase tracking-wider text-[#2F7D5A]">
                   Active Parking Session
                 </span>
-                <span className="text-[13px] text-[rgba(245,247,250,0.58)]">·</span>
-                <span className="text-[13px] sm:text-[13.5px] font-medium text-white/80 truncate">{activeBooking.mallName}</span>
+                <span className="text-[13px] text-[#70675F]">·</span>
+                <span className="text-[13.5px] font-bold text-[#241F1B] truncate">{activeBooking.mallName}</span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsAssistanceOpen(true)}
-                className="text-[12px] sm:text-[12.5px] font-semibold text-[rgba(245,247,250,0.58)] hover:text-[#D84A2B] transition-colors flex items-center gap-[6px] shrink-0"
+                className="text-[12.5px] font-bold text-[#70675F] hover:text-[#C93B2F] transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
               >
-                <HelpCircle className="w-4 h-4 text-[#D84A2B]" />
+                <HelpCircle className="w-4 h-4 text-[#C93B2F]" />
                 <span>Report a Problem</span>
               </button>
             </div>
 
             {/* Space Grid Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-[8px] sm:gap-[12px]">
-              <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[10px] sm:p-[14px] flex flex-col min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[rgba(245,247,250,0.58)] truncate">Floor & Zone</span>
-                <span className="text-[15px] sm:text-[18px] font-black text-white mt-[2px] sm:mt-[4px] truncate">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col min-w-0">
+                <span className="text-[11px] font-bold uppercase text-[#70675F] truncate">Floor &amp; Zone</span>
+                <span className="text-[17px] sm:text-[19px] font-black text-[#241F1B] mt-1 truncate">
                   Floor {activeBooking.slotDetails?.floor || "B2"}
                 </span>
-                <span className="text-[11px] sm:text-[12px] text-[#D84A2B] font-semibold truncate">{activeBooking.slotDetails?.zone || "Zone A"}</span>
+                <span className="text-[12px] text-[#C93B2F] font-bold truncate">{activeBooking.slotDetails?.zone || "Zone A"}</span>
               </div>
 
-              <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[10px] sm:p-[14px] flex flex-col min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[rgba(245,247,250,0.58)] truncate">Assigned Space</span>
-                <span className="text-[15px] sm:text-[18px] font-black text-[#D84A2B] mt-[2px] sm:mt-[4px] truncate">
+              <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col min-w-0">
+                <span className="text-[11px] font-bold uppercase text-[#70675F] truncate">Assigned Space</span>
+                <span className="text-[17px] sm:text-[19px] font-black text-[#C93B2F] mt-1 truncate">
                   Slot {activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
                 </span>
-                <span className="text-[11px] sm:text-[12px] text-white/60 font-medium truncate">
+                <span className="text-[12px] text-[#70675F] font-semibold truncate">
                   {isPillarConfirmed ? (activeBooking.confirmedPillar || activeBooking.slotDetails?.pillar) : activeBooking.slotDetails?.pillar}
                 </span>
               </div>
 
-              <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[10px] sm:p-[14px] flex flex-col min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[rgba(245,247,250,0.58)] truncate">Entry Time</span>
-                <span className="text-[14px] sm:text-[16px] font-bold text-white mt-[2px] sm:mt-[4px] truncate">
+              <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col min-w-0">
+                <span className="text-[11px] font-bold uppercase text-[#70675F] truncate">Entry Time</span>
+                <span className="text-[15px] sm:text-[17px] font-bold text-[#241F1B] mt-1 truncate">
                   {new Date(activeBooking.entryTime).toLocaleTimeString("en-IN", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </span>
-                <span className="text-[11px] sm:text-[12px] text-[rgba(245,247,250,0.58)] truncate">
+                <span className="text-[12px] text-[#70675F] truncate">
                   {new Date(activeBooking.entryTime).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
                 </span>
               </div>
 
-              <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[10px] sm:p-[14px] flex flex-col min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[rgba(245,247,250,0.58)] truncate">Live Duration</span>
-                <span className="text-[15px] sm:text-[18px] font-black text-white mt-[2px] sm:mt-[4px] flex items-center gap-[4px] sm:gap-[6px] truncate">
-                  <Clock className="w-3.5 h-3.5 text-[#D84A2B] shrink-0" />
+              <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col min-w-0">
+                <span className="text-[11px] font-bold uppercase text-[#70675F] truncate">Live Duration</span>
+                <span className="text-[17px] sm:text-[19px] font-black text-[#241F1B] mt-1 flex items-center gap-1.5 truncate">
+                  <Clock className="w-4 h-4 text-[#C93B2F] shrink-0" />
                   <span className="truncate">{liveDuration}</span>
                 </span>
-                <span className="text-[11px] sm:text-[12px] text-emerald-400 font-semibold truncate">Active In Mall</span>
+                <span className="text-[12px] text-[#2F7D5A] font-bold truncate">Active In Mall</span>
               </div>
             </div>
 
             {/* 4-Stage Status Timeline */}
-            <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[12px] sm:p-[20px] flex flex-col gap-[10px] sm:gap-[12px]">
-              <div className="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.58)]">
+            <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-4 sm:p-5 flex flex-col gap-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#70675F]">
                 Parking Session Timeline
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-[6px] sm:gap-[12px] relative">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 relative">
                 {/* Step 1 */}
-                <div className="flex flex-col gap-[2px] sm:gap-[4px] p-[8px] sm:p-[10px] rounded-lg bg-emerald-500/10 border border-emerald-500/30 min-w-0">
-                  <div className="flex items-center gap-[4px] sm:gap-[6px] text-emerald-400 text-[11px] sm:text-[12px] font-bold truncate">
+                <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
+                  <div className="flex items-center gap-1.5 text-[#2F7D5A] text-[12px] font-bold truncate">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">1. Vehicle Detected</span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] text-white/60 truncate">Entry gate verified</span>
+                  <span className="text-[11px] text-[#70675F] truncate">Entry gate verified</span>
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex flex-col gap-[2px] sm:gap-[4px] p-[8px] sm:p-[10px] rounded-lg bg-emerald-500/10 border border-emerald-500/30 min-w-0">
-                  <div className="flex items-center gap-[4px] sm:gap-[6px] text-emerald-400 text-[11px] sm:text-[12px] font-bold truncate">
+                <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
+                  <div className="flex items-center gap-1.5 text-[#2F7D5A] text-[12px] font-bold truncate">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">2. Space Assigned</span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] text-white/60 truncate">Slot {activeBooking.slotDetails?.slotNumber} allocated</span>
+                  <span className="text-[11px] text-[#70675F] truncate">Slot {activeBooking.slotDetails?.slotNumber} allocated</span>
                 </div>
 
                 {/* Step 3 */}
                 <div
-                  className={`flex flex-col gap-[2px] sm:gap-[4px] p-[8px] sm:p-[10px] rounded-lg border min-w-0 ${
+                  className={`flex flex-col gap-1 p-2.5 rounded-lg border min-w-0 ${
                     isPillarConfirmed
-                      ? "bg-emerald-500/10 border-emerald-500/30"
-                      : "bg-[#D84A2B]/10 border-[#D84A2B] text-white"
+                      ? "bg-[#FFFFFF] border-[#2F7D5A]/40 text-[#2F7D5A]"
+                      : "bg-[#FFFFFF] border-[#C93B2F] text-[#C93B2F]"
                   }`}
                 >
-                  <div
-                    className={`flex items-center gap-[4px] sm:gap-[6px] text-[11px] sm:text-[12px] font-bold truncate ${
-                      isPillarConfirmed ? "text-emerald-400" : "text-[#D84A2B]"
-                    }`}
-                  >
+                  <div className="flex items-center gap-1.5 text-[12px] font-bold truncate">
                     {isPillarConfirmed ? (
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     ) : (
-                      <span className="w-2 h-2 rounded-full bg-[#D84A2B] animate-pulse shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-[#C93B2F] animate-pulse shrink-0" />
                     )}
                     <span className="truncate">3. Pillar Confirmed</span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] text-white/60 truncate">
+                  <span className="text-[11px] text-[#70675F] truncate">
                     {isPillarConfirmed ? `${activeBooking.confirmedPillar || "Pillar"} verified` : "Action needed"}
                   </span>
                 </div>
 
                 {/* Step 4 */}
                 <div
-                  className={`flex flex-col gap-[2px] sm:gap-[4px] p-[8px] sm:p-[10px] rounded-lg border min-w-0 ${
+                  className={`flex flex-col gap-1 p-2.5 rounded-lg border min-w-0 ${
                     activeBooking.status === "COMPLETED"
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                      ? "bg-[#FFFFFF] border-[#2F7D5A]/40 text-[#2F7D5A]"
                       : isPillarConfirmed
-                      ? "bg-white/[0.04] border-white/15 text-white/80"
-                      : "bg-white/[0.02] border-white/[0.06] text-white/40"
+                      ? "bg-[#FFFFFF] border-[#DED3C7] text-[#241F1B]"
+                      : "bg-[#F3EAE0] border-[#DED3C7] text-[#938980]"
                   }`}
                 >
-                  <div className="flex items-center gap-[4px] sm:gap-[6px] text-[11px] sm:text-[12px] font-bold truncate">
+                  <div className="flex items-center gap-1.5 text-[12px] font-bold truncate">
                     {activeBooking.status === "COMPLETED" ? (
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     ) : (
-                      <ShieldCheck className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                     )}
                     <span className="truncate">4. Ready to Exit</span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] text-white/50 truncate">Digital pass active</span>
+                  <span className="text-[11px] text-[#70675F] truncate">Digital pass active</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
           /* ── 5. NO ACTIVE SESSION COMPACT EMPTY STATE ── */
-          <div className="bg-[#10151D] border border-white/[0.10] rounded-2xl p-[24px] sm:p-[32px] text-center flex flex-col items-center justify-center gap-[16px]">
-            <div className="w-[56px] h-[56px] rounded-2xl bg-[#151B24] border border-white/[0.08] flex items-center justify-center text-[rgba(245,247,250,0.58)]">
-              <Car className="w-7 h-7 text-[#D84A2B]" />
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-center gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+            <div className="w-14 h-14 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
+              <Car className="w-7 h-7" />
             </div>
             <div className="max-w-[480px]">
-              <h3 className="text-[20px] sm:text-[22px] font-bold text-white">No active parking session</h3>
-              <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[6px] leading-[1.5]">
+              <h3 className="text-[20px] font-bold text-[#241F1B]">No active parking session</h3>
+              <p className="text-[14px] text-[#70675F] mt-1 leading-relaxed">
                 Your parking tools will activate when an operator assigns a space to your vehicle{" "}
                 {vehicleNumber && (
-                  <span className="font-mono text-white font-semibold">({vehicleNumber})</span>
+                  <span className="font-mono text-[#241F1B] font-bold">({vehicleNumber})</span>
                 )}
                 .
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-[12px] pt-[8px]">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="h-[44px] px-[20px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[14px] flex items-center gap-[8px] transition-all cursor-pointer"
+                className="h-11 px-5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
                 <span>Refresh Assignment</span>
@@ -467,41 +459,41 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* ── 4. FOUR DASHBOARD OPTIONS (DESKTOP TAB SELECTOR) ── */}
-        <div className="hidden md:grid grid-cols-4 gap-3">
+        {/* ── 4. FOUR DASHBOARD OPTIONS (RESPONSIVE TAB SELECTOR) ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
           {/* Option 1: Find My Car */}
           <button
             type="button"
             onClick={() => setActiveTab("find-my-car")}
             disabled={!hasActiveSession}
-            className={`min-h-[84px] p-[16px] rounded-2xl border text-left flex flex-col justify-between transition-all relative ${
+            className={`min-h-[90px] p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               activeTab === "find-my-car"
-                ? "bg-[#151B24] border-[#D84A2B] shadow-lg"
+                ? "bg-[#FFFFFF] border-2 border-[#C93B2F] shadow-[0_8px_24px_rgba(70,48,35,0.08)] ring-2 ring-[#C93B2F]/20"
                 : hasActiveSession
-                ? "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
-                : "bg-[#10151D]/60 border-white/[0.04] opacity-60 cursor-not-allowed"
+                ? "bg-[#FFFFFF] border-[#DED3C7] hover:bg-[#F3EAE0] hover:border-[#CBBCAE]"
+                : "bg-[#F3EAE0] border-[#DED3C7] opacity-65 cursor-not-allowed"
             }`}
           >
             <div className="flex items-center justify-between w-full">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   activeTab === "find-my-car"
-                    ? "bg-[#D84A2B] text-white"
-                    : "bg-[#151B24] text-[rgba(245,247,250,0.58)]"
+                    ? "bg-[#C93B2F] text-white"
+                    : "bg-[#F3EAE0] text-[#70675F]"
                 }`}
               >
                 <MapPin className="w-5 h-5" />
               </div>
               {!hasActiveSession && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/[0.06] text-white/40 uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] text-[#938980] border border-[#DED3C7] uppercase">
                   Inactive
                 </span>
               )}
             </div>
-            <div className="mt-[8px]">
-              <div className="text-[15px] font-bold text-white">Find My Car</div>
-              <div className="text-[12px] text-[rgba(245,247,250,0.58)] truncate">
-                {hasActiveSession ? "Interactive 3D route map" : "Available after space assigned"}
+            <div className="mt-2">
+              <div className="text-[15px] font-bold text-[#241F1B]">Find My Car</div>
+              <div className="text-[12px] text-[#70675F] truncate">
+                {hasActiveSession ? "Interactive route map" : "Requires active space"}
               </div>
             </div>
           </button>
@@ -511,34 +503,34 @@ export default function CustomerDashboard() {
             type="button"
             onClick={() => setActiveTab("scan-qr")}
             disabled={!hasActiveSession}
-            className={`min-h-[84px] p-[16px] rounded-2xl border text-left flex flex-col justify-between transition-all relative ${
+            className={`min-h-[90px] p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               activeTab === "scan-qr"
-                ? "bg-[#151B24] border-[#D84A2B] shadow-lg"
+                ? "bg-[#FFFFFF] border-2 border-[#C93B2F] shadow-[0_8px_24px_rgba(70,48,35,0.08)] ring-2 ring-[#C93B2F]/20"
                 : hasActiveSession
-                ? "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
-                : "bg-[#10151D]/60 border-white/[0.04] opacity-60 cursor-not-allowed"
+                ? "bg-[#FFFFFF] border-[#DED3C7] hover:bg-[#F3EAE0] hover:border-[#CBBCAE]"
+                : "bg-[#F3EAE0] border-[#DED3C7] opacity-65 cursor-not-allowed"
             }`}
           >
             <div className="flex items-center justify-between w-full">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   activeTab === "scan-qr"
-                    ? "bg-[#D84A2B] text-white"
-                    : "bg-[#151B24] text-[rgba(245,247,250,0.58)]"
+                    ? "bg-[#C93B2F] text-white"
+                    : "bg-[#F3EAE0] text-[#70675F]"
                 }`}
               >
                 <ScanLine className="w-5 h-5" />
               </div>
               {!hasActiveSession && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/[0.06] text-white/40 uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] text-[#938980] border border-[#DED3C7] uppercase">
                   Inactive
                 </span>
               )}
             </div>
-            <div className="mt-[8px]">
-              <div className="text-[15px] font-bold text-white">Scan QR</div>
-              <div className="text-[12px] text-[rgba(245,247,250,0.58)] truncate">
-                {hasActiveSession ? "Confirm pillar location" : "Available after space assigned"}
+            <div className="mt-2">
+              <div className="text-[15px] font-bold text-[#241F1B]">Scan QR</div>
+              <div className="text-[12px] text-[#70675F] truncate">
+                {hasActiveSession ? "Confirm pillar location" : "Requires active space"}
               </div>
             </div>
           </button>
@@ -547,30 +539,30 @@ export default function CustomerDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab("history")}
-            className={`min-h-[84px] p-[16px] rounded-2xl border text-left flex flex-col justify-between transition-all ${
+            className={`min-h-[90px] p-4 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
               activeTab === "history"
-                ? "bg-[#151B24] border-[#D84A2B] shadow-lg"
-                : "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
+                ? "bg-[#FFFFFF] border-2 border-[#C93B2F] shadow-[0_8px_24px_rgba(70,48,35,0.08)] ring-2 ring-[#C93B2F]/20"
+                : "bg-[#FFFFFF] border-[#DED3C7] hover:bg-[#F3EAE0] hover:border-[#CBBCAE]"
             }`}
           >
             <div className="flex items-center justify-between w-full">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   activeTab === "history"
-                    ? "bg-[#D84A2B] text-white"
-                    : "bg-[#151B24] text-[rgba(245,247,250,0.58)]"
+                    ? "bg-[#C93B2F] text-white"
+                    : "bg-[#F3EAE0] text-[#70675F]"
                 }`}
               >
                 <HistoryIcon className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 uppercase">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/20 uppercase">
                 {historyRecords?.length || 0} Records
               </span>
             </div>
-            <div className="mt-[8px]">
-              <div className="text-[15px] font-bold text-white">History</div>
-              <div className="text-[12px] text-[rgba(245,247,250,0.58)] truncate">
-                Past parking sessions & logs
+            <div className="mt-2">
+              <div className="text-[15px] font-bold text-[#241F1B]">History</div>
+              <div className="text-[12px] text-[#70675F] truncate">
+                Past parking sessions &amp; logs
               </div>
             </div>
           </button>
@@ -580,67 +572,67 @@ export default function CustomerDashboard() {
             type="button"
             onClick={() => setActiveTab("exit-pass")}
             disabled={!hasActiveSession}
-            className={`min-h-[84px] p-[16px] rounded-2xl border text-left flex flex-col justify-between transition-all relative ${
+            className={`min-h-[90px] p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               activeTab === "exit-pass"
-                ? "bg-[#151B24] border-[#D84A2B] shadow-lg"
+                ? "bg-[#FFFFFF] border-2 border-[#C93B2F] shadow-[0_8px_24px_rgba(70,48,35,0.08)] ring-2 ring-[#C93B2F]/20"
                 : hasActiveSession
-                ? "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
-                : "bg-[#10151D]/60 border-white/[0.04] opacity-60 cursor-not-allowed"
+                ? "bg-[#FFFFFF] border-[#DED3C7] hover:bg-[#F3EAE0] hover:border-[#CBBCAE]"
+                : "bg-[#F3EAE0] border-[#DED3C7] opacity-65 cursor-not-allowed"
             }`}
           >
             <div className="flex items-center justify-between w-full">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   activeTab === "exit-pass"
-                    ? "bg-[#D84A2B] text-white"
-                    : "bg-[#151B24] text-[rgba(245,247,250,0.58)]"
+                    ? "bg-[#C93B2F] text-white"
+                    : "bg-[#F3EAE0] text-[#70675F]"
                 }`}
               >
                 <ShieldCheck className="w-5 h-5" />
               </div>
               {!hasActiveSession && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/[0.06] text-white/40 uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] text-[#938980] border border-[#DED3C7] uppercase">
                   Inactive
                 </span>
               )}
             </div>
-            <div className="mt-[8px]">
-              <div className="text-[15px] font-bold text-white">Exit Pass</div>
-              <div className="text-[12px] text-[rgba(245,247,250,0.58)] truncate">
-                {hasActiveSession ? "Digital signed barrier QR" : "Available after space assigned"}
+            <div className="mt-2">
+              <div className="text-[15px] font-bold text-[#241F1B]">Exit Pass</div>
+              <div className="text-[12px] text-[#70675F] truncate">
+                {hasActiveSession ? "Digital exit barrier QR" : "Requires active space"}
               </div>
             </div>
           </button>
         </div>
 
         {/* ── TAB CONTENT RENDERING ── */}
-        <div className="w-full flex flex-col gap-[24px]">
+        <div className="w-full flex flex-col gap-6">
           {/* TAB 1: FIND MY CAR */}
           {activeTab === "find-my-car" && hasActiveSession && activeBooking && (
-            <div className="flex flex-col gap-[20px]">
+            <div className="flex flex-col gap-5">
               {!isPillarConfirmed ? (
                 /* Pre-confirmation Call to Action */
-                <div className="bg-[#10151D] border border-[#D84A2B]/40 rounded-2xl p-[24px] sm:p-[32px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-[20px] shadow-xl">
-                  <div className="flex items-start gap-[16px]">
-                    <div className="w-[52px] h-[52px] rounded-2xl bg-[#D84A2B]/15 border border-[#D84A2B]/30 flex items-center justify-center shrink-0 text-[#D84A2B]">
-                      <ScanLine className="w-7 h-7" />
+                <div className="bg-[#FFFFFF] border border-[#C93B2F]/40 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
+                      <ScanLine className="w-6 h-6" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#D84A2B]">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#C93B2F]">
                         Step Required
                       </span>
-                      <h3 className="text-[20px] sm:text-[22px] font-bold text-white mt-[2px]">
+                      <h3 className="text-[19px] sm:text-[21px] font-bold text-[#241F1B] mt-0.5">
                         Confirm where you parked
                       </h3>
-                      <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px] max-w-[460px] leading-[1.5]">
-                        Scan the QR code near your parking pillar ({activeBooking.slotDetails?.pillar || "Pillar"} · {activeBooking.slotDetails?.slotNumber}) to activate live walking route guidance.
+                      <p className="text-[13.5px] text-[#70675F] mt-1 max-w-[460px] leading-relaxed">
+                        Scan the QR code on your parking pillar ({activeBooking.slotDetails?.pillar || "Pillar"} · {activeBooking.slotDetails?.slotNumber}) to activate walking route guidance.
                       </p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setActiveTab("scan-qr")}
-                    className="h-[48px] px-[24px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[14px] flex items-center gap-[8px] shrink-0 transition-all cursor-pointer shadow-lg"
+                    className="h-12 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs"
                   >
                     <ScanLine className="w-4 h-4" />
                     <span>Scan Pillar QR Now</span>
@@ -648,22 +640,22 @@ export default function CustomerDashboard() {
                 </div>
               ) : (
                 /* Confirmed Find My Car View: Two-Column Desktop (2/3 Map, 1/3 Details) */
-                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-[20px]">
+                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
                   {/* Left 2/3 Column: Map & Controls */}
-                  <div className="lg:col-span-2 flex flex-col gap-[16px]">
-                    <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[16px] sm:p-[20px] flex flex-col gap-[16px]">
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
                       {/* Map Mode Header */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-[8px]">
-                          <Compass className="w-5 h-5 text-[#D84A2B]" />
-                          <span className="text-[15px] font-bold text-white">Indoor Navigation Guidance</span>
+                        <div className="flex items-center gap-2">
+                          <Compass className="w-5 h-5 text-[#C93B2F]" />
+                          <span className="text-[15px] font-bold text-[#241F1B]">Indoor Navigation Guidance</span>
                         </div>
-                        <div className="flex items-center gap-[6px] bg-[#151B24] p-[3px] rounded-xl border border-white/[0.08]">
+                        <div className="flex items-center gap-1.5 bg-[#F3EAE0] p-1 rounded-xl border border-[#DED3C7]">
                           <button
                             type="button"
                             onClick={() => setMapMode("3D")}
-                            className={`px-[12px] py-[6px] rounded-lg text-[12px] font-bold transition-all ${
-                              mapMode === "3D" ? "bg-[#D84A2B] text-white" : "text-white/60 hover:text-white"
+                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                              mapMode === "3D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
                             }`}
                           >
                             Interactive View
@@ -671,8 +663,8 @@ export default function CustomerDashboard() {
                           <button
                             type="button"
                             onClick={() => setMapMode("2D")}
-                            className={`px-[12px] py-[6px] rounded-lg text-[12px] font-bold transition-all ${
-                              mapMode === "2D" ? "bg-[#D84A2B] text-white" : "text-white/60 hover:text-white"
+                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                              mapMode === "2D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
                             }`}
                           >
                             Floor Plan
@@ -681,7 +673,7 @@ export default function CustomerDashboard() {
                       </div>
 
                       {/* Map Canvas */}
-                      <div className="w-full h-[360px] sm:h-[460px] rounded-xl overflow-hidden relative">
+                      <div className="w-full h-[360px] sm:h-[460px] rounded-xl overflow-hidden relative border border-[#DED3C7]">
                         {mapMode === "3D" ? (
                           <FindMyCar3DMap
                             routePoints={routeData?.waypointCoordinates}
@@ -706,38 +698,38 @@ export default function CustomerDashboard() {
                   </div>
 
                   {/* Right 1/3 Column: Landmark Selector & Step Guidance */}
-                  <div className="flex flex-col gap-[16px]">
+                  <div className="flex flex-col gap-4">
                     {/* Landmark Selector Card */}
-                    <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[20px] flex flex-col gap-[14px]">
-                      <div className="flex items-center justify-between pb-[10px] border-b border-white/[0.08]">
-                        <span className="text-[12px] font-bold uppercase text-[rgba(245,247,250,0.58)]">
+                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3.5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                      <div className="flex items-center justify-between pb-2.5 border-b border-[#DED3C7]">
+                        <span className="text-[12px] font-bold uppercase text-[#70675F]">
                           Starting Landmark
                         </span>
-                        <span className="text-[12px] text-emerald-400 font-bold">
+                        <span className="text-[12px] text-[#2F7D5A] font-bold">
                           {routeData?.totalDistanceMeters || 36}m ({routeData?.walkTimeMinutes || 1} min)
                         </span>
                       </div>
 
-                      <div className="flex flex-col gap-[8px]">
+                      <div className="flex flex-col gap-2">
                         {LANDMARKS.map((landmark) => (
                           <button
                             key={landmark.id}
                             type="button"
                             onClick={() => setSelectedLandmarkId(landmark.id)}
-                            className={`p-[12px] rounded-xl border text-left flex items-start gap-[10px] transition-all cursor-pointer ${
+                            className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
                               selectedLandmarkId === landmark.id
-                                ? "bg-[#D84A2B]/10 border-[#D84A2B] text-white"
-                                : "bg-[#151B24] border-white/[0.06] text-white/70 hover:border-white/20"
+                                ? "bg-[#F9E3DE] border-[#C93B2F] text-[#241F1B]"
+                                : "bg-[#FFFFFF] border-[#DED3C7] text-[#70675F] hover:bg-[#F3EAE0]"
                             }`}
                           >
                             <Building2
-                              className={`w-4 h-4 shrink-0 mt-[2px] ${
-                                selectedLandmarkId === landmark.id ? "text-[#D84A2B]" : "text-white/40"
+                              className={`w-4 h-4 shrink-0 mt-0.5 ${
+                                selectedLandmarkId === landmark.id ? "text-[#C93B2F]" : "text-[#70675F]"
                               }`}
                             />
                             <div>
-                              <div className="text-[13.5px] font-bold leading-tight">{landmark.name}</div>
-                              <div className="text-[11.5px] text-[rgba(245,247,250,0.58)] mt-[2px]">
+                              <div className="text-[13.5px] font-bold text-[#241F1B] leading-tight">{landmark.name}</div>
+                              <div className="text-[11.5px] text-[#70675F] mt-0.5">
                                 {landmark.description}
                               </div>
                             </div>
@@ -747,18 +739,18 @@ export default function CustomerDashboard() {
                     </div>
 
                     {/* Turn-by-turn Directions */}
-                    <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[20px] flex flex-col gap-[12px]">
-                      <div className="text-[12px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.58)] flex items-center gap-[6px]">
-                        <Navigation className="w-4 h-4 text-[#D84A2B]" />
-                        <span>A* Turn-by-Turn Route</span>
+                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                      <div className="text-[12px] font-bold uppercase tracking-wider text-[#70675F] flex items-center gap-1.5">
+                        <Navigation className="w-4 h-4 text-[#C93B2F]" />
+                        <span>Turn-by-Turn Route</span>
                       </div>
-                      <div className="flex flex-col gap-[10px]">
+                      <div className="flex flex-col gap-2.5">
                         {routeData?.directions.map((step, idx) => (
-                          <div key={idx} className="flex items-start gap-[10px] text-[13px] leading-[1.4]">
-                            <span className="w-5 h-5 rounded-full bg-[#D84A2B]/20 text-[#D84A2B] text-[11px] font-bold flex items-center justify-center shrink-0 mt-[1px]">
+                          <div key={idx} className="flex items-start gap-2.5 text-[13px] leading-relaxed">
+                            <span className="w-5 h-5 rounded-full bg-[#F9E3DE] text-[#C93B2F] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                               {idx + 1}
                             </span>
-                            <span className="text-white/85">{step}</span>
+                            <span className="text-[#241F1B]">{step}</span>
                           </div>
                         ))}
                       </div>
@@ -771,12 +763,12 @@ export default function CustomerDashboard() {
 
           {/* TAB 2: SCAN QR */}
           {activeTab === "scan-qr" && (
-            <div className="flex flex-col gap-[20px]">
+            <div className="flex flex-col gap-5">
               {!hasActiveSession || !activeBooking ? (
-                <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[32px] text-center flex flex-col items-center justify-center gap-[12px]">
-                  <ScanLine className="w-8 h-8 text-[rgba(245,247,250,0.4)]" />
-                  <h4 className="text-[18px] font-bold text-white">QR Scanner is Inactive</h4>
-                  <p className="text-[14px] text-[rgba(245,247,250,0.58)] max-w-[400px]">
+                <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-8 text-center flex flex-col items-center justify-center gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+                  <ScanLine className="w-8 h-8 text-[#70675F]" />
+                  <h4 className="text-[18px] font-bold text-[#241F1B]">QR Scanner is Inactive</h4>
+                  <p className="text-[14px] text-[#70675F] max-w-[400px]">
                     Available after a parking space is assigned to your vehicle.
                   </p>
                 </div>
@@ -793,16 +785,16 @@ export default function CustomerDashboard() {
 
           {/* TAB 3: HISTORY (Always Available) */}
           {activeTab === "history" && (
-            <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-[20px] sm:p-[24px] flex flex-col gap-[20px]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-[12px] pb-[16px] border-b border-white/[0.08]">
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-7 flex flex-col gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#DED3C7]">
                 <div>
-                  <h3 className="text-[18px] font-bold text-white flex items-center gap-[10px]">
-                    <HistoryIcon className="w-5 h-5 text-[#D84A2B]" />
+                  <h3 className="text-[18px] font-bold text-[#241F1B] flex items-center gap-2.5">
+                    <HistoryIcon className="w-5 h-5 text-[#C93B2F]" />
                     <span>Customer Parking History</span>
                   </h3>
-                  <p className="text-[13.5px] text-[rgba(245,247,250,0.58)] mt-[2px]">
+                  <p className="text-[13.5px] text-[#70675F] mt-0.5">
                     Verified log of previous parking stays for vehicle{" "}
-                    <span className="font-mono text-white font-semibold">{vehicleNumber || "your account"}</span>
+                    <span className="font-mono text-[#241F1B] font-bold">{vehicleNumber || "your account"}</span>
                   </p>
                 </div>
 
@@ -810,26 +802,26 @@ export default function CustomerDashboard() {
                   type="button"
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="h-[38px] px-[14px] rounded-xl bg-[#151B24] border border-white/[0.08] text-[13px] font-semibold text-white/80 hover:text-white flex items-center gap-[6px] self-start sm:self-auto"
+                  className="h-10 px-4 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[13px] font-bold text-[#241F1B] hover:bg-[#F3EAE0] flex items-center gap-2 self-start sm:self-auto cursor-pointer shadow-xs"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-[#D84A2B] ${refreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-[#C93B2F] ${refreshing ? "animate-spin" : ""}`} />
                   <span>Refresh</span>
                 </button>
               </div>
 
               {historyRecords === undefined ? (
                 /* Loading Skeleton */
-                <div className="flex flex-col gap-[12px] animate-pulse">
+                <div className="flex flex-col gap-3 animate-pulse">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-[64px] bg-[#151B24] rounded-xl border border-white/[0.04]" />
+                    <div key={i} className="h-16 bg-[#F3EAE0] rounded-xl border border-[#DED3C7]" />
                   ))}
                 </div>
               ) : historyRecords.length === 0 ? (
                 /* Empty State */
-                <div className="py-[36px] text-center flex flex-col items-center justify-center gap-[10px]">
-                  <HistoryIcon className="w-8 h-8 text-[rgba(245,247,250,0.3)]" />
-                  <h4 className="text-[16px] font-bold text-white">No past parking records</h4>
-                  <p className="text-[13.5px] text-[rgba(245,247,250,0.58)] max-w-[360px]">
+                <div className="py-10 text-center flex flex-col items-center justify-center gap-2.5">
+                  <HistoryIcon className="w-8 h-8 text-[#70675F]" />
+                  <h4 className="text-[16px] font-bold text-[#241F1B]">No past parking records</h4>
+                  <p className="text-[13.5px] text-[#70675F] max-w-[360px]">
                     When your parking visits are completed and validated at the exit gate, they will appear here.
                   </p>
                 </div>
@@ -839,38 +831,38 @@ export default function CustomerDashboard() {
                   <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-left text-[13.5px]">
                       <thead>
-                        <tr className="border-b border-white/[0.08] text-[11.5px] font-bold uppercase text-[rgba(245,247,250,0.58)]">
-                          <th className="py-[12px] px-[12px]">Date</th>
-                          <th className="py-[12px] px-[12px]">Location</th>
-                          <th className="py-[12px] px-[12px]">Space</th>
-                          <th className="py-[12px] px-[12px]">Entry</th>
-                          <th className="py-[12px] px-[12px]">Exit</th>
-                          <th className="py-[12px] px-[12px]">Status</th>
+                        <tr className="border-b border-[#DED3C7] bg-[#F3EAE0] text-[11.5px] font-bold uppercase text-[#70675F]">
+                          <th className="py-3 px-3 rounded-l-lg">Date</th>
+                          <th className="py-3 px-3">Location</th>
+                          <th className="py-3 px-3">Space</th>
+                          <th className="py-3 px-3">Entry</th>
+                          <th className="py-3 px-3">Exit</th>
+                          <th className="py-3 px-3 rounded-r-lg">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/[0.04]">
+                      <tbody className="divide-y divide-[#DED3C7]">
                         {paginatedHistory.map((rec: any) => (
-                          <tr key={rec._id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="py-[14px] px-[12px] text-white font-medium">
+                          <tr key={rec._id} className="hover:bg-[#FAF7F2] transition-colors">
+                            <td className="py-3.5 px-3 text-[#241F1B] font-semibold">
                               {new Date(rec.entryTime).toLocaleDateString("en-IN", {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
                               })}
                             </td>
-                            <td className="py-[14px] px-[12px] text-[rgba(245,247,250,0.7)]">
+                            <td className="py-3.5 px-3 text-[#70675F]">
                               {rec.mallName || "Central Mall"} · Floor {rec.floor || "B2"}
                             </td>
-                            <td className="py-[14px] px-[12px] font-mono text-[#D84A2B] font-bold">
+                            <td className="py-3.5 px-3 font-mono text-[#C93B2F] font-bold">
                               {rec.slotNumber || rec.slotId} ({rec.pillar || "Pillar"})
                             </td>
-                            <td className="py-[14px] px-[12px] text-[rgba(245,247,250,0.7)]">
+                            <td className="py-3.5 px-3 text-[#70675F]">
                               {new Date(rec.entryTime).toLocaleTimeString("en-IN", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
                             </td>
-                            <td className="py-[14px] px-[12px] text-[rgba(245,247,250,0.7)]">
+                            <td className="py-3.5 px-3 text-[#70675F]">
                               {rec.exitTime
                                 ? new Date(rec.exitTime).toLocaleTimeString("en-IN", {
                                     hour: "2-digit",
@@ -878,14 +870,14 @@ export default function CustomerDashboard() {
                                   })
                                 : "In Progress"}
                             </td>
-                            <td className="py-[14px] px-[12px]">
+                            <td className="py-3.5 px-3">
                               <span
-                                className={`text-[11px] font-bold px-[10px] py-[4px] rounded-full border ${
+                                className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                                   rec.status === "COMPLETED"
-                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                    ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
                                     : rec.status === "ACTIVE"
-                                    ? "bg-[#D84A2B]/10 text-[#D84A2B] border-[#D84A2B]/30"
-                                    : "bg-white/5 text-white/50 border-white/10"
+                                    ? "bg-[#C93B2F]/10 text-[#C93B2F] border-[#C93B2F]/30"
+                                    : "bg-[#F3EAE0] text-[#70675F] border-[#DED3C7]"
                                 }`}
                               >
                                 {rec.status}
@@ -898,48 +890,38 @@ export default function CustomerDashboard() {
                   </div>
 
                   {/* Mobile Stacked History Cards */}
-                  <div className="sm:hidden flex flex-col gap-[12px]">
+                  <div className="sm:hidden flex flex-col gap-3">
                     {paginatedHistory.map((rec: any) => (
                       <div
                         key={rec._id}
-                        className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[16px] flex flex-col gap-[10px]"
+                        className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col gap-2"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-[15px] font-bold text-[#D84A2B]">
-                            Slot {rec.slotNumber || rec.slotId}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold px-[8px] py-[3px] rounded-full border ${
-                              rec.status === "COMPLETED"
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                                : "bg-[#D84A2B]/10 text-[#D84A2B] border-[#D84A2B]/30"
-                            }`}
-                          >
-                            {rec.status}
-                          </span>
-                        </div>
-                        <div className="text-[13px] text-[rgba(245,247,250,0.58)]">
-                          {rec.mallName || "Central Mall"} · Floor {rec.floor || "B2"} · {rec.pillar || "Pillar"}
-                        </div>
-                        <div className="flex items-center justify-between text-[12px] text-white/80 pt-[6px] border-t border-white/[0.06]">
-                          <span>
+                          <span className="text-[12px] font-bold text-[#241F1B]">
                             {new Date(rec.entryTime).toLocaleDateString("en-IN", {
                               day: "numeric",
                               month: "short",
                             })}
                           </span>
-                          <span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              rec.status === "COMPLETED"
+                                ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
+                                : "bg-[#C93B2F]/10 text-[#C93B2F] border-[#C93B2F]/30"
+                            }`}
+                          >
+                            {rec.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[13px]">
+                          <span className="font-mono text-[#C93B2F] font-bold">
+                            Space {rec.slotNumber || rec.slotId}
+                          </span>
+                          <span className="text-[#70675F]">
                             {new Date(rec.entryTime).toLocaleTimeString("en-IN", {
                               hour: "2-digit",
                               minute: "2-digit",
-                            })}{" "}
-                            →{" "}
-                            {rec.exitTime
-                              ? new Date(rec.exitTime).toLocaleTimeString("en-IN", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "Active"}
+                            })}
                           </span>
                         </div>
                       </div>
@@ -948,28 +930,26 @@ export default function CustomerDashboard() {
 
                   {/* Pagination Controls */}
                   {totalHistoryPages > 1 && (
-                    <div className="flex items-center justify-between pt-[12px] border-t border-white/[0.08]">
-                      <span className="text-[12px] text-[rgba(245,247,250,0.58)]">
+                    <div className="flex items-center justify-between pt-4 border-t border-[#DED3C7]">
+                      <span className="text-[12px] text-[#70675F]">
                         Page {historyPage} of {totalHistoryPages}
                       </span>
-                      <div className="flex items-center gap-[8px]">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          disabled={historyPage <= 1}
                           onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                          disabled={historyPage === 1}
-                          className="h-[36px] px-[12px] rounded-lg bg-[#151B24] border border-white/[0.08] text-white disabled:opacity-40 text-[12px] font-semibold flex items-center gap-[4px]"
+                          className="px-3 py-1.5 rounded-lg border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] disabled:opacity-40 text-[12.5px] font-bold transition-all cursor-pointer"
                         >
-                          <ChevronLeft className="w-4 h-4" />
-                          <span>Prev</span>
+                          Previous
                         </button>
                         <button
                           type="button"
+                          disabled={historyPage >= totalHistoryPages}
                           onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
-                          disabled={historyPage === totalHistoryPages}
-                          className="h-[36px] px-[12px] rounded-lg bg-[#151B24] border border-white/[0.08] text-white disabled:opacity-40 text-[12px] font-semibold flex items-center gap-[4px]"
+                          className="px-3 py-1.5 rounded-lg border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] disabled:opacity-40 text-[12.5px] font-bold transition-all cursor-pointer"
                         >
-                          <span>Next</span>
-                          <ChevronRight className="w-4 h-4" />
+                          Next
                         </button>
                       </div>
                     </div>
@@ -980,164 +960,64 @@ export default function CustomerDashboard() {
           )}
 
           {/* TAB 4: EXIT PASS */}
-          {activeTab === "exit-pass" && (
-            <div className="flex flex-col items-center">
-              {!hasActiveSession || !activeBooking ? (
-                <div className="w-full bg-[#10151D] border border-white/[0.08] rounded-2xl p-[32px] text-center flex flex-col items-center justify-center gap-[12px]">
-                  <ShieldCheck className="w-8 h-8 text-[rgba(245,247,250,0.4)]" />
-                  <h4 className="text-[18px] font-bold text-white">No Active Exit Pass</h4>
-                  <p className="text-[14px] text-[rgba(245,247,250,0.58)] max-w-[400px]">
-                    Available after a parking space is assigned.
-                  </p>
+          {activeTab === "exit-pass" && hasActiveSession && activeBooking && (
+            <div className="max-w-[560px] mx-auto w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center gap-6 shadow-[0_8px_24px_rgba(70,48,35,0.08)]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[11px] font-bold uppercase tracking-wider mb-2">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  AUTHENTICATED DIGITAL PASS
                 </div>
-              ) : activeBooking.status === "COMPLETED" || activeBooking.exitPassUsed ? (
-                /* Exit Pass Already Used / Completed */
-                <div className="w-full max-w-[460px] bg-[#10151D] border border-white/[0.10] rounded-2xl p-[24px] sm:p-[32px] flex flex-col items-center text-center gap-[20px] shadow-2xl">
-                  <div className="w-[64px] h-[64px] rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-[22px] font-bold text-white">Exit completed</h3>
-                    <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[6px]">
-                      This exit pass has already been used.
-                    </p>
-                  </div>
-                  <div className="w-full p-[14px] rounded-xl bg-[#151B24] border border-white/[0.08] text-[13px] text-white/70 font-mono">
-                    Exit logged at{" "}
-                    {activeBooking.exitTime
-                      ? new Date(activeBooking.exitTime).toLocaleTimeString("en-IN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })
-                      : "Gate Scanner"}
-                  </div>
+                <h3 className="text-[22px] font-black text-[#241F1B]">Exit Barrier Clearance Pass</h3>
+                <p className="text-[13.5px] text-[#70675F] mt-1">
+                  Scan this pass at the exit gate camera for automated gate lift.
+                </p>
+              </div>
+
+              {/* QR Container */}
+              <div className="p-4 bg-[#FAF7F2] border border-[#DED3C7] rounded-2xl shadow-xs">
+                <QRCodeSVG
+                  value={activeBooking.exitPassToken || activeBooking.customerAccessToken}
+                  size={200}
+                  level="H"
+                />
+              </div>
+
+              {/* Fallback Code Box */}
+              <div className="w-full bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-4 flex flex-col items-center gap-1">
+                <span className="text-[11px] font-bold uppercase text-[#70675F]">
+                  Manual Fallback Code
+                </span>
+                <span className="text-[22px] font-mono font-black text-[#C93B2F] tracking-widest">
+                  {activeBooking.fallbackCode || "N/A"}
+                </span>
+                <span className="text-[11px] text-[#70675F] mt-0.5">
+                  Provide this code to the operator if QR scan is unavailable
+                </span>
+              </div>
+
+              <div className="w-full grid grid-cols-2 gap-2 text-left text-[12.5px] pt-3 border-t border-[#DED3C7]">
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[11px]">Vehicle</span>
+                  <span className="font-mono font-bold text-[#241F1B]">{activeBooking.vehicleNumber}</span>
                 </div>
-              ) : (
-                /* Active Digital Signed Single-Use Exit Pass */
-                <div className="w-full max-w-[460px] bg-[#10151D] border border-white/[0.12] rounded-2xl p-[24px] sm:p-[32px] flex flex-col items-center text-center gap-[20px] shadow-2xl">
-                  <div className="flex items-center justify-between w-full pb-[16px] border-b border-white/[0.08]">
-                    <div className="flex items-center gap-[8px]">
-                      <ShieldCheck className="w-5 h-5 text-[#D84A2B]" />
-                      <span className="text-[13px] font-bold text-white uppercase tracking-wider">
-                        Digital Exit Pass
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-bold px-[10px] py-[3px] rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                      SINGLE USE
-                    </span>
-                  </div>
-
-                  {/* Scannable QR Code Canvas */}
-                  <div className="bg-white p-[20px] rounded-2xl border-4 border-[#D84A2B] shadow-2xl">
-                    <QRCodeSVG
-                      value={activeBooking.exitPassToken || activeBooking.customerAccessToken || "INVALID"}
-                      size={220}
-                      level="H"
-                      marginSize={0}
-                    />
-                  </div>
-
-                  {/* Vehicle & Location Details */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <div className="text-[20px] font-mono font-black text-white tracking-wider">
-                      {activeBooking.vehicleNumber}
-                    </div>
-                    <div className="text-[14px] text-[rgba(245,247,250,0.58)] font-medium">
-                      Floor {activeBooking.slotDetails?.floor || "B2"} · {activeBooking.slotDetails?.zone || "Zone A"} · Space {activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
-                    </div>
-                  </div>
-
-                  {/* Short Exit Instructions */}
-                  <div className="w-full p-[14px] rounded-xl bg-[#151B24] border border-white/[0.08] text-[13px] text-white/80 flex items-start gap-[10px] text-left">
-                    <KeyRound className="w-5 h-5 text-[#D84A2B] shrink-0 mt-[1px]" />
-                    <span>
-                      Present this QR code to the barrier scanner at the exit gate. Validated single-use token expires in 24 hours.
-                    </span>
-                  </div>
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[11px]">Space</span>
+                  <span className="font-bold text-[#241F1B]">
+                    Slot {activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
       </main>
 
-      {/* ── 4. FIXED BOTTOM NAVIGATION (MOBILE ONLY) ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050507]/95 backdrop-blur-lg border-t border-white/[0.10] px-[8px] sm:px-[12px] py-[6px] sm:py-[8px] pb-[calc(6px+env(safe-area-inset-bottom))]">
-        <div className="grid grid-cols-4 gap-1 max-w-[430px] mx-auto w-full">
-          {/* Mobile Option 1: Find My Car */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("find-my-car")}
-            disabled={!hasActiveSession}
-            className={`min-h-[48px] sm:min-h-[52px] rounded-xl flex flex-col items-center justify-center gap-[2px] sm:gap-[4px] transition-all cursor-pointer min-w-0 ${
-              activeTab === "find-my-car"
-                ? "text-[#D84A2B] bg-[#D84A2B]/10 font-bold"
-                : hasActiveSession
-                ? "text-[rgba(245,247,250,0.58)] hover:text-white"
-                : "text-white/30 opacity-50 cursor-not-allowed"
-            }`}
-          >
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] leading-none truncate max-w-full">Find Car</span>
-          </button>
-
-          {/* Mobile Option 2: Scan QR */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("scan-qr")}
-            disabled={!hasActiveSession}
-            className={`min-h-[48px] sm:min-h-[52px] rounded-xl flex flex-col items-center justify-center gap-[2px] sm:gap-[4px] transition-all cursor-pointer min-w-0 ${
-              activeTab === "scan-qr"
-                ? "text-[#D84A2B] bg-[#D84A2B]/10 font-bold"
-                : hasActiveSession
-                ? "text-[rgba(245,247,250,0.58)] hover:text-white"
-                : "text-white/30 opacity-50 cursor-not-allowed"
-            }`}
-          >
-            <ScanLine className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] leading-none truncate max-w-full">Scan QR</span>
-          </button>
-
-          {/* Mobile Option 3: History */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("history")}
-            className={`min-h-[48px] sm:min-h-[52px] rounded-xl flex flex-col items-center justify-center gap-[2px] sm:gap-[4px] transition-all cursor-pointer min-w-0 ${
-              activeTab === "history"
-                ? "text-[#D84A2B] bg-[#D84A2B]/10 font-bold"
-                : "text-[rgba(245,247,250,0.58)] hover:text-white"
-            }`}
-          >
-            <HistoryIcon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] leading-none truncate max-w-full">History</span>
-          </button>
-
-          {/* Mobile Option 4: Exit Pass */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("exit-pass")}
-            disabled={!hasActiveSession}
-            className={`min-h-[48px] sm:min-h-[52px] rounded-xl flex flex-col items-center justify-center gap-[2px] sm:gap-[4px] transition-all cursor-pointer min-w-0 ${
-              activeTab === "exit-pass"
-                ? "text-[#D84A2B] bg-[#D84A2B]/10 font-bold"
-                : hasActiveSession
-                ? "text-[rgba(245,247,250,0.58)] hover:text-white"
-                : "text-white/30 opacity-50 cursor-not-allowed"
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] leading-none truncate max-w-full">Exit Pass</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* ── CUSTOMER ASSISTANCE PROBLEM REPORT MODAL ── */}
+      {/* Customer Assistance Modal */}
       <CustomerAssistanceModal
         isOpen={isAssistanceOpen}
         onClose={() => setIsAssistanceOpen(false)}
         bookingId={activeBooking?._id}
-        vehicleNumber={activeBooking?.vehicleNumber || vehicleNumber}
+        vehicleNumber={vehicleNumber}
         mallName={activeBooking?.mallName}
         slotNumber={activeBooking?.slotDetails?.slotNumber}
         floor={activeBooking?.slotDetails?.floor}

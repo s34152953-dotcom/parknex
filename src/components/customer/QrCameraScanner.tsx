@@ -4,12 +4,10 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import jsQR from "jsqr";
 import {
   Camera,
-  QrCode,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
   Loader2,
-  ShieldCheck,
   X,
   Keyboard,
   ArrowRight,
@@ -60,75 +58,58 @@ export default function QrCameraScanner({
       animationFrameRef.current = null;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
+      streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, [stopCamera]);
 
-  const processScanResult = useCallback(
-    async (decodedText: string) => {
-      stopCamera();
-      setStatus("verifying");
-      setErrorMessage(null);
+  // Handle scanned raw payload
+  const handleDecodedCode = async (rawCode: string) => {
+    stopCamera();
+    setStatus("verifying");
+    setErrorMessage(null);
 
-      try {
-        const result = await onConfirmPillar(decodedText);
-        if (result.success) {
-          setStatus("confirmed");
-          setConfirmedDetails(result.confirmedPillar || assignedPillar);
-        } else {
-          const err = result.error || "Invalid pillar QR code";
-          if (err.toLowerCase().includes("floor")) {
-            setStatus("wrong_mall");
-          } else if (err.toLowerCase().includes("inactive")) {
-            setStatus("inactive_pillar");
-          } else {
-            setStatus("invalid_qr");
-          }
-          setErrorMessage(err);
-        }
-      } catch (err: any) {
+    try {
+      const result = await onConfirmPillar(rawCode);
+      if (result.success) {
+        setStatus("confirmed");
+        setConfirmedDetails(result.confirmedPillar || assignedPillar);
+      } else {
         setStatus("invalid_qr");
-        setErrorMessage(err.message || "Failed to confirm parking pillar");
+        setErrorMessage(result.error || "Pillar verification failed. Please try scanning again.");
       }
-    },
-    [onConfirmPillar, assignedPillar, stopCamera]
-  );
+    } catch (err: any) {
+      setStatus("invalid_qr");
+      setErrorMessage(err.message || "Network error verifying pillar.");
+    }
+  };
 
-  // Scan video frame using jsQR
+  // Continuous frame loop for QR decoding
   const scanFrame = useCallback(() => {
     if (!isScanningRef.current) return;
-
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    if (video && canvas && video.readyState === video.HAVE_ENOUGH_DATA) {
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (video && video.readyState === video.HAVE_ENOUGH_DATA && canvas) {
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "dontInvert",
         });
 
-        if (code && code.data && code.data.trim().length > 0) {
-          processScanResult(code.data.trim());
-          return; // Stop scan loop
+        if (code && code.data) {
+          handleDecodedCode(code.data.trim());
+          return;
         }
       }
     }
@@ -136,22 +117,16 @@ export default function QrCameraScanner({
     if (isScanningRef.current) {
       animationFrameRef.current = requestAnimationFrame(scanFrame);
     }
-  }, [processScanResult]);
+  }, [onConfirmPillar]);
 
+  // Initialize Camera
   const startCamera = async () => {
-    setErrorMessage(null);
     setStatus("requesting_permission");
+    setErrorMessage(null);
 
     try {
-      stopCamera();
-
-      // Request rear camera with ideal facing mode
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
 
@@ -166,13 +141,9 @@ export default function QrCameraScanner({
       setStatus("scanning");
       animationFrameRef.current = requestAnimationFrame(scanFrame);
     } catch (err: any) {
-      console.error("Camera access error:", err);
+      console.warn("Camera permission denied:", err);
       setStatus("permission_denied");
-      setErrorMessage(
-        err.name === "NotAllowedError" || err.name === "PermissionDeniedError"
-          ? "Camera permission was denied. Please allow camera access in your browser settings or use manual code entry."
-          : "Unable to start camera. Please ensure no other app is using it, or use manual entry below."
-      );
+      setErrorMessage("Camera access was denied or is unavailable on this device.");
     }
   };
 
@@ -182,20 +153,19 @@ export default function QrCameraScanner({
 
     setManualLoading(true);
     setErrorMessage(null);
-    setStatus("verifying");
 
     try {
-      const result = await onConfirmPillar(manualCode.trim());
+      const result = await onConfirmPillar(manualCode.trim().toUpperCase());
       if (result.success) {
         setStatus("confirmed");
-        setConfirmedDetails(result.confirmedPillar || manualCode.trim());
+        setConfirmedDetails(result.confirmedPillar || manualCode.trim().toUpperCase());
       } else {
         setStatus("invalid_qr");
-        setErrorMessage(result.error || "Pillar code does not match");
+        setErrorMessage(result.error || "Pillar code does not match active parking space.");
       }
     } catch (err: any) {
       setStatus("invalid_qr");
-      setErrorMessage(err.message || "Failed to confirm pillar code");
+      setErrorMessage(err.message || "Failed to confirm pillar code.");
     } finally {
       setManualLoading(false);
     }
@@ -206,36 +176,35 @@ export default function QrCameraScanner({
     setStatus("idle");
     setErrorMessage(null);
     setConfirmedDetails(null);
+    setManualCode("");
   };
 
   return (
-    <div className="w-full bg-[#10151D] border border-white/[0.08] rounded-2xl p-[20px] sm:p-[24px] flex flex-col gap-[20px]">
-      {/* Header & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-[16px] pb-[16px] border-b border-white/[0.08]">
+    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-7 flex flex-col gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+      {/* Header controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#DED3C7]">
         <div>
-          <h3 className="text-[18px] font-bold text-[#F5F7FA] tracking-tight flex items-center gap-[10px]">
-            <QrCode className="w-5 h-5 text-[#D84A2B]" />
-            <span>Pillar QR Location Verification</span>
-          </h3>
-          <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px]">
-            Scan the QR tag mounted on your parking pillar ({assignedPillar} · {assignedSlot})
+          <h3 className="text-[16px] font-bold text-[#241F1B]">Confirm Pillar Location</h3>
+          <p className="text-[12.5px] text-[#70675F]">
+            Verify parking position at {assignedPillar} ({assignedSlot})
           </p>
         </div>
 
-        <div className="flex items-center gap-[8px] bg-[#151B24] p-[4px] rounded-xl border border-white/[0.08] self-start">
+        {/* Mode switcher */}
+        <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
           <button
             type="button"
             onClick={() => {
               setActiveTab("camera");
-              if (status === "idle") startCamera();
+              if (status !== "scanning") resetScanner();
             }}
-            className={`px-[12px] py-[8px] rounded-lg text-[13px] font-semibold transition-all flex items-center gap-[6px] min-h-[36px] ${
+            className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "camera"
-                ? "bg-[#D84A2B] text-white"
-                : "text-[rgba(245,247,250,0.58)] hover:text-[#F5F7FA]"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
-            <Camera className="w-4 h-4" />
+            <Camera className="w-3.5 h-3.5" />
             <span>Camera</span>
           </button>
           <button
@@ -244,13 +213,13 @@ export default function QrCameraScanner({
               setActiveTab("manual");
               stopCamera();
             }}
-            className={`px-[12px] py-[8px] rounded-lg text-[13px] font-semibold transition-all flex items-center gap-[6px] min-h-[36px] ${
+            className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "manual"
-                ? "bg-[#D84A2B] text-white"
-                : "text-[rgba(245,247,250,0.58)] hover:text-[#F5F7FA]"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
-            <Keyboard className="w-4 h-4" />
+            <Keyboard className="w-3.5 h-3.5" />
             <span>Manual Code</span>
           </button>
         </div>
@@ -258,25 +227,25 @@ export default function QrCameraScanner({
 
       {/* Confirmed State */}
       {status === "confirmed" && (
-        <div className="bg-[#151B24] border border-emerald-500/30 rounded-xl p-[24px] flex flex-col items-center text-center gap-[16px]">
-          <div className="w-[56px] h-[56px] rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+        <div className="bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 rounded-xl p-6 flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#2F7D5A]/15 text-[#2F7D5A] flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[#2F7D5A]">
               Location Confirmed
             </span>
-            <h4 className="text-[22px] font-bold text-white mt-[4px]">
+            <h4 className="text-[20px] font-bold text-[#241F1B] mt-1">
               {confirmedDetails || assignedPillar} Verified
             </h4>
-            <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px] max-w-[400px]">
+            <p className="text-[13.5px] text-[#70675F] mt-1 max-w-[400px]">
               Your vehicle position has been validated at Floor {assignedFloor} · {assignedSlot}. Find My Car is now active with live walking directions.
             </p>
           </div>
           <button
             type="button"
             onClick={resetScanner}
-            className="h-[44px] px-[20px] rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white text-[14px] font-semibold flex items-center gap-[8px] transition-all"
+            className="h-11 px-5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13.5px] font-bold flex items-center gap-2 transition-all cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Scan Again</span>
@@ -286,12 +255,12 @@ export default function QrCameraScanner({
 
       {/* Verifying State */}
       {status === "verifying" && (
-        <div className="bg-[#151B24] border border-white/[0.08] rounded-xl p-[32px] flex flex-col items-center text-center gap-[16px]">
-          <Loader2 className="w-10 h-10 text-[#D84A2B] animate-spin" />
+        <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-8 flex flex-col items-center text-center gap-4">
+          <Loader2 className="w-10 h-10 text-[#C93B2F] animate-spin" />
           <div>
-            <h4 className="text-[18px] font-bold text-white">Validating Pillar Security Signature</h4>
-            <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px]">
-              Confirming cryptographically signed pillar token with Convex...
+            <h4 className="text-[17px] font-bold text-[#241F1B]">Validating Pillar Security Signature</h4>
+            <p className="text-[13.5px] text-[#70675F] mt-1">
+              Confirming cryptographically signed pillar token...
             </p>
           </div>
         </div>
@@ -302,27 +271,23 @@ export default function QrCameraScanner({
         status === "wrong_mall" ||
         status === "inactive_pillar" ||
         status === "permission_denied") && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-[20px] flex flex-col gap-[12px]">
-          <div className="flex items-start gap-[12px]">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-[2px]" />
+        <div className="bg-[#C93B2F]/10 border border-[#C93B2F]/30 rounded-xl p-5 flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-[#C93B2F] shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-[15px] font-bold text-red-300">
-                {status === "wrong_mall"
-                  ? "Wrong Floor or Zone Detected"
-                  : status === "inactive_pillar"
-                  ? "Inactive Pillar Tag"
-                  : status === "permission_denied"
+              <h4 className="text-[15px] font-bold text-[#C93B2F]">
+                {status === "permission_denied"
                   ? "Camera Permission Required"
                   : "Invalid Pillar Code"}
               </h4>
-              <p className="text-[13.5px] text-red-200/80 mt-[2px]">{errorMessage}</p>
+              <p className="text-[13px] text-[#70675F] mt-0.5">{errorMessage}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-[12px] pt-[8px]">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               type="button"
               onClick={startCamera}
-              className="h-[44px] px-[16px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white text-[13px] font-bold flex items-center gap-[8px] transition-all"
+              className="h-11 px-4 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Retry Camera</span>
@@ -333,7 +298,7 @@ export default function QrCameraScanner({
                 setActiveTab("manual");
                 stopCamera();
               }}
-              className="h-[44px] px-[16px] rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white text-[13px] font-bold flex items-center gap-[8px] transition-all"
+              className="h-11 px-4 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer"
             >
               <Keyboard className="w-4 h-4" />
               <span>Enter Pillar Code Manually</span>
@@ -344,29 +309,29 @@ export default function QrCameraScanner({
 
       {/* Camera Scanning View */}
       {activeTab === "camera" && status !== "confirmed" && status !== "verifying" && (
-        <div className="flex flex-col items-center gap-[16px]">
+        <div className="flex flex-col items-center gap-4">
           {status === "idle" ? (
-            <div className="w-full bg-[#151B24] border border-white/[0.08] rounded-xl p-[32px] flex flex-col items-center text-center gap-[16px]">
-              <div className="w-[64px] h-[64px] rounded-2xl bg-[#D84A2B]/15 border border-[#D84A2B]/30 text-[#D84A2B] flex items-center justify-center">
+            <div className="w-full bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-8 flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
                 <Camera className="w-8 h-8" />
               </div>
               <div className="max-w-[420px]">
-                <h4 className="text-[18px] font-bold text-white">Activate Physical Pillar Scanner</h4>
-                <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px]">
+                <h4 className="text-[18px] font-bold text-[#241F1B]">Activate Pillar Scanner</h4>
+                <p className="text-[13.5px] text-[#70675F] mt-1">
                   Point your device camera at the QR sign on {assignedPillar} near your space ({assignedSlot}).
                 </p>
               </div>
               <button
                 type="button"
                 onClick={startCamera}
-                className="h-[48px] px-[24px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[15px] flex items-center gap-[10px] shadow-lg transition-all cursor-pointer"
+                className="h-12 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14.5px] flex items-center gap-2.5 shadow-[0_4px_16px_rgba(201,59,47,0.25)] transition-all cursor-pointer"
               >
                 <Camera className="w-5 h-5" />
                 <span>Start Camera Scanner</span>
               </button>
             </div>
           ) : (
-            <div className="relative w-full max-w-[500px] aspect-[4/3] bg-black rounded-2xl overflow-hidden border border-white/15 flex items-center justify-center">
+            <div className="relative w-full max-w-[500px] aspect-[4/3] bg-black rounded-2xl overflow-hidden border border-[#DED3C7] flex items-center justify-center">
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -376,22 +341,23 @@ export default function QrCameraScanner({
               <canvas ref={canvasRef} className="hidden" />
 
               {/* Targeting Overlay Frame */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-[32px]">
-                <div className="relative w-[220px] h-[220px] border-2 border-[#D84A2B]/60 rounded-2xl flex items-center justify-center">
-                  {/* Animated Scanning Beam */}
-                  <div className="absolute left-2 right-2 h-0.5 bg-[#D84A2B] shadow-[0_0_8px_#D84A2B] animate-pulse" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-white/70 bg-black/60 px-2 py-1 rounded">
-                    Align Pillar QR
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-8">
+                <div className="relative w-[200px] h-[200px] border-2 border-[#C93B2F] rounded-2xl flex items-center justify-center bg-[#C93B2F]/[0.04]">
+                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-white" />
+                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-white" />
+                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-white" />
+                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-white" />
+                  <span className="text-[11px] font-mono text-white font-bold bg-black/60 px-2 py-0.5 rounded">
+                    SCAN PILLAR QR
                   </span>
                 </div>
               </div>
 
-              {/* Close Button */}
+              {/* Stop camera button */}
               <button
                 type="button"
                 onClick={stopCamera}
-                className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/70 border border-white/20 text-white flex items-center justify-center hover:bg-black transition-all"
-                aria-label="Stop Camera"
+                className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-black/70 hover:bg-black text-white flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -400,42 +366,35 @@ export default function QrCameraScanner({
         </div>
       )}
 
-      {/* Manual Code Entry Tab */}
+      {/* Manual Code Entry View */}
       {activeTab === "manual" && status !== "confirmed" && (
-        <form onSubmit={handleManualSubmit} className="flex flex-col gap-[16px]">
-          <div className="flex flex-col gap-[8px]">
-            <label htmlFor="manualPillarInput" className="text-[13px] font-bold text-white/80 uppercase tracking-wider">
-              Enter Pillar or Space Code
+        <form onSubmit={handleManualSubmit} className="flex flex-col gap-4">
+          <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-5 flex flex-col gap-3">
+            <label className="text-[12.5px] font-bold text-[#241F1B] uppercase tracking-wider">
+              Enter 4-Character Pillar Code
             </label>
-            <div className="flex gap-[10px]">
+            <p className="text-[12.5px] text-[#70675F]">
+              Enter the alphanumeric pillar code printed on the physical column (e.g.{" "}
+              <span className="font-mono font-bold text-[#241F1B]">{assignedPillar}</span>).
+            </p>
+            <div className="flex gap-2">
               <input
-                id="manualPillarInput"
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value.toUpperCase())}
-                placeholder={`e.g. ${assignedPillar} or ${assignedSlot}`}
-                className="flex-1 h-[48px] px-[16px] rounded-xl bg-[#151B24] border border-white/15 text-white placeholder-white/30 text-[15px] font-mono focus:border-[#D84A2B] focus:outline-none transition-colors"
-                disabled={manualLoading}
+                placeholder={assignedPillar || "P02"}
+                maxLength={10}
+                className="h-12 px-4 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[16px] font-bold uppercase tracking-wider focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE] flex-1"
               />
               <button
                 type="submit"
                 disabled={manualLoading || !manualCode.trim()}
-                className="h-[48px] px-[20px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] disabled:opacity-50 text-white font-bold text-[14px] flex items-center gap-[8px] transition-all shrink-0 cursor-pointer"
+                className="h-12 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] disabled:opacity-50 text-white font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer"
               >
-                {manualLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <span>Confirm</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                {manualLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                <span>Verify</span>
               </button>
             </div>
-            <p className="text-[12px] text-[rgba(245,247,250,0.58)]">
-              Assigned location: <span className="text-white font-semibold">{assignedPillar}</span> ·{" "}
-              <span className="text-white font-semibold">Space {assignedSlot}</span> (Floor {assignedFloor})
-            </p>
           </div>
         </form>
       )}

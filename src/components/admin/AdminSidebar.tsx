@@ -29,28 +29,28 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[260px] bg-[#10151D] border-r border-white/[0.08] h-screen sticky top-0 shrink-0 select-none text-[#F5F7FA]">
+    <aside className="hidden lg:flex flex-col w-[260px] bg-[#F3EAE0] border-r border-[#DED3C7] h-screen sticky top-0 shrink-0 select-none text-[#241F1B]">
       {/* Brand Header */}
-      <div className="flex items-center gap-3 h-[72px] px-6 border-b border-white/[0.08]">
-        <div className="w-10 h-10 rounded-2xl border border-[#D84A2B]/30 flex items-center justify-center bg-[#D84A2B]/10 shadow-xs p-1.5 shrink-0">
-          <ParknexIcon className="w-6 h-6" />
+      <div className="flex items-center gap-3 h-[72px] px-6 border-b border-[#DED3C7] bg-[#FFFFFF]">
+        <div className="w-10 h-10 rounded-xl border border-[#DED3C7] flex items-center justify-center bg-[#FAF7F2] shadow-xs p-1.5 shrink-0">
+          <ParknexIcon className="w-6 h-6" variant="light" />
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="font-black tracking-tight text-[17px] text-[#F5F7FA]">
-              PARK<span className="text-[#D84A2B]">NEX</span>
+            <span className="font-black tracking-tight text-[17px] text-[#241F1B]">
+              PARK<span className="text-[#C93B2F]">NEX</span>
             </span>
-            <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#D84A2B]/20 text-[#D84A2B] uppercase tracking-wider border border-[#D84A2B]/30">
+            <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#F9E3DE] text-[#C93B2F] uppercase tracking-wider border border-[#C93B2F]/20">
               OPERATOR
             </span>
           </div>
-          <span className="text-[11px] text-[rgba(245,247,250,0.58)] font-medium">Control Center</span>
+          <span className="text-[11px] text-[#70675F] font-medium">Control Center</span>
         </div>
       </div>
 
       {/* Operational Navigation */}
       <div className="px-3 py-5 flex-1 flex flex-col gap-1 overflow-y-auto">
-        <p className="px-3 text-[10.5px] font-bold text-[rgba(245,247,250,0.4)] uppercase tracking-wider mb-2">
+        <p className="px-3 text-[11px] font-bold text-[#70675F] uppercase tracking-wider mb-2">
           Control Center
         </p>
 
@@ -63,15 +63,15 @@ export default function AdminSidebar() {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-150 ${
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-bold transition-all duration-150 ${
                 isActive
-                  ? "bg-[#D84A2B] text-white shadow-[0_2px_12px_rgba(216,74,43,0.35)]"
-                  : "text-[rgba(245,247,250,0.7)] hover:text-white hover:bg-white/[0.04]"
+                  ? "bg-[#C93B2F] text-white shadow-[0_4px_12px_rgba(201,59,47,0.25)]"
+                  : "text-[#241F1B] hover:text-[#C93B2F] hover:bg-[#EDE1D4]"
               }`}
             >
               <item.icon
                 className={`w-4.5 h-4.5 shrink-0 transition-colors ${
-                  isActive ? "text-white" : "text-[rgba(245,247,250,0.5)]"
+                  isActive ? "text-white" : "text-[#70675F]"
                 }`}
                 strokeWidth={isActive ? 2.4 : 1.8}
               />
@@ -82,19 +82,17 @@ export default function AdminSidebar() {
       </div>
 
       {/* Bottom Status & Sign Out */}
-      <div className="p-3 border-t border-white/[0.08] flex flex-col gap-1 bg-[#0D1117]">
-        <div className="flex items-center justify-between px-3 py-2 text-[11.5px] text-[rgba(245,247,250,0.6)]">
+      <div className="p-3 border-t border-[#DED3C7] flex flex-col gap-1 bg-[#FFFFFF]">
+        <div className="flex items-center justify-between px-3 py-1.5 text-[12px] text-[#70675F]">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-            <span className="font-medium">Live Terminal</span>
+            <span className="w-2 h-2 rounded-full bg-[#2F7D5A] animate-pulse" />
+            <span className="font-semibold text-[#241F1B]">Live Terminal</span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.06] text-white/70">
-            v2.4-PRO
-          </span>
+          <span className="text-[11px] text-[#70675F] font-medium">Online</span>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-semibold text-[rgba(245,247,250,0.6)] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-all cursor-pointer"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-bold text-[#70675F] hover:text-[#C93B2F] hover:bg-[#F9E3DE] transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Operator Logout</span>

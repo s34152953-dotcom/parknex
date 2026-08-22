@@ -4,7 +4,7 @@ import React from "react";
 
 export function ParknexIcon({
   className = "w-10 h-10",
-  variant = "dark",
+  variant = "light",
 }: {
   className?: string;
   variant?: "dark" | "light";
@@ -16,7 +16,7 @@ export function ParknexIcon({
         src="/images/parknex-symbol.png"
         alt="PARKNEX Icon"
         className={`w-full h-full object-contain ${
-          variant === "dark" ? "brightness-110" : "mix-blend-multiply"
+          variant === "dark" ? "brightness-110" : ""
         }`}
       />
     </div>
@@ -26,7 +26,7 @@ export function ParknexIcon({
 export default function ParknexLogo({
   size = "md",
   showWordmark = true,
-  variant = "dark",
+  variant = "light",
   className = "",
 }: {
   size?: "sm" | "md" | "lg" | "xl";
@@ -48,7 +48,7 @@ export default function ParknexLogo({
     xl: "text-[32px]",
   };
 
-  const textColor = variant === "dark" ? "text-white" : "text-[#1C1917]";
+  const textColor = variant === "dark" ? "text-white" : "text-[#241F1B]";
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
@@ -62,7 +62,7 @@ export default function ParknexLogo({
             fontWeight: 800,
           }}
         >
-          PARK<span className="text-[#D84A2B]">NEX</span>
+          PARK<span className="text-[#C93B2F]">NEX</span>
         </span>
       )}
     </div>

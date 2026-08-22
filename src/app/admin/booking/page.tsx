@@ -11,10 +11,8 @@ import {
   CheckCircle2,
   RefreshCw,
   Wrench,
-  Eye,
-  SlidersHorizontal,
   Navigation,
-  Compass,
+  SlidersHorizontal,
 } from "lucide-react";
 import AdminFloorPlan2D, { ParkingSlot2D } from "@/components/admin/AdminFloorPlan2D";
 import InteractiveParkingMap3D from "@/components/parking/InteractiveParkingMap3D";
@@ -97,84 +95,85 @@ export default function AdminLiveParkingMapPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6 select-none text-[#F5F7FA]">
-      {/* ── MAP HEADER CONTROLS ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-white/[0.08]">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6 select-none text-[#241F1B]">
+      {/* Page Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#DED3C7]">
         <div>
-          <h1 className="text-[22px] sm:text-[26px] font-black text-white tracking-tight">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C93B2F] bg-[#F9E3DE] px-2 py-0.5 rounded border border-[#C93B2F]/20">
+              FACILITY OVERVIEW
+            </span>
+            <span className="text-[12px] text-[#70675F]">· Central Mall Grand</span>
+          </div>
+          <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
             Live Parking Map
           </h1>
-          <p className="text-[13px] text-[rgba(245,247,250,0.6)] mt-0.5">
-            Real-time space occupancy and bay management.
+          <p className="text-[13.5px] text-[#70675F] mt-0.5">
+            Real-time space occupancy, automated recommendations, and operator controls.
           </p>
         </div>
 
-        {/* Action Controls */}
+        {/* Global Action Bar */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Floor Selector */}
-          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
-            {["B2", "B1", "G", "ALL"].map((fl) => (
+          <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
+            {["B2", "B1", "G", "ALL"].map((f) => (
               <button
-                key={fl}
-                onClick={() => {
-                  setSelectedFloor(fl);
-                  setSelectedSlot(null);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                  selectedFloor === fl
-                    ? "bg-[#D84A2B] text-white shadow-xs"
-                    : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                key={f}
+                type="button"
+                onClick={() => setSelectedFloor(f)}
+                className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer ${
+                  selectedFloor === f
+                    ? "bg-[#C93B2F] text-white shadow-xs"
+                    : "text-[#70675F] hover:text-[#241F1B]"
                 }`}
               >
-                {fl === "ALL" ? "All Floors" : `Level ${fl}`}
+                {f === "ALL" ? "All Floors" : `Level ${f}`}
               </button>
             ))}
           </div>
 
           {/* Zone Selector */}
-          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
-            {[
-              { id: "ALL", label: "All Zones" },
-              { id: "Zone A", label: "Zone A" },
-              { id: "Zone B", label: "Zone B" },
-            ].map((z) => (
+          <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
+            {["ALL", "Zone A", "Zone B"].map((z) => (
               <button
-                key={z.id}
-                onClick={() => setSelectedZone(z.id)}
-                className={`px-2.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                  selectedZone === z.id
-                    ? "bg-white/[0.12] text-white"
-                    : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                key={z}
+                type="button"
+                onClick={() => setSelectedZone(z)}
+                className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer ${
+                  selectedZone === z
+                    ? "bg-[#C93B2F] text-white shadow-xs"
+                    : "text-[#70675F] hover:text-[#241F1B]"
                 }`}
               >
-                {z.label}
+                {z === "ALL" ? "All Zones" : z}
               </button>
             ))}
           </div>
 
-          {/* Floor Plan (2D) / Interactive View (3D) Toggle */}
-          <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+          {/* 2D / 3D View Switcher */}
+          <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
             <button
+              type="button"
               onClick={() => setViewMode("2d")}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer ${
                 viewMode === "2d"
-                  ? "bg-white/[0.14] text-white"
-                  : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                  ? "bg-[#C93B2F] text-white shadow-xs"
+                  : "text-[#70675F] hover:text-[#241F1B]"
               }`}
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Floor Plan</span>
+              Floor Plan
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("3d")}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer ${
                 viewMode === "3d"
-                  ? "bg-white/[0.14] text-white"
-                  : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                  ? "bg-[#C93B2F] text-white shadow-xs"
+                  : "text-[#70675F] hover:text-[#241F1B]"
               }`}
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Interactive View</span>
+              Interactive View
             </button>
           </div>
 
@@ -182,82 +181,77 @@ export default function AdminLiveParkingMapPage() {
           <button
             type="button"
             onClick={handleRefresh}
-            className="p-2 rounded-xl bg-[#10151D] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-            title="Refresh"
-            aria-label="Refresh"
+            className="h-[38px] px-3 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] hover:bg-[#F3EAE0] text-[#241F1B] text-[12.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Refresh Occupancy Data"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#C93B2F] ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
           </button>
-
-          {/* New Entry Button */}
-          <Link
-            href="/admin/new-entry"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[12.5px] shadow-[0_2px_12px_rgba(216,74,43,0.3)] transition-all cursor-pointer"
-          >
-            <CarFront className="w-4 h-4" />
-            <span>New Entry</span>
-          </Link>
         </div>
       </div>
 
-      {/* ── TOP RECOMMENDED SPACES ── */}
-      {topRecommendations.length > 0 && (
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-bold uppercase tracking-wider text-white/60">
+      {/* Top 3 Recommended Spaces Banner */}
+      <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-[#3569A8]" />
+            <h3 className="text-[14px] font-bold text-[#241F1B]">
               Recommended Spaces
-            </span>
-            <span className="text-[11.5px] text-white/40">
-              Ranked by entry proximity and lift walking distance
+            </h3>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#3569A8]/10 text-[#3569A8] border border-[#3569A8]/20">
+              Ranked
             </span>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {topRecommendations.map((rec) => (
-              <button
-                key={rec.slot.slotId}
-                onClick={() => setSelectedSlot(rec.slot as any)}
-                className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                  selectedSlot?.slotId === rec.slot.slotId
-                    ? "bg-[#151B24] border-[#2563EB] ring-2 ring-[#2563EB]/40 shadow-lg"
-                    : "bg-[#10151D] border-white/[0.08] hover:border-white/20 hover:bg-[#151B24]"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white text-[11px] font-black flex items-center justify-center">
-                      #{rec.rank}
-                    </span>
-                    <span className="font-mono font-extrabold text-[15px] text-white">
-                      Space {rec.slot.slotNumber}
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-bold text-[#60A5FA] bg-[#2563EB]/15 px-2.5 py-0.5 rounded-full border border-[#2563EB]/30">
-                    {rec.score}/100 Match
-                  </span>
-                </div>
-
-                <p className="text-[11.5px] text-white/70 line-clamp-1 mt-2">
-                  {rec.reason}
-                </p>
-
-                <div className="flex items-center justify-between text-[11px] text-white/50 mt-2.5 pt-2 border-t border-white/[0.04]">
-                  <span>Level {rec.slot.floor} · {rec.slot.pillar}</span>
-                  <span className="text-[#3B82F6] font-semibold">Select Space →</span>
-                </div>
-              </button>
-            ))}
-          </div>
+          <span className="text-[11.5px] text-[#70675F]">
+            Optimal walking distance to main lobby
+          </span>
         </div>
-      )}
 
-      {/* ── DESKTOP GRID: LARGE MAP ON LEFT + DETAILS PANEL ON RIGHT ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
-        {/* Left: Large Live Parking Map */}
-        <div className="w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {topRecommendations.map((rec) => (
+            <div
+              key={rec.slot.slotId}
+              onClick={() => setSelectedSlot(rec.slot as ParkingSlot2D)}
+              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                selectedSlot?.slotId === rec.slot.slotId
+                  ? "bg-[#F9E3DE] border-[#C93B2F] ring-2 ring-[#C93B2F]/20"
+                  : "bg-[#FAF7F2] border-[#DED3C7] hover:bg-[#F3EAE0]"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#3569A8] text-white text-[11px] font-black flex items-center justify-center">
+                  #{rec.rank}
+                </span>
+                <div>
+                  <div className="font-mono font-black text-[15px] text-[#241F1B]">
+                    Space {rec.slot.slotNumber}
+                  </div>
+                  <div className="text-[11px] text-[#70675F]">
+                    Level {rec.slot.floor} · {rec.slot.pillar}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[11px] font-bold text-[#3569A8] bg-[#3569A8]/10 px-2 py-0.5 rounded border border-[#3569A8]/20">
+                  {rec.score}/100 Match
+                </span>
+                <span className="block text-[10.5px] text-[#70675F] mt-0.5">
+                  {rec.slot.distanceFromEntrance}m walk
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Floor Plan Grid Layout (Responsive: Map + 360px Details Panel) */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+        {/* Left Column: Interactive Map Canvas */}
+        <div className="w-full flex flex-col gap-4">
           {viewMode === "2d" ? (
             <AdminFloorPlan2D
-              slots={rawSlots as any}
+              slots={rawSlots as ParkingSlot2D[]}
               selectedSlotId={selectedSlot?.slotId || null}
               recommendedSlotIds={recommendedSlotIds}
               onSelectSlot={(slot) => setSelectedSlot(slot)}
@@ -265,29 +259,13 @@ export default function AdminLiveParkingMapPage() {
               zoneFilter={selectedZone}
             />
           ) : (
-            <div className="w-full min-h-[380px] sm:min-h-[500px] lg:min-h-[650px] rounded-3xl border border-white/10 bg-[#10151D] overflow-hidden shadow-xl shadow-black/20">
+            <div className="w-full min-h-[540px] sm:min-h-[580px] lg:min-h-[660px] rounded-2xl border border-[#DED3C7] bg-[#FFFFFF] overflow-hidden shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
               <InteractiveParkingMap3D
-                slots={rawSlots.map((s) => ({
-                  id: s.slotId,
-                  slotId: s.slotId,
-                  mallId: s.mallId || "central_mall",
-                  mallName: s.mallName || "Central Mall Grand",
-                  slotNumber: s.slotNumber,
-                  floor: s.floor,
-                  zone: s.zone,
-                  pillar: s.pillar,
-                  status: s.status as any,
-                  positionX: s.positionX,
-                  positionY: s.positionY,
-                  positionZ: s.positionZ,
-                  rotationY: s.rotationY || 0,
-                  distanceFromEntrance: s.distanceFromEntrance,
-                  walkingDirections: s.walkingDirections || [],
-                }))}
-                selectedSlot={selectedSlot ? ({ id: selectedSlot.slotId, ...selectedSlot } as any) : null}
-                nearestSlot={topRecommendations[0] ? ({ id: topRecommendations[0].slot.slotId, ...topRecommendations[0].slot } as any) : null}
+                slots={rawSlots as any}
+                selectedSlot={selectedSlot as any}
+                nearestSlot={topRecommendations[0]?.slot as any}
                 recommendedSlotIds={recommendedSlotIds}
-                onSelectSlot={(slot: any) => setSelectedSlot(slot)}
+                onSelectSlot={(slot) => setSelectedSlot(slot as any)}
                 currentFloor={selectedFloor}
                 onFallbackTo2D={() => setViewMode("2d")}
               />
@@ -295,163 +273,154 @@ export default function AdminLiveParkingMapPage() {
           )}
         </div>
 
-        {/* Right: Space Details & Assignment Panel (360px) */}
-        <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-xl shadow-black/20">
-          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-            <h2 className="text-[14px] font-bold text-white flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#D84A2B]" />
-              <span>Space Details</span>
-            </h2>
-            {selectedSlot && (
-              <span className="text-[11px] font-mono text-white/50">
-                {selectedSlot.slotId}
-              </span>
-            )}
-          </div>
-
+        {/* Right Column: Space Inspector & Direct Allocation Panel (360px on Desktop) */}
+        <div className="w-full flex flex-col gap-4">
           {selectedSlot ? (
-            <div className="flex flex-col gap-3.5">
-              {/* Space Header Card */}
-              <div className="bg-[#0A0D14] border border-white/[0.08] rounded-2xl p-4 flex items-center justify-between">
-                <div>
-                  <span className="text-[10.5px] font-bold text-white/50 uppercase tracking-wider block">
-                    Space Number
-                  </span>
-                  <span className="text-[22px] font-mono font-black text-white">
-                    {selectedSlot.slotNumber}
-                  </span>
-                  <span className="text-[11.5px] text-white/60 block mt-0.5">
-                    Level {selectedSlot.floor} · {selectedSlot.zone}
-                  </span>
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#DED3C7]">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#C93B2F]" />
+                  <h3 className="text-[15px] font-bold text-[#241F1B]">Space Inspector</h3>
                 </div>
+                <span
+                  className={`text-[10.5px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                    selectedSlot.status === "available"
+                      ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
+                      : selectedSlot.status === "occupied"
+                      ? "bg-[#C93B2F]/10 text-[#C93B2F] border-[#C93B2F]/30"
+                      : selectedSlot.status === "reserved"
+                      ? "bg-[#B7791F]/10 text-[#B7791F] border-[#B7791F]/30"
+                      : "bg-[#70675F]/10 text-[#70675F] border-[#70675F]/30"
+                  }`}
+                >
+                  {selectedSlot.status}
+                </span>
+              </div>
 
-                {/* Status Badge */}
+              {/* Slot Number Main Block */}
+              <div className="bg-[#FAF7F2] p-4 rounded-xl border border-[#DED3C7] flex items-center justify-between">
                 <div>
-                  {selectedSlot.status === "available" && (
-                    <span className="px-3 py-1.5 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 text-[#10B981] text-[11px] font-extrabold">
-                      AVAILABLE
-                    </span>
-                  )}
-                  {selectedSlot.status === "occupied" && (
-                    <span className="px-3 py-1.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[11px] font-extrabold">
-                      OCCUPIED
-                    </span>
-                  )}
-                  {(selectedSlot.status === "reserved" || selectedSlot.status === "temporarily_held") && (
-                    <span className="px-3 py-1.5 rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/40 text-[#F59E0B] text-[11px] font-extrabold">
-                      RESERVED
-                    </span>
-                  )}
-                  {selectedSlot.status === "maintenance" && (
-                    <span className="px-3 py-1.5 rounded-full bg-[#6B7280]/20 border border-[#6B7280]/40 text-[#9CA3AF] text-[11px] font-extrabold">
-                      MAINTENANCE
-                    </span>
-                  )}
+                  <span className="text-[11px] font-bold text-[#70675F] uppercase">Space Identifier</span>
+                  <div className="text-[26px] font-mono font-black text-[#241F1B] leading-none mt-1">
+                    {selectedSlot.slotNumber}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] font-bold text-[#70675F] uppercase">Floor &amp; Pillar</span>
+                  <div className="text-[14px] font-bold text-[#241F1B] mt-1">
+                    Level {selectedSlot.floor} · {selectedSlot.pillar}
+                  </div>
                 </div>
               </div>
 
-              {/* Recommendation Card */}
+              {/* Recommendation Analysis */}
               {selectedRecommendation && (
-                <div className="bg-[#2563EB]/10 border border-[#2563EB]/30 rounded-xl p-3 text-[12px]">
-                  <div className="flex items-center gap-1.5 text-[#60A5FA] font-bold mb-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Match Score: {selectedRecommendation.score}/100</span>
+                <div className="bg-[#3569A8]/10 border border-[#3569A8]/30 p-3 rounded-xl flex flex-col gap-1 text-[12px]">
+                  <div className="flex items-center justify-between text-[#3569A8] font-bold">
+                    <span>Rank #{selectedRecommendation.rank} Space</span>
+                    <span>{selectedRecommendation.score}/100 Match</span>
                   </div>
-                  <p className="text-white/80 leading-relaxed">
+                  <p className="text-[#241F1B] leading-relaxed text-[11.5px]">
                     {selectedRecommendation.reason}
                   </p>
                 </div>
               )}
 
-              {/* Specs Cards */}
+              {/* Specs Grid */}
               <div className="grid grid-cols-2 gap-2 text-[12px]">
-                <div className="bg-[#151B24] p-3 rounded-xl border border-white/[0.06]">
-                  <span className="text-white/50 block text-[10.5px]">Pillar</span>
-                  <span className="font-semibold text-white">{selectedSlot.pillar}</span>
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[10.5px]">Zone</span>
+                  <span className="font-semibold text-[#241F1B]">{selectedSlot.zone}</span>
                 </div>
-                <div className="bg-[#151B24] p-3 rounded-xl border border-white/[0.06]">
-                  <span className="text-white/50 block text-[10.5px]">Shortest Route</span>
-                  <span className="font-semibold text-white">~{selectedSlot.distanceFromEntrance}m from Gate A</span>
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[10.5px]">Distance from Gate A</span>
+                  <span className="font-semibold text-[#241F1B]">{selectedSlot.distanceFromEntrance} meters</span>
+                </div>
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[10.5px]">EV Charger</span>
+                  <span className="font-semibold text-[#241F1B]">
+                    {selectedSlot.vehicleConstraints?.isEV ? "Available" : "Standard Bay"}
+                  </span>
+                </div>
+                <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                  <span className="text-[#70675F] block text-[10.5px]">Accessibility</span>
+                  <span className="font-semibold text-[#241F1B]">
+                    {selectedSlot.vehicleConstraints?.isHandicapped ? "Near Lift Lobby" : "Standard"}
+                  </span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col gap-2 pt-2">
+              {/* Quick Action Controls */}
+              <div className="flex flex-col gap-2 pt-2 border-t border-[#DED3C7]">
                 {selectedSlot.status === "available" && (
                   <Link
                     href={`/admin/new-entry?slotId=${selectedSlot.slotId}`}
-                    className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[13.5px] shadow-[0_2px_12px_rgba(216,74,43,0.3)] transition-all cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
                   >
                     <CarFront className="w-4 h-4" />
-                    <span>Assign Space {selectedSlot.slotNumber}</span>
+                    <span>Assign Vehicle to Space {selectedSlot.slotNumber}</span>
                   </Link>
                 )}
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setOverrideStatus(selectedSlot.status === "maintenance" ? "available" : "maintenance");
-                    setOverrideModalOpen(true);
-                  }}
-                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white font-semibold text-[12px] transition-all cursor-pointer"
+                  onClick={() => setOverrideModalOpen(true)}
+                  className="w-full h-10 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] hover:bg-[#F3EAE0] text-[#241F1B] text-[12.5px] font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Wrench className="w-3.5 h-3.5 text-white/60" />
-                  <span>
-                    {selectedSlot.status === "maintenance" ? "Restore to Available" : "Set to Maintenance"}
-                  </span>
+                  <Wrench className="w-3.5 h-3.5 text-[#70675F]" />
+                  <span>Update Space Status</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-white/40">
-              <MapPin className="w-9 h-9 text-white/20 mb-2" />
-              <p className="text-[13.5px] font-semibold text-white/80">No Space Selected</p>
-              <p className="text-[11.5px] text-white/50 max-w-[200px] mt-1">
-                Click any bay on the floor plan to view details and assign.
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)] min-h-[320px]">
+              <div className="w-12 h-12 rounded-2xl bg-[#F3EAE0] flex items-center justify-center text-[#70675F]">
+                <Navigation className="w-6 h-6 text-[#C93B2F]" />
+              </div>
+              <h4 className="text-[16px] font-bold text-[#241F1B]">No Space Selected</h4>
+              <p className="text-[12.5px] text-[#70675F] max-w-[220px]">
+                Click on any parking bay in the floor plan to inspect details or assign a vehicle.
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── STATUS OVERRIDE MODAL ── */}
+      {/* Manual Status Override Modal */}
       {overrideModalOpen && selectedSlot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#10151D] border border-white/[0.15] rounded-3xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-[17px] font-bold text-white mb-1.5">
-              Change Status for Space {selectedSlot.slotNumber}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+            <h3 className="text-[18px] font-bold text-[#241F1B]">
+              Update Status: Space {selectedSlot.slotNumber}
             </h3>
-            <p className="text-[12.5px] text-white/60 mb-4">
-              Status changes are recorded in the operator audit log.
-            </p>
 
             <form onSubmit={handleStatusOverride} className="flex flex-col gap-4">
               <div>
-                <label className="block text-[12px] font-bold text-white/80 mb-1.5">
-                  Target Status
+                <label className="block text-[12px] font-bold text-[#241F1B] uppercase mb-1">
+                  New Status
                 </label>
                 <select
                   value={overrideStatus}
-                  onChange={(e: any) => setOverrideStatus(e.target.value)}
-                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+                  onChange={(e) => setOverrideStatus(e.target.value as any)}
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3 py-2.5 text-[13.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
                 >
-                  <option value="available">Available</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="occupied">Occupied</option>
+                  <option value="available">Available (Green)</option>
+                  <option value="maintenance">Maintenance / Out of Order (Grey)</option>
+                  <option value="occupied">Manual Occupied (Red)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-white/80 mb-1.5">
-                  Reason for Status Change
+                <label className="block text-[12px] font-bold text-[#241F1B] uppercase mb-1">
+                  Reason / Notes
                 </label>
                 <textarea
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="e.g., Space maintenance, Reserved allocation, Sensor check"
-                  required
-                  rows={3}
-                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl p-3 text-[13px] text-white focus:outline-none focus:border-[#D84A2B] placeholder:text-white/30 resize-none"
+                  placeholder="e.g., Space blocked for maintenance"
+                  rows={2}
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl p-3 text-[13px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F] resize-none"
                 />
               </div>
 
@@ -459,16 +428,16 @@ export default function AdminLiveParkingMapPage() {
                 <button
                   type="button"
                   onClick={() => setOverrideModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white/[0.05] text-white text-[12.5px] font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-4 py-2 rounded-xl bg-[#D84A2B] text-white text-[12.5px] font-bold hover:bg-[#C64024] transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {isUpdating ? "Applying..." : "Confirm Status"}
+                  {isUpdating ? "Saving..." : "Save Status"}
                 </button>
               </div>
             </form>

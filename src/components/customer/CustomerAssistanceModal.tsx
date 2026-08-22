@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
   X,
   Loader2,
@@ -84,17 +83,17 @@ export default function CustomerAssistanceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-[16px] sm:p-[24px] bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-[500px] bg-[#10151D] border border-white/15 rounded-2xl p-[20px] sm:p-[24px] shadow-2xl flex flex-col gap-[20px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-xs">
+      <div className="w-full max-w-[500px] bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-6 sm:p-7 shadow-[0_16px_48px_rgba(70,48,35,0.15)] flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center justify-between pb-[16px] border-b border-white/[0.08]">
-          <div className="flex items-center gap-[10px]">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+        <div className="flex items-center justify-between pb-4 border-b border-[#DED3C7]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
               <HelpCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-[17px] font-bold text-[#F5F7FA]">Report a Parking Issue</h3>
-              <p className="text-[12px] text-[rgba(245,247,250,0.58)]">
+              <h3 className="text-[17px] font-bold text-[#241F1B]">Report a Parking Issue</h3>
+              <p className="text-[12.5px] text-[#70675F]">
                 Direct dispatch to mall parking operations team
               </p>
             </div>
@@ -102,25 +101,25 @@ export default function CustomerAssistanceModal({
           <button
             type="button"
             onClick={handleReset}
-            className="w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white/70 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg bg-[#F3EAE0] hover:bg-[#EDE1D4] text-[#70675F] hover:text-[#241F1B] flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {submitted ? (
-          <div className="flex flex-col items-center text-center gap-[16px] py-[16px]">
-            <div className="w-[56px] h-[56px] rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center gap-4 py-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#2F7D5A]/15 text-[#2F7D5A] flex items-center justify-center">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
-              <h4 className="text-[20px] font-bold text-white">Assistance Request Dispatched</h4>
-              <p className="text-[14px] text-[rgba(245,247,250,0.58)] mt-[4px] max-w-[380px]">
+              <h4 className="text-[19px] font-bold text-[#241F1B]">Assistance Request Dispatched</h4>
+              <p className="text-[14px] text-[#70675F] mt-1 max-w-[380px]">
                 Our floor marshals at {mallName} have received your ticket for vehicle{" "}
-                <span className="font-mono text-white font-bold">{vehicleNumber}</span>.
+                <span className="font-mono text-[#241F1B] font-bold">{vehicleNumber}</span>.
               </p>
               {reportId && (
-                <div className="mt-[12px] inline-block px-3 py-1 rounded-md bg-white/[0.06] font-mono text-[12px] text-white/70">
+                <div className="mt-3 inline-block px-3 py-1 rounded-md bg-[#F3EAE0] font-mono text-[12px] text-[#70675F]">
                   Ticket #{reportId.substring(0, 8).toUpperCase()}
                 </div>
               )}
@@ -128,67 +127,66 @@ export default function CustomerAssistanceModal({
             <button
               type="button"
               onClick={handleReset}
-              className="h-[44px] px-[24px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[14px] transition-all"
+              className="h-11 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] transition-all cursor-pointer"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-[16px]">
-            <div className="flex flex-col gap-[8px]">
-              <label className="text-[12px] font-bold text-white/70 uppercase tracking-wider">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-[#241F1B] uppercase tracking-wider">
                 Select the issue
               </label>
-              <div className="flex flex-col gap-[8px]">
-                {ISSUE_OPTIONS.map((issue) => (
-                  <label
-                    key={issue}
-                    className={`flex items-center gap-[10px] p-[12px] rounded-xl border transition-all cursor-pointer text-[14px] ${
-                      selectedIssue === issue
-                        ? "bg-[#D84A2B]/10 border-[#D84A2B] text-white font-semibold"
-                        : "bg-[#151B24] border-white/[0.08] text-[rgba(245,247,250,0.7)] hover:border-white/20"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="issueType"
-                      value={issue}
-                      checked={selectedIssue === issue}
-                      onChange={() => setSelectedIssue(issue)}
-                      className="accent-[#D84A2B]"
-                    />
-                    <span>{issue}</span>
-                  </label>
+              <select
+                value={selectedIssue}
+                onChange={(e) => setSelectedIssue(e.target.value)}
+                className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE] focus:outline-none"
+              >
+                {ISSUE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            <div className="flex flex-col gap-[8px]">
-              <label htmlFor="issueNotes" className="text-[12px] font-bold text-white/70 uppercase tracking-wider">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-[#241F1B] uppercase tracking-wider">
                 Additional Details (Optional)
               </label>
               <textarea
-                id="issueNotes"
-                rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Describe what you see or need help with..."
-                className="w-full p-[12px] rounded-xl bg-[#151B24] border border-white/15 text-white placeholder-white/30 text-[14px] focus:border-[#D84A2B] focus:outline-none resize-none transition-colors"
+                placeholder="Describe your location or the problem..."
+                rows={3}
+                className="p-3 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] placeholder:text-[#938980] text-[13.5px] focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE] focus:outline-none resize-none"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-[12px] pt-[8px]">
+            <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3 text-[12px] text-[#70675F]">
+              <span>Vehicle: </span>
+              <strong className="font-mono text-[#241F1B]">{vehicleNumber}</strong>
+              {slotNumber && (
+                <span>
+                  {" "}
+                  · Space: <strong className="text-[#241F1B]">{slotNumber}</strong> (Level {floor})
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleReset}
-                className="h-[44px] px-[16px] rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 font-semibold text-[14px] transition-all"
+                className="h-11 px-4 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13.5px] font-bold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading || !selectedIssue}
-                className="h-[44px] px-[20px] rounded-xl bg-[#D84A2B] hover:bg-[#C64024] disabled:opacity-50 text-white font-bold text-[14px] flex items-center gap-[8px] transition-all cursor-pointer"
+                disabled={loading}
+                className="h-11 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13.5px] font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 <span>Submit Ticket</span>

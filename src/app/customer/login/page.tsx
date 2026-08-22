@@ -18,21 +18,21 @@ function CustomerLoginForm() {
   };
 
   return (
-    <div className="bg-[#10151D] border border-white/[0.08] rounded-3xl p-[24px] shadow-2xl shadow-black/60 flex flex-col w-[calc(100%-40px)] max-w-[440px] mx-auto">
+    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-7 sm:p-9 shadow-[0_8px_24px_rgba(70,48,35,0.07)] flex flex-col w-full max-w-[480px] mx-auto">
       {/* Icon */}
-      <div className="w-[56px] h-[56px] rounded-2xl bg-[#D84A2B]/15 flex items-center justify-center mb-[20px]">
-        <Car className="w-[28px] h-[28px] text-[#D84A2B]" />
+      <div className="w-14 h-14 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center mb-5">
+        <Car className="w-7 h-7" />
       </div>
 
-      <h1 className="text-[30px] sm:text-[34px] font-black text-white mb-[8px] tracking-tight leading-tight">
+      <h1 className="text-[28px] sm:text-[32px] font-black text-[#241F1B] mb-2 tracking-tight leading-tight">
         Customer Sign In
       </h1>
-      <p className="text-[16px] text-white/50 leading-[1.5] mb-[24px]">
+      <p className="text-[14.5px] text-[#70675F] leading-relaxed mb-6">
         Sign in to view your parking location, live route guidance and digital exit pass.
       </p>
 
       {error && (
-        <div className="mb-[24px] p-[16px] rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[14px] flex items-start gap-[12px]">
+        <div className="mb-6 p-4 rounded-xl bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[13.5px] flex items-start gap-3">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span>
             {error === "OAuthCallback" || error === "OAuthCallbackError"
@@ -46,12 +46,12 @@ function CustomerLoginForm() {
       <button
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="w-full h-[56px] flex items-center justify-center gap-[12px] bg-white text-[#1C1917] text-[16px] font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-md"
+        className="w-full h-13 flex items-center justify-center gap-3 bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] hover:bg-[#F3EAE0] text-[15px] font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-xs"
       >
         {loading ? (
-          <Loader2 className="w-5 h-5 text-[#1C1917] animate-spin" />
+          <Loader2 className="w-5 h-5 text-[#241F1B] animate-spin" />
         ) : (
-          <svg className="w-[20px] h-[20px]" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -62,25 +62,25 @@ function CustomerLoginForm() {
       </button>
 
       {/* Divider */}
-      <div className="flex items-center gap-[16px] my-[24px]">
-        <div className="flex-1 h-px bg-white/10" />
-        <span className="text-[12px] text-white/30 font-bold uppercase tracking-wider">Direct Access</span>
-        <div className="flex-1 h-px bg-white/10" />
+      <div className="flex items-center gap-4 my-6">
+        <div className="flex-1 h-px bg-[#DED3C7]" />
+        <span className="text-[11.5px] text-[#938980] font-bold uppercase tracking-wider">Direct Access</span>
+        <div className="flex-1 h-px bg-[#DED3C7]" />
       </div>
 
       {/* Token info */}
-      <p className="text-[14px] text-white/50 text-center leading-[1.6]">
+      <p className="text-[13.5px] text-[#70675F] text-center leading-relaxed">
         Received an SMS parking link? <br />
-        <span className="text-white">Tap the link in your message</span> to open your space directly.
+        <span className="text-[#241F1B] font-semibold">Tap the link in your message</span> to open your space directly.
       </p>
 
       {/* Operator link inside card footer */}
-      <div className="mt-[32px] pt-[24px] border-t border-white/[0.08] flex justify-center">
+      <div className="mt-8 pt-6 border-t border-[#DED3C7] flex justify-center">
         <Link
           href="/auth/login"
-          className="inline-flex items-center gap-[8px] text-[14px] text-white/50 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-[13.5px] text-[#70675F] hover:text-[#C93B2F] font-semibold transition-colors"
         >
-          <ShieldCheck className="w-[18px] h-[18px] text-[#D84A2B]" />
+          <ShieldCheck className="w-4 h-4 text-[#C93B2F]" />
           <span>Mall Operator Sign In</span>
         </Link>
       </div>
@@ -90,22 +90,25 @@ function CustomerLoginForm() {
 
 export default function CustomerLogin() {
   return (
-    <main className="min-h-[100dvh] bg-[#050507] text-[#F5F7FA] flex flex-col box-border w-full selection:bg-[#D84A2B]/20 selection:text-[#D84A2B] pb-[48px]">
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#D84A2B]/8 blur-[120px]" />
-      </div>
-
-      {/* Normal column layout */}
-      <div className="w-full flex flex-col relative z-10">
-        {/* Logo with proper spacing from top edge */}
-        <div className="flex justify-center pt-[64px] mb-[36px]">
-          <Link href="/" aria-label="Go to ParkNex homepage">
-            <ParknexLogo size="lg" variant="dark" />
+    <main className="min-h-[100dvh] bg-[#FAF7F2] text-[#241F1B] flex flex-col box-border w-full selection:bg-[#F9E3DE] selection:text-[#C93B2F] pb-12">
+      {/* Top Header */}
+      <header className="w-full bg-[#FFFFFF] border-b border-[#DED3C7] py-4 px-4 sm:px-8 mb-8">
+        <div className="max-w-[1440px] mx-auto flex items-center justify-between">
+          <Link href="/" className="group">
+            <ParknexLogo size="md" variant="light" />
+          </Link>
+          <Link
+            href="/"
+            className="text-[13.5px] font-bold text-[#70675F] hover:text-[#241F1B] transition-colors"
+          >
+            Back to Home
           </Link>
         </div>
+      </header>
 
-        <Suspense fallback={<div className="h-[340px] w-[calc(100%-40px)] max-w-[440px] mx-auto rounded-3xl bg-[#10151D] animate-pulse border border-white/10" />}>
+      {/* Form Container */}
+      <div className="w-full flex-1 flex items-center justify-center px-4 sm:px-6">
+        <Suspense fallback={<div className="h-[360px] max-w-[480px] w-full bg-[#FFFFFF] rounded-2xl animate-pulse border border-[#DED3C7]" />}>
           <CustomerLoginForm />
         </Suspense>
       </div>

@@ -43,32 +43,32 @@ export default function AdminHistoryPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6 select-none text-[#241F1B]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#DED3C7]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D84A2B] bg-[#D84A2B]/10 px-2 py-0.5 rounded border border-[#D84A2B]/20">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C93B2F] bg-[#F9E3DE] px-2 py-0.5 rounded border border-[#C93B2F]/20">
               OPERATIONAL AUDIT
             </span>
-            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">· Activity Logs</span>
+            <span className="text-[12px] text-[#70675F]">· Activity Logs</span>
           </div>
-          <h1 className="text-[24px] sm:text-[28px] font-black text-[#F5F7FA] tracking-tight">
+          <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
             Parking History &amp; Audit Trail
           </h1>
-          <p className="text-[13.5px] text-[rgba(245,247,250,0.65)] mt-0.5">
+          <p className="text-[13.5px] text-[#70675F] mt-0.5">
             Immutable log of all active, completed allocations, barrier scans, and operator overrides.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+        <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
           <button
             onClick={() => setActiveTab("sessions")}
             className={`px-4 py-2 rounded-lg text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "sessions"
-                ? "bg-[#D84A2B] text-white shadow-xs"
-                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
             <History className="w-4 h-4" />
@@ -78,8 +78,8 @@ export default function AdminHistoryPage() {
             onClick={() => setActiveTab("audit")}
             className={`px-4 py-2 rounded-lg text-[13px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "audit"
-                ? "bg-[#D84A2B] text-white shadow-xs"
-                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
@@ -91,23 +91,23 @@ export default function AdminHistoryPage() {
       {activeTab === "sessions" ? (
         <div className="flex flex-col gap-4">
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#10151D] border border-white/[0.08] p-3 rounded-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#FFFFFF] border border-[#DED3C7] p-3 rounded-2xl shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-[240px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#70675F]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search plate, phone..."
-                  className="w-full bg-[#0A0D14] border border-white/[0.1] rounded-xl pl-9 pr-3 py-2 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                  className="w-full bg-[#FAF7F2] border border-[#DED3C7] rounded-xl pl-9 pr-3 py-2 text-[13px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                 />
               </div>
 
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#0A0D14] border border-white/[0.1] rounded-xl px-3 py-2 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+                className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl px-3 py-2 text-[13px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
@@ -118,7 +118,7 @@ export default function AdminHistoryPage() {
               <select
                 value={floorFilter}
                 onChange={(e) => setFloorFilter(e.target.value)}
-                className="bg-[#0A0D14] border border-white/[0.1] rounded-xl px-3 py-2 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+                className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl px-3 py-2 text-[13px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
               >
                 <option value="ALL">All Floors</option>
                 <option value="B2">Level B2</option>
@@ -127,72 +127,74 @@ export default function AdminHistoryPage() {
               </select>
             </div>
 
-            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">
+            <span className="text-[12px] text-[#70675F]">
               Showing {bookings.length} record{bookings.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {/* Sessions Table */}
-          <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[13px] text-[rgba(245,247,250,0.85)]">
-                <thead className="bg-[#0A0D14] text-[11.5px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.5)] border-b border-white/[0.08]">
+              <table className="w-full text-left text-[13.5px]">
+                <thead className="bg-[#F3EAE0] text-[11.5px] font-bold uppercase tracking-wider text-[#70675F] border-b border-[#DED3C7]">
                   <tr>
-                    <th className="px-5 py-4">Booking Ref</th>
-                    <th className="px-5 py-4">Vehicle Plate</th>
-                    <th className="px-5 py-4">Space Allocated</th>
-                    <th className="px-5 py-4">Entry / Exit Times</th>
-                    <th className="px-5 py-4">Duration</th>
-                    <th className="px-5 py-4 text-right">Status</th>
+                    <th className="px-5 py-3.5">Booking Ref</th>
+                    <th className="px-5 py-3.5">Vehicle Plate</th>
+                    <th className="px-5 py-3.5">Space Allocated</th>
+                    <th className="px-5 py-3.5">Entry / Exit Times</th>
+                    <th className="px-5 py-3.5">Duration</th>
+                    <th className="px-5 py-3.5 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04]">
+                <tbody className="divide-y divide-[#DED3C7]">
                   {bookings.length > 0 ? (
                     bookings.map((b: any) => (
-                      <tr key={b.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-4 font-mono font-bold text-white text-[12.5px]">
+                      <tr key={b.id} className="hover:bg-[#FAF7F2] transition-colors">
+                        <td className="px-5 py-4 font-mono font-bold text-[#241F1B] text-[13px]">
                           #{b.bookingNumber}
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
-                            <CarFront className="w-4 h-4 text-[#D84A2B]" />
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
+                              <CarFront className="w-4 h-4" />
+                            </div>
                             <div>
-                              <span className="font-mono font-black text-white block">
+                              <span className="font-mono font-black text-[#241F1B] block">
                                 {b.vehicleNumber}
                               </span>
-                              <span className="text-[11px] text-[rgba(245,247,250,0.5)]">
+                              <span className="text-[11.5px] text-[#70675F]">
                                 {b.phoneNumber || b.email || "Walk-In"}
                               </span>
                             </div>
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="font-mono font-bold text-white block">
+                          <span className="font-mono font-bold text-[#241F1B] block">
                             Slot {b.slotNumber}
                           </span>
-                          <span className="text-[11px] text-[rgba(245,247,250,0.6)]">
+                          <span className="text-[11.5px] text-[#70675F]">
                             Level {b.floor} · {b.pillar}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-[12px]">
-                          <span className="text-white block">
+                        <td className="px-5 py-4 text-[12.5px]">
+                          <span className="text-[#241F1B] block font-medium">
                             In: {new Date(b.entryTime).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                           </span>
-                          <span className="text-[rgba(245,247,250,0.5)]">
+                          <span className="text-[#70675F]">
                             Out: {b.exitTime ? new Date(b.exitTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Active Inside"}
                           </span>
                         </td>
-                        <td className="px-5 py-4 font-mono text-white">
+                        <td className="px-5 py-4 font-mono text-[#241F1B] font-bold">
                           {computeDuration(b.entryTime, b.exitTime)}
                         </td>
                         <td className="px-5 py-4 text-right">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold border ${
                               b.status === "ACTIVE"
-                                ? "bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]"
+                                ? "bg-[#2F7D5A]/10 border-[#2F7D5A]/30 text-[#2F7D5A]"
                                 : b.status === "COMPLETED"
-                                ? "bg-white/[0.08] border-white/[0.15] text-[rgba(245,247,250,0.8)]"
-                                : "bg-[#EF4444]/15 border-[#EF4444]/30 text-[#EF4444]"
+                                ? "bg-[#F3EAE0] border-[#DED3C7] text-[#241F1B]"
+                                : "bg-[#C93B2F]/10 border-[#C93B2F]/30 text-[#C93B2F]"
                             }`}
                           >
                             {b.status}
@@ -202,7 +204,7 @@ export default function AdminHistoryPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-5 py-12 text-center text-[rgba(245,247,250,0.5)]">
+                      <td colSpan={6} className="px-5 py-12 text-center text-[#70675F]">
                         No parking records matching the criteria.
                       </td>
                     </tr>
@@ -214,50 +216,50 @@ export default function AdminHistoryPage() {
         </div>
       ) : (
         /* Operator Audit Log View */
-        <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px] text-[rgba(245,247,250,0.85)]">
-              <thead className="bg-[#0A0D14] text-[11.5px] font-bold uppercase tracking-wider text-[rgba(245,247,250,0.5)] border-b border-white/[0.08]">
+            <table className="w-full text-left text-[13.5px]">
+              <thead className="bg-[#F3EAE0] text-[11.5px] font-bold uppercase tracking-wider text-[#70675F] border-b border-[#DED3C7]">
                 <tr>
-                  <th className="px-5 py-4">Timestamp</th>
-                  <th className="px-5 py-4">Operator</th>
-                  <th className="px-5 py-4">Action</th>
-                  <th className="px-5 py-4">Details &amp; Reason</th>
-                  <th className="px-5 py-4 text-right">Target</th>
+                  <th className="px-5 py-3.5">Timestamp</th>
+                  <th className="px-5 py-3.5">Operator</th>
+                  <th className="px-5 py-3.5">Action</th>
+                  <th className="px-5 py-3.5">Details &amp; Reason</th>
+                  <th className="px-5 py-3.5 text-right">Target</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-[#DED3C7]">
                 {auditLogs.length > 0 ? (
                   auditLogs.map((log: any) => (
-                    <tr key={log._id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-5 py-4 font-mono text-[12px] text-white/70">
+                    <tr key={log._id} className="hover:bg-[#FAF7F2] transition-colors">
+                      <td className="px-5 py-4 font-mono text-[12px] text-[#70675F]">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-5 py-4 font-bold text-white flex items-center gap-2">
-                        <UserCheck className="w-3.5 h-3.5 text-[#D84A2B]" />
+                      <td className="px-5 py-4 font-bold text-[#241F1B] flex items-center gap-2">
+                        <UserCheck className="w-3.5 h-3.5 text-[#C93B2F]" />
                         <span>{log.operatorEmail}</span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="font-mono font-bold text-[11.5px] px-2 py-0.5 rounded bg-white/[0.06] text-white">
+                        <span className="font-mono font-bold text-[11.5px] px-2 py-0.5 rounded bg-[#F3EAE0] text-[#241F1B] border border-[#DED3C7]">
                           {log.action}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-[12.5px] text-white leading-snug">{log.details || "-"}</p>
+                        <p className="text-[13px] text-[#241F1B] leading-snug">{log.details || "-"}</p>
                         {log.reason && (
-                          <p className="text-[11.5px] text-[#F59E0B] italic mt-0.5">
+                          <p className="text-[12px] text-[#B7791F] font-semibold italic mt-0.5">
                             Reason: &ldquo;{log.reason}&rdquo;
                           </p>
                         )}
                       </td>
-                      <td className="px-5 py-4 text-right font-mono text-[11.5px] text-white/50">
+                      <td className="px-5 py-4 text-right font-mono text-[11.5px] text-[#70675F]">
                         {log.targetType} ({log.targetId.substring(0, 10)})
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-[rgba(245,247,250,0.5)]">
+                    <td colSpan={5} className="px-5 py-12 text-center text-[#70675F]">
                       No audit log records recorded yet.
                     </td>
                   </tr>

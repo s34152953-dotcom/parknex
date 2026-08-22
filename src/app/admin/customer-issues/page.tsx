@@ -10,9 +10,6 @@ import {
   ShieldCheck,
   MapPin,
   CarFront,
-  MessageSquare,
-  Search,
-  Filter,
 } from "lucide-react";
 
 export default function AdminCustomerIssuesPage() {
@@ -37,34 +34,34 @@ export default function AdminCustomerIssuesPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1280px] mx-auto flex flex-col gap-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1280px] mx-auto flex flex-col gap-6 select-none text-[#241F1B]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#DED3C7]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#EF4444] bg-[#EF4444]/10 px-2 py-0.5 rounded border border-[#EF4444]/20">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C93B2F] bg-[#F9E3DE] px-2 py-0.5 rounded border border-[#C93B2F]/20">
               CUSTOMER ASSISTANCE
             </span>
-            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">· Incident Dispatch</span>
+            <span className="text-[12px] text-[#70675F]">· Incident Dispatch</span>
           </div>
-          <h1 className="text-[24px] sm:text-[28px] font-black text-[#F5F7FA] tracking-tight">
+          <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
             Customer Issues &amp; Reports ({reports?.length ?? 0})
           </h1>
-          <p className="text-[13.5px] text-[rgba(245,247,250,0.65)] mt-0.5">
+          <p className="text-[13.5px] text-[#70675F] mt-0.5">
             Live tickets submitted by drivers from their mobile dashboard for instant operator assistance.
           </p>
         </div>
 
         {/* Status Tabs */}
-        <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+        <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
           {["OPEN", "IN_PROGRESS", "RESOLVED", "ALL"].map((st) => (
             <button
               key={st}
               onClick={() => setSelectedStatus(st)}
-              className={`px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-[12.5px] font-bold transition-all cursor-pointer ${
                 selectedStatus === st
-                  ? "bg-[#D84A2B] text-white shadow-xs"
-                  : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                  ? "bg-[#C93B2F] text-white shadow-xs"
+                  : "text-[#70675F] hover:text-[#241F1B]"
               }`}
             >
               {st}
@@ -79,12 +76,12 @@ export default function AdminCustomerIssuesPage() {
           reports.map((r) => (
             <div
               key={r._id}
-              className={`p-5 rounded-2xl border transition-all flex flex-col justify-between gap-4 ${
+              className={`p-5 rounded-2xl border transition-all flex flex-col justify-between gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)] ${
                 r.status === "OPEN"
-                  ? "bg-[#10151D] border-[#EF4444]/40 shadow-[0_4px_20px_rgba(239,68,68,0.1)]"
+                  ? "bg-[#FFFFFF] border-[#C93B2F]/40"
                   : r.status === "RESOLVED"
-                  ? "bg-[#10151D]/50 border-white/[0.06] opacity-75"
-                  : "bg-[#10151D] border-[#F59E0B]/30"
+                  ? "bg-[#FAF7F2] border-[#DED3C7] opacity-80"
+                  : "bg-[#FFFFFF] border-[#B7791F]/30"
               }`}
             >
               <div className="flex flex-col gap-3">
@@ -93,10 +90,10 @@ export default function AdminCustomerIssuesPage() {
                     <div
                       className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                         r.status === "OPEN"
-                          ? "bg-[#EF4444]/20 text-[#EF4444]"
+                          ? "bg-[#F9E3DE] text-[#C93B2F]"
                           : r.status === "RESOLVED"
-                          ? "bg-[#10B981]/20 text-[#10B981]"
-                          : "bg-[#F59E0B]/20 text-[#F59E0B]"
+                          ? "bg-[#2F7D5A]/15 text-[#2F7D5A]"
+                          : "bg-[#B7791F]/15 text-[#B7791F]"
                       }`}
                     >
                       {r.status === "RESOLVED" ? (
@@ -105,7 +102,7 @@ export default function AdminCustomerIssuesPage() {
                         <AlertTriangle className="w-4 h-4" />
                       )}
                     </div>
-                    <span className="font-extrabold text-[14.5px] text-white">
+                    <span className="font-extrabold text-[15px] text-[#241F1B]">
                       {r.issueType}
                     </span>
                   </div>
@@ -113,10 +110,10 @@ export default function AdminCustomerIssuesPage() {
                   <span
                     className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full border ${
                       r.status === "OPEN"
-                        ? "bg-[#EF4444]/15 border-[#EF4444]/30 text-[#EF4444]"
+                        ? "bg-[#C93B2F]/10 border-[#C93B2F]/30 text-[#C93B2F]"
                         : r.status === "RESOLVED"
-                        ? "bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]"
-                        : "bg-[#F59E0B]/15 border-[#F59E0B]/30 text-[#F59E0B]"
+                        ? "bg-[#2F7D5A]/10 border-[#2F7D5A]/30 text-[#2F7D5A]"
+                        : "bg-[#B7791F]/10 border-[#B7791F]/30 text-[#B7791F]"
                     }`}
                   >
                     {r.status}
@@ -125,24 +122,24 @@ export default function AdminCustomerIssuesPage() {
 
                 {/* Issue Details */}
                 {r.details && (
-                  <p className="text-[13px] text-[rgba(245,247,250,0.85)] bg-[#0A0D14] p-3 rounded-xl border border-white/[0.06] leading-relaxed">
+                  <p className="text-[13px] text-[#241F1B] bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7] leading-relaxed">
                     &ldquo;{r.details}&rdquo;
                   </p>
                 )}
 
                 {/* Spatial Context */}
-                <div className="flex flex-wrap items-center gap-3 text-[12px] text-[rgba(245,247,250,0.65)]">
+                <div className="flex flex-wrap items-center gap-3 text-[12px] text-[#70675F]">
                   <div className="flex items-center gap-1.5">
-                    <CarFront className="w-3.5 h-3.5 text-[#D84A2B]" />
-                    <span className="font-mono font-bold text-white">{r.vehicleNumber}</span>
+                    <CarFront className="w-3.5 h-3.5 text-[#C93B2F]" />
+                    <span className="font-mono font-bold text-[#241F1B]">{r.vehicleNumber}</span>
                   </div>
                   {r.floor && (
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-white/40" />
+                      <MapPin className="w-3.5 h-3.5 text-[#70675F]" />
                       <span>Level {r.floor} · {r.pillar || "Main Bay"}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1.5 text-white/40">
+                  <div className="flex items-center gap-1.5 text-[#70675F]">
                     <Clock className="w-3.5 h-3.5" />
                     <span>{new Date(r.createdAt).toLocaleTimeString()}</span>
                   </div>
@@ -155,7 +152,7 @@ export default function AdminCustomerIssuesPage() {
                   type="button"
                   onClick={() => handleResolve(r._id)}
                   disabled={resolvingId === r._id}
-                  className="w-full h-10 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white font-bold text-[13px] transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full h-10 rounded-xl bg-[#2F7D5A] hover:bg-[#236346] text-white font-bold text-[13px] transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 shadow-xs"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{resolvingId === r._id ? "Resolving..." : "Mark as Resolved"}</span>
@@ -164,10 +161,10 @@ export default function AdminCustomerIssuesPage() {
             </div>
           ))
         ) : (
-          <div className="col-span-2 py-16 text-center text-[rgba(245,247,250,0.5)] bg-[#10151D] border border-white/[0.08] rounded-2xl">
-            <CheckCircle2 className="w-12 h-12 text-[#10B981] mx-auto mb-3 opacity-60" />
-            <p className="text-[15px] font-bold text-white">All Clear — No Open Issues</p>
-            <p className="text-[12.5px] text-white/50 mt-1">
+          <div className="col-span-2 py-16 text-center text-[#70675F] bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+            <CheckCircle2 className="w-12 h-12 text-[#2F7D5A] mx-auto mb-3" />
+            <p className="text-[16px] font-bold text-[#241F1B]">All Clear — No Open Issues</p>
+            <p className="text-[13px] text-[#70675F] mt-1">
               Customer problem submissions will appear here in real time.
             </p>
           </div>

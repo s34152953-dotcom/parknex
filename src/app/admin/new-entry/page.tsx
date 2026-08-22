@@ -18,19 +18,10 @@ import {
   Mail,
   QrCode,
   Printer,
-  Share2,
   RefreshCw,
   ShieldCheck,
   ShieldAlert,
-  Zap,
-  Layers,
-  ArrowRight,
-  Send,
-  HelpCircle,
-  Clock,
   FileCheck,
-  CheckSquare,
-  Square,
   ExternalLink,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -238,30 +229,6 @@ function NewEntryContent() {
     setCameraActive(false);
   };
 
-  // Run Plate Recognition
-  const runPlateRecognition = async () => {
-    if (!videoRef.current && !detectedPlate) {
-      setCameraStatusMsg("Querying plate detection service...");
-      try {
-        const res = await fetch("http://localhost:8000/detect-plate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cameraId: "cam_gate_a_01" }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setDetectedPlate(data.normalizedPlate);
-          setDetectionConfidence(data.confidence);
-          setValue("vehicleNumber", data.normalizedPlate);
-          setCameraStatusMsg(`Plate recognized: ${data.normalizedPlate}`);
-          return;
-        }
-      } catch {
-        setCameraStatusMsg("Camera service offline. Enter plate manually.");
-      }
-    }
-  };
-
   // Perform External Vehicle Verification
   const handleVerifyRegistration = async () => {
     if (!normalizedPlate) return;
@@ -301,7 +268,7 @@ function NewEntryContent() {
         setVerificationData({
           status: "UNAVAILABLE",
           normalizedRegistrationNumber: normalizedPlate,
-          errorMessage: data.errorMessage || "Online verification service is temporarily unavailable.",
+          errorMessage: data.errorMessage || "Online verification is temporarily unavailable.",
           verifiedAt: data.verifiedAt,
         });
       }
@@ -309,7 +276,7 @@ function NewEntryContent() {
       setVerificationData({
         status: "UNAVAILABLE",
         normalizedRegistrationNumber: normalizedPlate,
-        errorMessage: "Network error connecting to verification service.",
+        errorMessage: "Online verification is temporarily unavailable.",
         verifiedAt: new Date().toISOString(),
       });
     } finally {
@@ -436,33 +403,33 @@ function NewEntryContent() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1280px] mx-auto flex flex-col gap-6 select-none text-[#F5F7FA]">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto flex flex-col gap-6 select-none text-[#241F1B]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#DED3C7]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D84A2B] bg-[#D84A2B]/10 px-2 py-0.5 rounded border border-[#D84A2B]/20">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C93B2F] bg-[#F9E3DE] px-2 py-0.5 rounded border border-[#C93B2F]/20">
               ENTRY CONTROL
             </span>
-            <span className="text-[12px] text-[rgba(245,247,250,0.5)]">· Gate A Inbound</span>
+            <span className="text-[12px] text-[#70675F]">· Gate A Inbound</span>
           </div>
-          <h1 className="text-[24px] sm:text-[28px] font-black text-white tracking-tight">
+          <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
             Process Vehicle Entry
           </h1>
-          <p className="text-[13.5px] text-[rgba(245,247,250,0.65)] mt-0.5">
+          <p className="text-[13.5px] text-[#70675F] mt-0.5">
             Two-step vehicle entry, plate verification, and space allocation.
           </p>
         </div>
 
         {/* Entry Mode Selector */}
-        <div className="flex items-center bg-[#10151D] border border-white/[0.08] p-1 rounded-xl">
+        <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
           <button
             type="button"
             onClick={() => setEntryMode("walk_in")}
             className={`px-3.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
               entryMode === "walk_in"
-                ? "bg-[#D84A2B] text-white shadow-xs"
-                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
             Walk-In Customer
@@ -472,8 +439,8 @@ function NewEntryContent() {
             onClick={() => setEntryMode("preregistered")}
             className={`px-3.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
               entryMode === "preregistered"
-                ? "bg-[#D84A2B] text-white shadow-xs"
-                : "text-[rgba(245,247,250,0.6)] hover:text-white"
+                ? "bg-[#C93B2F] text-white shadow-xs"
+                : "text-[#70675F] hover:text-[#241F1B]"
             }`}
           >
             Pre-Registered Pass
@@ -487,9 +454,9 @@ function NewEntryContent() {
           <div className="lg:col-span-7 flex flex-col gap-5">
             {/* Preregistered Token Scan Box if active */}
             {entryMode === "preregistered" && (
-              <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-3">
-                <h3 className="text-[14px] font-bold text-white flex items-center gap-2">
-                  <QrCode className="w-4 h-4 text-[#D84A2B]" />
+              <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+                <h3 className="text-[14px] font-bold text-[#241F1B] flex items-center gap-2">
+                  <QrCode className="w-4 h-4 text-[#C93B2F]" />
                   <span>Scan or Enter Pre-Registered Pass Token</span>
                 </h3>
                 <div className="flex gap-2">
@@ -498,18 +465,18 @@ function NewEntryContent() {
                     value={preregTokenInput}
                     onChange={(e) => setPreregTokenInput(e.target.value)}
                     placeholder="Paste signed entry token..."
-                    className="flex-1 bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-[13px] text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                    className="flex-1 bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[13px] text-[#241F1B] font-mono placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                   <button
                     type="button"
                     onClick={handleValidatePreregToken}
-                    className="px-4 py-2.5 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[13px] transition-colors cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[13px] transition-colors cursor-pointer"
                   >
                     Verify Pass
                   </button>
                 </div>
                 {preregError && (
-                  <p className="text-[12px] text-[#EF4444] font-semibold flex items-center gap-1.5">
+                  <p className="text-[12px] text-[#C93B2F] font-semibold flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>{preregError}</span>
                   </p>
@@ -518,11 +485,11 @@ function NewEntryContent() {
             )}
 
             {/* Step 1: Camera / Plate Detection Box */}
-            <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-4">
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Camera className="w-4.5 h-4.5 text-[#D84A2B]" />
-                  <span className="text-[14px] font-bold text-white">
+                  <Camera className="w-4.5 h-4.5 text-[#C93B2F]" />
+                  <span className="text-[14.5px] font-bold text-[#241F1B]">
                     Step 1: Entry Camera &amp; Plate Detection
                   </span>
                 </div>
@@ -531,7 +498,7 @@ function NewEntryContent() {
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-white text-[12px] font-bold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
                     >
                       Start Camera
                     </button>
@@ -539,23 +506,16 @@ function NewEntryContent() {
                     <button
                       type="button"
                       onClick={stopCamera}
-                      className="px-3 py-1.5 rounded-lg bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[12px] font-bold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[12px] font-bold transition-colors cursor-pointer"
                     >
                       Stop Camera
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={runPlateRecognition}
-                    className="px-3 py-1.5 rounded-lg bg-[#D84A2B]/20 hover:bg-[#D84A2B]/30 border border-[#D84A2B]/40 text-[#D84A2B] text-[12px] font-bold transition-colors cursor-pointer"
-                  >
-                    Detect Plate
-                  </button>
                 </div>
               </div>
 
               {/* Video Viewport / Reticle */}
-              <div className="relative w-full h-[200px] bg-[#0A0D14] rounded-xl border border-white/[0.06] overflow-hidden flex items-center justify-center">
+              <div className="relative w-full h-[200px] bg-[#FAF7F2] rounded-xl border border-[#DED3C7] overflow-hidden flex items-center justify-center">
                 <video
                   ref={videoRef}
                   className={`w-full h-full object-cover ${cameraActive ? "block" : "hidden"}`}
@@ -564,10 +524,10 @@ function NewEntryContent() {
                 />
 
                 {!cameraActive && (
-                  <div className="flex flex-col items-center justify-center p-4 text-center text-[rgba(245,247,250,0.5)]">
-                    <Camera className="w-8 h-8 text-white/20 mb-2" />
-                    <p className="text-[13px] font-semibold text-white/80">Camera Inactive</p>
-                    <p className="text-[11.5px] text-white/50 max-w-[260px] mt-0.5">
+                  <div className="flex flex-col items-center justify-center p-4 text-center text-[#70675F]">
+                    <Camera className="w-8 h-8 text-[#938980] mb-2" />
+                    <p className="text-[13px] font-bold text-[#241F1B]">Camera Inactive</p>
+                    <p className="text-[11.5px] text-[#70675F] max-w-[260px] mt-0.5">
                       Click &ldquo;Start Camera&rdquo; or type vehicle number directly below.
                     </p>
                   </div>
@@ -576,8 +536,8 @@ function NewEntryContent() {
                 {/* Reticle Target Overlay */}
                 {cameraActive && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
-                    <div className="w-[80%] h-[60%] border-2 border-dashed border-[#D84A2B]/70 rounded-lg flex items-center justify-center bg-[#D84A2B]/[0.02]">
-                      <span className="text-[10.5px] font-mono text-[#D84A2B] font-bold bg-black/60 px-2 py-0.5 rounded">
+                    <div className="w-[80%] h-[60%] border-2 border-dashed border-[#C93B2F]/70 rounded-lg flex items-center justify-center bg-[#C93B2F]/[0.02]">
+                      <span className="text-[10.5px] font-mono text-white font-bold bg-[#241F1B]/80 px-2 py-0.5 rounded">
                         ALIGN NUMBER PLATE
                       </span>
                     </div>
@@ -587,24 +547,24 @@ function NewEntryContent() {
 
               {/* Vehicle Number Input Field */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-bold text-white flex items-center justify-between">
+                <label className="text-[12px] font-bold text-[#241F1B] flex items-center justify-between">
                   <span>Vehicle Number Plate (Mandatory)</span>
                   {normalizedPlate && (
-                    <span className="text-[11px] font-mono text-[#10B981]">
+                    <span className="text-[11px] font-mono text-[#2F7D5A] font-bold">
                       Normalized: {normalizedPlate}
                     </span>
                   )}
                 </label>
                 <input
                   {...register("vehicleNumber")}
-                  placeholder="e.g., MH-02-ZZ-0001 or 22BH1234AA"
-                  className="w-full bg-[#0A0D14] border border-white/[0.15] rounded-xl px-4 py-3 text-[16px] font-mono font-black text-white uppercase placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                  placeholder="e.g., MH02AB1234 or 22BH1234AA"
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-4 py-3 text-[16px] font-mono font-black text-[#241F1B] uppercase placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
                 />
                 {errors.vehicleNumber && (
-                  <p className="text-[11.5px] text-[#EF4444] font-semibold">{errors.vehicleNumber.message}</p>
+                  <p className="text-[11.5px] text-[#C93B2F] font-semibold">{errors.vehicleNumber.message}</p>
                 )}
                 {formatValidation && !formatValidation.isValid && (
-                  <p className="text-[11.5px] text-[#EF4444] font-medium flex items-center gap-1">
+                  <p className="text-[11.5px] text-[#C93B2F] font-medium flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>{formatValidation.error}</span>
                   </p>
@@ -614,12 +574,12 @@ function NewEntryContent() {
               {/* Vehicle Type & Attributes */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div>
-                  <label className="text-[11.5px] font-bold text-[rgba(245,247,250,0.8)] block mb-1">
+                  <label className="text-[11.5px] font-bold text-[#241F1B] block mb-1">
                     Vehicle Type
                   </label>
                   <select
                     {...register("vehicleType")}
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3 py-2 text-[13px] text-white focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3 py-2 text-[13px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
                   >
                     <option value="sedan">Sedan</option>
                     <option value="suv">SUV / 4x4</option>
@@ -634,9 +594,9 @@ function NewEntryContent() {
                     type="checkbox"
                     id="ev-check"
                     {...register("isEV")}
-                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#D84A2B] focus:ring-[#D84A2B]"
+                    className="w-4 h-4 rounded border-[#DED3C7] text-[#C93B2F] focus:ring-[#C93B2F]"
                   />
-                  <label htmlFor="ev-check" className="text-[12.5px] text-white/90 font-medium cursor-pointer">
+                  <label htmlFor="ev-check" className="text-[12.5px] text-[#241F1B] font-medium cursor-pointer">
                     EV Charging
                   </label>
                 </div>
@@ -646,9 +606,9 @@ function NewEntryContent() {
                     type="checkbox"
                     id="handicap-check"
                     {...register("isHandicapped")}
-                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#D84A2B] focus:ring-[#D84A2B]"
+                    className="w-4 h-4 rounded border-[#DED3C7] text-[#C93B2F] focus:ring-[#C93B2F]"
                   />
-                  <label htmlFor="handicap-check" className="text-[12.5px] text-white/90 font-medium cursor-pointer">
+                  <label htmlFor="handicap-check" className="text-[12.5px] text-[#241F1B] font-medium cursor-pointer">
                     Accessible / Lift
                   </label>
                 </div>
@@ -657,24 +617,24 @@ function NewEntryContent() {
 
             {/* Active Session Warning Banner */}
             {activeBooking && (
-              <div className="bg-[#EF4444]/15 border border-[#EF4444]/40 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg animate-pulse">
+              <div className="bg-[#C93B2F]/10 border border-[#C93B2F]/40 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
                 <div className="flex items-start gap-3">
-                  <ShieldAlert className="w-6 h-6 text-[#EF4444] shrink-0 mt-0.5" />
+                  <ShieldAlert className="w-6 h-6 text-[#C93B2F] shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#EF4444] block">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#C93B2F] block">
                       Active Parking Session Detected
                     </span>
-                    <h4 className="text-[15px] font-bold text-white mt-0.5">
+                    <h4 className="text-[15px] font-bold text-[#241F1B] mt-0.5">
                       Vehicle {normalizedPlate} already has an active session
                     </h4>
-                    <p className="text-[12.5px] text-white/70 mt-1">
-                      Assigned Space: <span className="font-mono font-bold text-white">{activeBooking.slotDetails?.slotNumber || activeBooking.slotId}</span> (Level {activeBooking.slotDetails?.floor}) · Entered at {new Date(activeBooking.entryTime).toLocaleTimeString()}
+                    <p className="text-[12.5px] text-[#70675F] mt-1">
+                      Assigned Space: <span className="font-mono font-bold text-[#241F1B]">{activeBooking.slotDetails?.slotNumber || activeBooking.slotId}</span> (Level {activeBooking.slotDetails?.floor}) · Entered at {new Date(activeBooking.entryTime).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
                 <Link
                   href="/admin/active-sessions"
-                  className="px-4 py-2 rounded-xl bg-[#EF4444] hover:bg-[#DC2626] text-white font-bold text-[12.5px] transition-colors shrink-0 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[12.5px] transition-colors shrink-0 flex items-center gap-1.5"
                 >
                   <span>View Active Session</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -683,11 +643,11 @@ function NewEntryContent() {
             )}
 
             {/* ── VEHICLE REGISTRATION VERIFICATION SECTION ── */}
-            <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-4 shadow-md">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/[0.08]">
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#DED3C7]">
                 <div className="flex items-center gap-2.5">
-                  <FileCheck className="w-5 h-5 text-[#D84A2B]" />
-                  <h3 className="text-[15px] font-bold text-white">
+                  <FileCheck className="w-5 h-5 text-[#C93B2F]" />
+                  <h3 className="text-[15px] font-bold text-[#241F1B]">
                     Vehicle Registration Verification
                   </h3>
                 </div>
@@ -695,38 +655,38 @@ function NewEntryContent() {
                 {/* Status Badges */}
                 <div>
                   {verificationData.status === "NOT_CHECKED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-white/[0.06] text-white/60 border border-white/[0.1] text-[11px] font-bold">
+                    <span className="px-2.5 py-1 rounded-full bg-[#FAF7F2] text-[#70675F] border border-[#DED3C7] text-[11px] font-bold">
                       NOT CHECKED
                     </span>
                   )}
                   {verificationData.status === "CHECKING" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#2563EB]/20 text-[#60A5FA] border border-[#2563EB]/40 text-[11px] font-bold flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-full bg-[#3569A8]/10 text-[#3569A8] border border-[#3569A8]/30 text-[11px] font-bold flex items-center gap-1.5">
                       <RefreshCw className="w-3 h-3 animate-spin" />
                       VERIFYING...
                     </span>
                   )}
                   {verificationData.status === "VERIFIED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 text-[11px] font-extrabold flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/30 text-[11px] font-extrabold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       VERIFIED
                     </span>
                   )}
                   {verificationData.status === "MANUAL_VERIFIED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#8B5CF6]/20 text-[#A78BFA] border border-[#8B5CF6]/40 text-[11px] font-extrabold flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-[#3569A8]/10 text-[#3569A8] border border-[#3569A8]/30 text-[11px] font-extrabold flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       MANUALLY VERIFIED
                     </span>
                   )}
                   {verificationData.status === "UNAVAILABLE" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 text-[11px] font-bold flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-[#B7791F]/10 text-[#B7791F] border border-[#B7791F]/30 text-[11px] font-bold flex items-center gap-1">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      UNAVAILABLE
+                      SERVICE UNAVAILABLE
                     </span>
                   )}
                   {verificationData.status === "INVALID" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/40 text-[11px] font-bold flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-[#C93B2F]/10 text-[#C93B2F] border border-[#C93B2F]/30 text-[11px] font-bold flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      INVALID
+                      INVALID REGISTRATION
                     </span>
                   )}
                 </div>
@@ -734,20 +694,20 @@ function NewEntryContent() {
 
               {/* Status & Details Body */}
               {verificationData.status === "NOT_CHECKED" && (
-                <div className="bg-[#0A0D14] border border-white/[0.06] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-[13px] font-semibold text-white">
-                      Ready to Verify {normalizedPlate || "Vehicle"}
+                    <p className="text-[13.5px] font-bold text-[#241F1B]">
+                      Check the vehicle details before assigning a parking space.
                     </p>
-                    <p className="text-[11.5px] text-white/50 mt-0.5">
-                      Query registration records before assigning space.
+                    <p className="text-[12px] text-[#70675F] mt-0.5">
+                      Verify registration records for {normalizedPlate || "vehicle"}.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleVerifyRegistration}
                     disabled={!normalizedPlate || isVerifying || (formatValidation !== null && !formatValidation.isValid)}
-                    className="px-4 py-2 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[12.5px] transition-colors cursor-pointer disabled:opacity-40"
+                    className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[12.5px] transition-colors cursor-pointer disabled:opacity-40 shadow-xs"
                   >
                     Verify Registration
                   </button>
@@ -755,50 +715,50 @@ function NewEntryContent() {
               )}
 
               {verificationData.status === "CHECKING" && (
-                <div className="bg-[#0A0D14] border border-white/[0.06] rounded-xl p-5 flex items-center justify-center gap-3 text-white/80">
-                  <RefreshCw className="w-5 h-5 text-[#2563EB] animate-spin" />
-                  <span className="text-[13px] font-semibold">Connecting to vehicle verification gateway...</span>
+                <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-5 flex items-center justify-center gap-3 text-[#70675F]">
+                  <RefreshCw className="w-5 h-5 text-[#3569A8] animate-spin" />
+                  <span className="text-[13px] font-semibold text-[#241F1B]">Connecting to vehicle verification gateway...</span>
                 </div>
               )}
 
               {verificationData.status === "VERIFIED" && (
                 <div className="flex flex-col gap-3">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[12px]">
-                    <div className="bg-[#0A0D14] p-3 rounded-xl border border-white/[0.06]">
-                      <span className="text-white/40 block text-[10.5px]">Make &amp; Model</span>
-                      <span className="font-semibold text-white">
+                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                      <span className="text-[#70675F] block text-[10.5px]">Make &amp; Model</span>
+                      <span className="font-bold text-[#241F1B]">
                         {verificationData.make || "N/A"} {verificationData.model || ""}
                       </span>
                     </div>
-                    <div className="bg-[#0A0D14] p-3 rounded-xl border border-white/[0.06]">
-                      <span className="text-white/40 block text-[10.5px]">Colour</span>
-                      <span className="font-semibold text-white">{verificationData.colour || "Standard"}</span>
+                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                      <span className="text-[#70675F] block text-[10.5px]">Colour</span>
+                      <span className="font-bold text-[#241F1B]">{verificationData.colour || "Standard"}</span>
                     </div>
-                    <div className="bg-[#0A0D14] p-3 rounded-xl border border-white/[0.06]">
-                      <span className="text-white/40 block text-[10.5px]">Vehicle Class</span>
-                      <span className="font-semibold text-white">{verificationData.vehicleClass || "Motor Car (LMV)"}</span>
+                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                      <span className="text-[#70675F] block text-[10.5px]">Vehicle Class</span>
+                      <span className="font-bold text-[#241F1B]">{verificationData.vehicleClass || "Motor Car (LMV)"}</span>
                     </div>
-                    <div className="bg-[#0A0D14] p-3 rounded-xl border border-white/[0.06]">
-                      <span className="text-white/40 block text-[10.5px]">RC Status</span>
-                      <span className="font-semibold text-[#10B981]">{verificationData.registrationStatus || "ACTIVE"}</span>
+                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
+                      <span className="text-[#70675F] block text-[10.5px]">RC Status</span>
+                      <span className="font-bold text-[#2F7D5A]">{verificationData.registrationStatus || "ACTIVE"}</span>
                     </div>
                   </div>
 
                   {/* Physical Vehicle Confirmation Checkbox */}
                   <div
                     onClick={() => setPhysicalMatchConfirmed(!physicalMatchConfirmed)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
                       physicalMatchConfirmed
-                        ? "bg-[#10B981]/10 border-[#10B981]/30 text-white"
-                        : "bg-[#0A0D14] border-white/[0.1] text-white/80 hover:border-white/20"
+                        ? "bg-[#2F7D5A]/10 border-[#2F7D5A]/40 text-[#241F1B]"
+                        : "bg-[#FAF7F2] border-[#DED3C7] text-[#241F1B] hover:border-[#CBBCAE]"
                     }`}
                   >
                     <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
-                      physicalMatchConfirmed ? "bg-[#10B981] text-white" : "border border-white/30"
+                      physicalMatchConfirmed ? "bg-[#2F7D5A] text-white" : "border border-[#DED3C7] bg-white"
                     }`}>
                       {physicalMatchConfirmed && <CheckCircle2 className="w-4 h-4" />}
                     </div>
-                    <span className="text-[12.5px] font-medium">
+                    <span className="text-[13px] font-semibold">
                       I confirm the physical vehicle matches the verified make, model, and colour.
                     </span>
                   </div>
@@ -806,12 +766,12 @@ function NewEntryContent() {
               )}
 
               {verificationData.status === "UNAVAILABLE" && (
-                <div className="bg-[#0A0D14] border border-[#F59E0B]/30 rounded-xl p-4 flex flex-col gap-3">
+                <div className="bg-[#FAF7F2] border border-[#B7791F]/30 rounded-xl p-4 flex flex-col gap-3">
                   <div>
-                    <p className="text-[13px] font-bold text-[#F59E0B]">
+                    <p className="text-[13.5px] font-bold text-[#B7791F]">
                       Online verification is temporarily unavailable
                     </p>
-                    <p className="text-[11.5px] text-white/60 mt-0.5">
+                    <p className="text-[12px] text-[#70675F] mt-0.5">
                       {verificationData.errorMessage || "Unable to reach verification service. Authorised operators may proceed with manual RC inspection."}
                     </p>
                   </div>
@@ -821,14 +781,14 @@ function NewEntryContent() {
                       type="button"
                       onClick={handleVerifyRegistration}
                       disabled={isVerifying}
-                      className="px-3.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] text-white text-[12px] font-semibold transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[12px] font-bold hover:bg-[#F3EAE0] transition-colors cursor-pointer shadow-xs"
                     >
                       Retry Verification
                     </button>
                     <button
                       type="button"
                       onClick={() => setManualModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#8B5CF6]/20 hover:bg-[#8B5CF6]/30 border border-[#8B5CF6]/40 text-[#C4B5FD] text-[12px] font-bold transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#3569A8] hover:bg-[#25538C] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
                     >
                       Manual RC Verification
                     </button>
@@ -837,12 +797,12 @@ function NewEntryContent() {
               )}
 
               {verificationData.status === "INVALID" && (
-                <div className="bg-[#0A0D14] border border-[#EF4444]/30 rounded-xl p-4 flex flex-col gap-3">
+                <div className="bg-[#FAF7F2] border border-[#C93B2F]/30 rounded-xl p-4 flex flex-col gap-3">
                   <div>
-                    <p className="text-[13px] font-bold text-[#EF4444]">
+                    <p className="text-[13.5px] font-bold text-[#C93B2F]">
                       Registration Record Not Found
                     </p>
-                    <p className="text-[11.5px] text-white/60 mt-0.5">
+                    <p className="text-[12px] text-[#70675F] mt-0.5">
                       {verificationData.errorMessage || "Vehicle not found in official registry. If this is a newly registered vehicle, use manual verification."}
                     </p>
                   </div>
@@ -851,7 +811,7 @@ function NewEntryContent() {
                     <button
                       type="button"
                       onClick={() => setManualModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#8B5CF6]/20 hover:bg-[#8B5CF6]/30 border border-[#8B5CF6]/40 text-[#C4B5FD] text-[12px] font-bold transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#3569A8] hover:bg-[#25538C] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
                     >
                       Manual RC Verification
                     </button>
@@ -860,69 +820,69 @@ function NewEntryContent() {
               )}
 
               {verificationData.status === "MANUAL_VERIFIED" && (
-                <div className="bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 rounded-xl p-3.5 flex flex-col gap-1.5 text-[12px]">
+                <div className="bg-[#3569A8]/10 border border-[#3569A8]/30 rounded-xl p-3.5 flex flex-col gap-1 text-[12px]">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#C4B5FD] flex items-center gap-1.5">
+                    <span className="font-bold text-[#3569A8] flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4" />
                       Manually Verified by Operator (Station 01)
                     </span>
-                    <span className="text-white/50 text-[11px]">
+                    <span className="text-[#70675F] text-[11px]">
                       {new Date(verificationData.verifiedAt || "").toLocaleTimeString()}
                     </span>
                   </div>
-                  <p className="text-white/80">
-                    Reason: <span className="font-medium">{verificationData.manualReason}</span>
+                  <p className="text-[#241F1B]">
+                    Reason: <span className="font-semibold">{verificationData.manualReason}</span>
                   </p>
                 </div>
               )}
             </div>
 
             {/* Step 2: Contact Verification */}
-            <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+              <div className="flex items-center justify-between pb-2 border-b border-[#DED3C7]">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4.5 h-4.5 text-[#10B981]" />
-                  <span className="text-[14px] font-bold text-white">
+                  <ShieldCheck className="w-4.5 h-4.5 text-[#2F7D5A]" />
+                  <span className="text-[14.5px] font-bold text-[#241F1B]">
                     Step 2: Contact Verification &amp; Pass Delivery
                   </span>
                 </div>
-                <span className="text-[11px] text-white/50">Digital Delivery</span>
+                <span className="text-[11px] text-[#70675F] font-bold">Digital Delivery</span>
               </div>
 
-              <p className="text-[12.5px] text-[rgba(245,247,250,0.65)] leading-relaxed">
+              <p className="text-[12.5px] text-[#70675F] leading-relaxed">
                 Enter mobile number or email for digital pass delivery, or print on screen.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11.5px] font-bold text-white flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[rgba(245,247,250,0.5)]" />
+                  <label className="text-[11.5px] font-bold text-[#241F1B] flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-[#70675F]" />
                     <span>Customer Mobile (Optional)</span>
                   </label>
                   <input
                     {...register("phoneNumber")}
                     type="tel"
                     placeholder="+91 98765 43210"
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-[13.5px] font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[13.5px] font-mono text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                   {errors.phoneNumber && (
-                    <p className="text-[11px] text-[#EF4444]">{errors.phoneNumber.message}</p>
+                    <p className="text-[11px] text-[#C93B2F]">{errors.phoneNumber.message}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11.5px] font-bold text-white flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-[rgba(245,247,250,0.5)]" />
+                  <label className="text-[11.5px] font-bold text-[#241F1B] flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-[#70675F]" />
                     <span>Customer Email (Optional)</span>
                   </label>
                   <input
                     {...register("email")}
                     type="email"
                     placeholder="customer@domain.com"
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[13.5px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                   {errors.email && (
-                    <p className="text-[11px] text-[#EF4444]">{errors.email.message}</p>
+                    <p className="text-[11px] text-[#C93B2F]">{errors.email.message}</p>
                   )}
                 </div>
               </div>
@@ -931,13 +891,15 @@ function NewEntryContent() {
 
           {/* Right Column: Space Recommendations & Submit (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col gap-5">
-            <div className="bg-[#10151D] border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#DED3C7]">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#2563EB]" />
-                  <h3 className="text-[14px] font-bold text-white">Recommended Spaces</h3>
+                  <CheckCircle2 className="w-4 h-4 text-[#3569A8]" />
+                  <h3 className="text-[14.5px] font-bold text-[#241F1B]">Recommended Spaces</h3>
                 </div>
-                <span className="text-[11px] text-[#60A5FA] font-bold">Top 3 Ranked</span>
+                <span className="text-[11px] text-[#3569A8] font-bold bg-[#3569A8]/10 px-2 py-0.5 rounded border border-[#3569A8]/20">
+                  Top 3 Ranked
+                </span>
               </div>
 
               {topRecommendations.length > 0 ? (
@@ -950,27 +912,27 @@ function NewEntryContent() {
                         onClick={() => setValue("slotId", rec.slot.slotId)}
                         className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-2 ${
                           isSelected
-                            ? "bg-[#151B24] border-[#2563EB] ring-2 ring-[#2563EB]/40 shadow-lg"
-                            : "bg-[#0A0D14] border-white/[0.08] hover:border-white/20"
+                            ? "bg-[#F9E3DE] border-[#C93B2F] ring-2 ring-[#C93B2F]/20 shadow-sm"
+                            : "bg-[#FAF7F2] border-[#DED3C7] hover:bg-[#F3EAE0]"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white text-[11px] font-black flex items-center justify-center">
+                            <span className="w-5 h-5 rounded-full bg-[#3569A8] text-white text-[11px] font-black flex items-center justify-center">
                               #{rec.rank}
                             </span>
-                            <span className="font-mono font-black text-[15px] text-white">
+                            <span className="font-mono font-black text-[15px] text-[#241F1B]">
                               Space {rec.slot.slotNumber}
                             </span>
-                            <span className="text-[11px] text-[rgba(245,247,250,0.6)]">
+                            <span className="text-[11.5px] text-[#70675F]">
                               (Level {rec.slot.floor} · {rec.slot.pillar})
                             </span>
                           </div>
-                          <span className="text-[11px] font-bold text-[#60A5FA] bg-[#2563EB]/15 px-2.5 py-0.5 rounded-full border border-[#2563EB]/30">
+                          <span className="text-[11px] font-bold text-[#3569A8] bg-[#3569A8]/10 px-2 py-0.5 rounded-full border border-[#3569A8]/20">
                             {rec.score}/100 Match
                           </span>
                         </div>
-                        <p className="text-[11.5px] text-[rgba(245,247,250,0.8)] leading-relaxed">
+                        <p className="text-[11.5px] text-[#70675F] leading-relaxed">
                           {rec.reason}
                         </p>
                       </div>
@@ -978,19 +940,19 @@ function NewEntryContent() {
                   })}
                 </div>
               ) : (
-                <div className="py-6 text-center text-[12.5px] text-[rgba(245,247,250,0.5)]">
+                <div className="py-6 text-center text-[12.5px] text-[#70675F]">
                   No available spaces match the selected floor.
                 </div>
               )}
 
               {/* All Available Dropdown Fallback */}
-              <div className="flex flex-col gap-1.5 pt-2 border-t border-white/[0.06]">
-                <label className="text-[11.5px] font-bold text-[rgba(245,247,250,0.7)]">
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-[#DED3C7]">
+                <label className="text-[11.5px] font-bold text-[#70675F]">
                   Or Manually Select Any Available Space
                 </label>
                 <select
                   {...register("slotId")}
-                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3 py-2.5 text-[13px] text-white font-mono focus:outline-none focus:border-[#D84A2B]"
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3 py-2.5 text-[13px] text-[#241F1B] font-mono focus:outline-none focus:border-[#C93B2F]"
                 >
                   <option value="">-- Choose Space --</option>
                   {rawSlots
@@ -1002,14 +964,14 @@ function NewEntryContent() {
                     ))}
                 </select>
                 {errors.slotId && (
-                  <p className="text-[11px] text-[#EF4444]">{errors.slotId.message}</p>
+                  <p className="text-[11px] text-[#C93B2F]">{errors.slotId.message}</p>
                 )}
               </div>
 
               {/* Verification Gate Notice before submit */}
               {!canProceedToAssign && (
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[12px] text-white/60 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#F59E0B] shrink-0" />
+                <div className="p-3 rounded-xl bg-[#F3EAE0] border border-[#DED3C7] text-[12px] text-[#70675F] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#B7791F] shrink-0" />
                   <span>
                     {activeBooking
                       ? "Vehicle already has an active session. Cannot issue duplicate pass."
@@ -1022,7 +984,7 @@ function NewEntryContent() {
               <button
                 type="submit"
                 disabled={isProcessingEntry || !canProceedToAssign}
-                className="w-full h-12 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] disabled:opacity-40 disabled:hover:bg-[#D84A2B] text-white font-bold text-[14px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(216,74,43,0.3)] transition-all cursor-pointer disabled:cursor-not-allowed"
+                className="w-full h-12 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] disabled:opacity-40 text-white font-bold text-[14px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(201,59,47,0.25)] transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 {isProcessingEntry ? (
                   <>
@@ -1041,39 +1003,39 @@ function NewEntryContent() {
         </form>
       ) : (
         /* Completed Pass State */
-        <div className="max-w-[640px] mx-auto bg-[#10151D] border border-white/[0.12] rounded-3xl p-6 sm:p-8 flex flex-col gap-6 shadow-2xl">
+        <div className="max-w-[640px] mx-auto bg-[#FFFFFF] border border-[#DED3C7] rounded-3xl p-6 sm:p-8 flex flex-col gap-6 shadow-[0_8px_24px_rgba(70,48,35,0.08)]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-[#10B981]">
+            <div className="w-12 h-12 rounded-2xl bg-[#2F7D5A]/15 text-[#2F7D5A] flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#10B981]">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#2F7D5A]">
                 ENTRY CONFIRMED
               </span>
-              <h2 className="text-[22px] font-black text-white">Space Assigned &amp; Pass Issued</h2>
+              <h2 className="text-[22px] font-black text-[#241F1B]">Space Assigned &amp; Pass Issued</h2>
             </div>
           </div>
 
-          <div className="bg-[#0A0D14] border border-white/[0.08] rounded-2xl p-5 flex flex-col items-center gap-4 text-center">
-            <div className="bg-white p-3 rounded-2xl">
+          <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-2xl p-5 flex flex-col items-center gap-4 text-center">
+            <div className="bg-white p-3 rounded-2xl border border-[#DED3C7] shadow-xs">
               <QRCodeSVG value={completedPass.dashboardLink || completedPass.exitPassToken} size={180} />
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-mono text-white/50 uppercase">Offline Fallback Code</span>
-              <span className="text-[22px] font-mono font-black text-[#D84A2B] tracking-wider">
+              <span className="text-[11px] font-mono text-[#70675F] uppercase">Offline Fallback Code</span>
+              <span className="text-[22px] font-mono font-black text-[#C93B2F] tracking-wider">
                 {completedPass.fallbackCode}
               </span>
             </div>
 
-            <div className="w-full grid grid-cols-2 gap-2 text-[12.5px] pt-3 border-t border-white/[0.06] text-left">
-              <div className="bg-[#151B24] p-3 rounded-xl">
-                <span className="text-white/50 block text-[11px]">Vehicle Number</span>
-                <span className="font-mono font-bold text-white">{completedPass.vehicleNumber}</span>
+            <div className="w-full grid grid-cols-2 gap-2 text-[12.5px] pt-3 border-t border-[#DED3C7] text-left">
+              <div className="bg-[#FFFFFF] p-3 rounded-xl border border-[#DED3C7]">
+                <span className="text-[#70675F] block text-[11px]">Vehicle Number</span>
+                <span className="font-mono font-bold text-[#241F1B]">{completedPass.vehicleNumber}</span>
               </div>
-              <div className="bg-[#151B24] p-3 rounded-xl">
-                <span className="text-white/50 block text-[11px]">Assigned Space</span>
-                <span className="font-mono font-bold text-white">
+              <div className="bg-[#FFFFFF] p-3 rounded-xl border border-[#DED3C7]">
+                <span className="text-[#70675F] block text-[11px]">Assigned Space</span>
+                <span className="font-mono font-bold text-[#241F1B]">
                   Space {completedPass.slotNumber} (Level {completedPass.floor})
                 </span>
               </div>
@@ -1084,7 +1046,7 @@ function NewEntryContent() {
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex-1 h-11 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-bold text-[13px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="flex-1 h-11 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] font-bold text-[13px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Pass</span>
@@ -1099,7 +1061,7 @@ function NewEntryContent() {
                 setVerificationData({ status: "NOT_CHECKED", normalizedRegistrationNumber: "" });
                 setPhysicalMatchConfirmed(false);
               }}
-              className="flex-1 h-11 rounded-xl bg-[#D84A2B] hover:bg-[#C64024] text-white font-bold text-[13px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="flex-1 h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[13px] flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
             >
               <CarFront className="w-4 h-4" />
               <span>Process Next Vehicle</span>
@@ -1110,37 +1072,37 @@ function NewEntryContent() {
 
       {/* ── MANUAL VERIFICATION MODAL ── */}
       {manualModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#10151D] border border-white/[0.15] rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10.5px] font-extrabold uppercase tracking-widest text-[#8B5CF6] bg-[#8B5CF6]/15 px-2 py-0.5 rounded border border-[#8B5CF6]/30">
+                <span className="text-[10.5px] font-extrabold uppercase tracking-widest text-[#3569A8] bg-[#3569A8]/10 px-2 py-0.5 rounded border border-[#3569A8]/20">
                   AUTHORISED OVERRIDE
                 </span>
-                <span className="text-[12px] text-white/50">· Operator Station 01</span>
+                <span className="text-[12px] text-[#70675F]">· Operator Station 01</span>
               </div>
-              <h3 className="text-[18px] font-bold text-white">Manual Vehicle RC Verification</h3>
-              <p className="text-[12.5px] text-white/60 mt-0.5">
+              <h3 className="text-[18px] font-bold text-[#241F1B]">Manual Vehicle RC Verification</h3>
+              <p className="text-[12.5px] text-[#70675F] mt-0.5">
                 Record physical inspection of vehicle registration smart card / documents. This action is permanently logged in the security audit trail.
               </p>
             </div>
 
             <form onSubmit={handleManualVerificationSubmit} className="flex flex-col gap-3.5">
               <div>
-                <label className="block text-[11.5px] font-bold text-white/80 mb-1">
+                <label className="block text-[11.5px] font-bold text-[#241F1B] mb-1">
                   Registration Number
                 </label>
                 <input
                   type="text"
                   value={normalizedPlate}
                   readOnly
-                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl px-3.5 py-2 text-[13.5px] font-mono font-bold text-white/80"
+                  className="w-full bg-[#FAF7F2] border border-[#DED3C7] rounded-xl px-3.5 py-2 text-[13.5px] font-mono font-bold text-[#241F1B]"
                 />
               </div>
 
               <div>
-                <label className="block text-[11.5px] font-bold text-white/80 mb-1">
-                  Mandatory Justification / Reason <span className="text-[#D84A2B]">*</span>
+                <label className="block text-[11.5px] font-bold text-[#241F1B] mb-1">
+                  Mandatory Justification / Reason <span className="text-[#C93B2F]">*</span>
                 </label>
                 <textarea
                   value={manualReason}
@@ -1148,55 +1110,55 @@ function NewEntryContent() {
                   placeholder="e.g., Physical RC Smart Card inspected at gate; Online service offline"
                   required
                   rows={2}
-                  className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-xl p-3 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#D84A2B] resize-none"
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl p-3 text-[13px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F] resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[11px] text-white/60 mb-1">Physical Make</label>
+                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Make</label>
                   <input
                     type="text"
                     value={manualPhysicalMake}
                     onChange={(e) => setManualPhysicalMake(e.target.value)}
                     placeholder="e.g., Hyundai"
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-lg px-2.5 py-1.5 text-[12.5px] text-white focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-white/60 mb-1">Physical Model</label>
+                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Model</label>
                   <input
                     type="text"
                     value={manualPhysicalModel}
                     onChange={(e) => setManualPhysicalModel(e.target.value)}
                     placeholder="e.g., Creta"
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-lg px-2.5 py-1.5 text-[12.5px] text-white focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-white/60 mb-1">Physical Colour</label>
+                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Colour</label>
                   <input
                     type="text"
                     value={manualPhysicalColour}
                     onChange={(e) => setManualPhysicalColour(e.target.value)}
                     placeholder="e.g., White"
-                    className="w-full bg-[#0A0D14] border border-white/[0.12] rounded-lg px-2.5 py-1.5 text-[12.5px] text-white focus:outline-none focus:border-[#D84A2B]"
+                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DED3C7]">
                 <button
                   type="button"
                   onClick={() => setManualModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white/[0.06] text-white text-[12.5px] font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] text-[#241F1B] text-[12.5px] font-bold hover:bg-[#F3EAE0] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={manualSubmitting || !manualReason.trim() || manualReason.trim().length < 4}
-                  className="px-4 py-2 rounded-xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white text-[12.5px] font-bold transition-colors cursor-pointer disabled:opacity-40"
+                  className="px-4 py-2 rounded-xl bg-[#3569A8] hover:bg-[#25538C] text-white text-[12.5px] font-bold transition-colors cursor-pointer disabled:opacity-40"
                 >
                   {manualSubmitting ? "Recording..." : "Confirm Manual Verification"}
                 </button>
@@ -1213,7 +1175,7 @@ export default function AdminNewEntryPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 max-w-[1280px] mx-auto flex items-center justify-center text-white/50">
+        <div className="p-8 max-w-[1440px] mx-auto flex items-center justify-center text-[#70675F]">
           Loading Entry Control...
         </div>
       }

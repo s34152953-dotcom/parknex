@@ -8,14 +8,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#050507] text-[#F5F7FA] flex antialiased">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#241F1B] flex antialiased">
       {/* Admin Left Sidebar */}
       <AdminSidebar />
 
       {/* Main Operations Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <AdminTopBar />
-        <main className="flex-1 w-full min-w-0 overflow-y-auto bg-[#050507]">
+        <main className="flex-1 w-full min-w-0 overflow-y-auto bg-[#FAF7F2]">
           {children}
         </main>
       </div>

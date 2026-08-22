@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
+import { Suspense } from "react";
 import { Providers } from "@/components/Providers";
+import RouteTransitionLoader from "@/components/ui/RouteTransitionLoader";
 import "./globals.css";
 
 const sora = Sora({
@@ -29,8 +31,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preload" as="image" href="/images/hero-car.jpg" fetchPriority="high" />
       </head>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#050507] text-[#F5F7FA]">
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-sora)] antialiased bg-[#FAF7F2] text-[#241F1B]">
         <Providers>
+          <Suspense fallback={null}>
+            <RouteTransitionLoader />
+          </Suspense>
           {children}
         </Providers>
       </body>
