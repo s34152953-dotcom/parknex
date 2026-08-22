@@ -355,50 +355,123 @@ export const completeExitWithVerification = mutation({
     overrideReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const input = args.tokenOrCode.trim();
-    let booking = null;
+    let input = (args.tokenOrCode || "").trim();
+    if (!input) {
+      throw new Error("Missing exit pass token or code.");
+    }
 
-    // 1. Try finding by customerAccessToken / exitPassToken
+    // If input is a URL (e.g. https://.../customer/TOKEN or /customer/TOKEN?token=...)
+    if (input.includes("/customer/")) {
+      const parts = input.split("/customer/");
+      if (parts[1]) {
+        input = parts[1].split("?")[0].split("/")[0].trim();
+      }
+    } else if (input.includes("token=")) {
+      const match = input.match(/[?&]token=([^&]+)/);
+      if (match && match[1]) {
+        input = decodeURIComponent(match[1]).trim();
+      }
+    }
+
+    let booking: any = null;
+
+    // 1. Try finding by exact customerAccessToken
     booking = await ctx.db
       .query("bookings")
       .withIndex("by_customerAccessToken", (q) => q.eq("customerAccessToken", input))
       .first();
 
-    // 2. Try finding by fallbackCode if not found by token
+    // 2. Try finding by fallbackCode (e.g. PNX-XXXXXX or XXXXXX)
     if (!booking) {
+      const upperInput = input.toUpperCase();
       booking = await ctx.db
         .query("bookings")
-        .withIndex("by_fallbackCode", (q) => q.eq("fallbackCode", input.toUpperCase()))
+        .withIndex("by_fallbackCode", (q) => q.eq("fallbackCode", upperInput))
         .first();
+
+      if (!booking && !upperInput.startsWith("PNX-")) {
+        booking = await ctx.db
+          .query("bookings")
+          .withIndex("by_fallbackCode", (q) => q.eq("fallbackCode", `PNX-${upperInput}`))
+          .first();
+      }
     }
 
-    // 3. If token contains JWT dots, verify signature
-    if (input.includes(".")) {
-      const verified = await verifyExitToken(input);
-      if (!verified) {
-        throw new Error("Invalid, unverified or expired exit pass signature.");
+    // 3. Try finding directly by Convex ID if input matches an ID format
+    if (!booking) {
+      try {
+        const maybeBooking = await ctx.db.get(input as any);
+        if (maybeBooking && (maybeBooking as any).vehicleNumber) {
+          booking = maybeBooking;
+        }
+      } catch {}
+    }
+
+    // 4. If input is a JWT, verify signature and retrieve bookingId from payload
+    if (!booking && input.includes(".")) {
+      try {
+        const verified = await verifyExitToken(input);
+        if (verified && verified.bookingId) {
+          try {
+            booking = await ctx.db.get(verified.bookingId);
+          } catch {}
+        }
+      } catch {}
+    }
+
+    // 5. Try finding by vehicle number if operator entered or scanned plate string
+    if (!booking) {
+      const normalizedPlate = input.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      if (normalizedPlate.length >= 4) {
+        const activeBookings = await ctx.db
+          .query("bookings")
+          .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+          .collect();
+
+        booking = activeBookings.find(
+          (b) => b.vehicleNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase() === normalizedPlate
+        ) || null;
       }
-      if (!booking && verified.bookingId) {
-        try {
-          booking = await ctx.db.get(verified.bookingId);
-        } catch {}
-      }
+    }
+
+    // 6. Search active bookings for matching exitPassToken
+    if (!booking) {
+      const activeBookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+        .collect();
+
+      booking = activeBookings.find((b) => b.exitPassToken === input || b.customerAccessToken === input) || null;
     }
 
     if (!booking) {
-      throw new Error("Exit pass or fallback code not found.");
+      throw new Error("Exit pass or fallback code not found. Please check code or enter vehicle plate.");
     }
 
-    // Check single-use state
+    // Handle already completed state gracefully
     if (booking.status === "COMPLETED" || booking.exitPassUsed) {
-      throw new Error("This exit pass has already been used.");
+      return {
+        success: false,
+        alreadyCompleted: true,
+        bookingId: booking._id,
+        vehicleNumber: booking.vehicleNumber,
+        slotNumber: booking.slotId,
+        exitTime: booking.exitTime,
+        error: `This exit pass was already processed at ${booking.exitTime ? new Date(booking.exitTime).toLocaleTimeString("en-IN") : "an earlier gate"}. Space is already released.`,
+      };
     }
 
     if (booking.status !== "ACTIVE") {
-      throw new Error(`Booking status is ${booking.status}. Only ACTIVE bookings can exit.`);
+      return {
+        success: false,
+        bookingId: booking._id,
+        vehicleNumber: booking.vehicleNumber,
+        slotNumber: booking.slotId,
+        error: `Booking status is ${booking.status}. Only ACTIVE bookings can exit.`,
+      };
     }
 
-    // 4. Compare detected plate with booking plate
+    // 7. Compare detected plate with booking plate
     const cleanExitPlate = args.exitDetectedPlate ? args.exitDetectedPlate.toUpperCase().trim() : "";
     const cleanBookingPlate = booking.vehicleNumber.toUpperCase().trim();
 
@@ -413,7 +486,7 @@ export const completeExitWithVerification = mutation({
       };
     }
 
-    // 5. Atomically consume exit pass
+    // 8. Atomically consume exit pass
     const exitTime = new Date().toISOString();
     await ctx.db.patch(booking._id, {
       status: "COMPLETED",
@@ -423,7 +496,7 @@ export const completeExitWithVerification = mutation({
       exitPlateConfidence: args.exitPlateConfidence,
     });
 
-    // 6. Free parking space
+    // 9. Free parking space
     const slot = await ctx.db
       .query("slots")
       .withIndex("by_slotId", (q) => q.eq("slotId", booking.slotId))
@@ -433,7 +506,7 @@ export const completeExitWithVerification = mutation({
       await ctx.db.patch(slot._id, { status: "available" });
     }
 
-    // 7. Record audit log
+    // 10. Record audit log
     if (args.operatorEmail) {
       await ctx.db.insert("audit_logs", {
         operatorEmail: args.operatorEmail,

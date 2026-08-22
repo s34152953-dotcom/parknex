@@ -34,6 +34,7 @@ export default function AdminScanExitPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const isProcessingRef = useRef<boolean>(false);
 
   const completeExitMutation = useMutation(api.bookings.completeExitWithVerification);
 
@@ -63,9 +64,12 @@ export default function AdminScanExitPage() {
           undefined,
           videoRef.current,
           (result, err) => {
-            if (result) {
+            if (result && !isProcessingRef.current) {
               const text = result.getText();
-              handleProcessPass(text);
+              if (text && text.trim()) {
+                isProcessingRef.current = true;
+                handleProcessPass(text);
+              }
             }
           }
         );
@@ -81,7 +85,9 @@ export default function AdminScanExitPage() {
 
   const stopCamera = () => {
     if (codeReaderRef.current) {
-      // Release scanner
+      try {
+        (codeReaderRef.current as any).reset?.();
+      } catch {}
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -91,38 +97,50 @@ export default function AdminScanExitPage() {
   };
 
   const handleProcessPass = async (tokenOrCode: string, overrideReasonText?: string) => {
-    if (!tokenOrCode.trim()) return;
+    const rawInput = (tokenOrCode || "").trim();
+    if (!rawInput) {
+      isProcessingRef.current = false;
+      return;
+    }
+    isProcessingRef.current = true;
     setIsVerifying(true);
     setErrorMessage("");
 
     try {
       const result = await completeExitMutation({
-        tokenOrCode: tokenOrCode.trim(),
+        tokenOrCode: rawInput,
         exitDetectedPlate: exitDetectedPlate.trim() || undefined,
         operatorEmail: "operator:desk01",
         overrideReason: overrideReasonText,
       });
 
-      stopCamera();
-      setCompletedExit(result);
-      setOverrideModalOpen(false);
-      setOverrideReason("");
-      setMismatchData(null);
+      if (!result.success) {
+        if (result.mismatch) {
+          // Plate mismatch detected — prompt operator override
+          setMismatchData({
+            tokenOrCode: rawInput,
+            expectedPlate: result.expectedPlate || "Assigned Plate",
+            detectedPlate: result.detectedPlate || exitDetectedPlate.toUpperCase(),
+          });
+          setOverrideModalOpen(true);
+        } else {
+          setErrorMessage(result.error || "Failed to validate exit pass.");
+        }
+      } else {
+        stopCamera();
+        setCompletedExit(result);
+        setOverrideModalOpen(false);
+        setOverrideReason("");
+        setMismatchData(null);
+      }
     } catch (err: any) {
       const msg = err.message || "Failed to process exit";
-      if (msg.includes("LICENSE_PLATE_MISMATCH")) {
-        // Plate mismatch detected
-        setMismatchData({
-          tokenOrCode,
-          expectedPlate: err.data?.expectedPlate || "Assigned Plate",
-          detectedPlate: exitDetectedPlate.toUpperCase(),
-        });
-        setOverrideModalOpen(true);
-      } else {
-        setErrorMessage(msg);
-      }
+      setErrorMessage(msg);
     } finally {
       setIsVerifying(false);
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 1000);
     }
   };
 
