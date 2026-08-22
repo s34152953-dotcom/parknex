@@ -27,6 +27,12 @@ import {
   Plus,
   ChevronLeft,
   KeyRound,
+  Pencil,
+  X,
+  Phone,
+  Palette,
+  SlidersHorizontal,
+  Check,
 } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 import QrCameraScanner from "@/components/customer/QrCameraScanner";
@@ -80,9 +86,69 @@ export default function CustomerDashboard() {
   const userEmail = session?.user?.email || "";
   const user = useQuery(api.users.getUser, userEmail ? { email: userEmail } : "skip");
   const upsertUser = useMutation(api.users.upsertUser);
+  const updateVehicleMutation = useMutation(api.users.updateVehicleDetails);
   const confirmPillarMutation = useMutation(api.bookings.confirmPillarLocation);
 
   const vehicleNumber = user?.vehicleNumber || "";
+
+  // Edit Vehicle Modal State
+  const [isEditVehicleOpen, setIsEditVehicleOpen] = useState(false);
+  const [editPlate, setEditPlate] = useState("");
+  const [editType, setEditType] = useState<"sedan" | "suv" | "hatchback" | "ev" | "motorcycle">("sedan");
+  const [editMake, setEditMake] = useState("");
+  const [editModel, setEditModel] = useState("");
+  const [editColour, setEditColour] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [isUpdatingVehicle, setIsUpdatingVehicle] = useState(false);
+  const [editVehicleError, setEditVehicleError] = useState("");
+  const [editVehicleSuccess, setEditVehicleSuccess] = useState(false);
+
+  const openEditModal = () => {
+    setEditPlate(user?.vehicleNumber || "");
+    setEditType((user as any)?.vehicleType || "sedan");
+    setEditMake((user as any)?.vehicleMake || "");
+    setEditModel((user as any)?.vehicleModel || "");
+    setEditColour((user as any)?.vehicleColour || "");
+    setEditPhone((user as any)?.phoneNumber || "");
+    setEditVehicleError("");
+    setEditVehicleSuccess(false);
+    setIsEditVehicleOpen(true);
+  };
+
+  const handleUpdateVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPlate = editPlate.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim();
+    if (!cleanPlate) {
+      setEditVehicleError("Please provide a valid vehicle license plate number.");
+      return;
+    }
+    if (!userEmail) return;
+
+    setIsUpdatingVehicle(true);
+    setEditVehicleError("");
+    setEditVehicleSuccess(false);
+
+    try {
+      await updateVehicleMutation({
+        email: userEmail,
+        vehicleNumber: cleanPlate,
+        vehicleType: editType,
+        vehicleMake: editMake.trim() || undefined,
+        vehicleModel: editModel.trim() || undefined,
+        vehicleColour: editColour.trim() || undefined,
+        phoneNumber: editPhone.trim() || undefined,
+      });
+      setEditVehicleSuccess(true);
+      setTimeout(() => {
+        setIsEditVehicleOpen(false);
+        setEditVehicleSuccess(false);
+      }, 1000);
+    } catch (err: any) {
+      setEditVehicleError(err.message || "Failed to update vehicle details.");
+    } finally {
+      setIsUpdatingVehicle(false);
+    }
+  };
 
   const activeBooking = useQuery(
     api.bookings.getActiveBookingByVehicle,
@@ -213,10 +279,16 @@ export default function CustomerDashboard() {
             </span>
 
             {vehicleNumber && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EAE0] border border-[#DED3C7] shrink-0 font-mono text-[12px] font-bold text-[#241F1B]">
+              <button
+                type="button"
+                onClick={openEditModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3EAE0] hover:bg-[#EDE1D4] border border-[#DED3C7] shrink-0 font-mono text-[12px] font-bold text-[#241F1B] transition-colors cursor-pointer"
+                title="Edit Vehicle Details"
+              >
                 <Car className="w-3.5 h-3.5 text-[#C93B2F]" />
                 <span>{vehicleNumber}</span>
-              </div>
+                <Pencil className="w-3 h-3 text-[#70675F] ml-0.5" />
+              </button>
             )}
 
             <button
@@ -290,6 +362,55 @@ export default function CustomerDashboard() {
                 <span>Save</span>
               </button>
             </form>
+          </div>
+        )}
+
+        {/* Registered Vehicle Profile Bar if user has vehicle assigned */}
+        {user !== undefined && vehicleNumber && (
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.05)]">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
+                <Car className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[16px] sm:text-[17px] font-black text-[#241F1B] tracking-wide">
+                    {vehicleNumber}
+                  </span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F3EAE0] text-[#70675F] border border-[#DED3C7]">
+                    {(user as any)?.vehicleType || "sedan"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#70675F] mt-0.5">
+                  {((user as any)?.vehicleMake || (user as any)?.vehicleModel) && (
+                    <span>
+                      {[(user as any)?.vehicleMake, (user as any)?.vehicleModel].filter(Boolean).join(" ")}
+                    </span>
+                  )}
+                  {(user as any)?.vehicleColour && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full border border-[#DED3C7] bg-[#70675F]" />
+                      {(user as any).vehicleColour}
+                    </span>
+                  )}
+                  {(user as any)?.phoneNumber && (
+                    <span className="flex items-center gap-1 font-mono text-[11.5px]">
+                      <Phone className="w-3 h-3 text-[#70675F]" />
+                      {(user as any).phoneNumber}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openEditModal}
+              className="h-10 px-4 rounded-xl bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[13px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#C93B2F]" />
+              <span>Edit Vehicle Details</span>
+            </button>
           </div>
         )}
         {vehicleSavedMsg && (
@@ -1054,6 +1175,159 @@ export default function CustomerDashboard() {
         floor={activeBooking?.slotDetails?.floor}
         pillar={activeBooking?.confirmedPillar || activeBooking?.slotDetails?.pillar}
       />
+
+      {/* ── EDIT VEHICLE PROFILE MODAL ── */}
+      {isEditVehicleOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#DED3C7]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
+                  <Car className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-black text-[#241F1B]">Edit Vehicle Profile</h3>
+                  <p className="text-[12px] text-[#70675F]">Update your vehicle details and preferences</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditVehicleOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#70675F] hover:text-[#241F1B] hover:bg-[#F3EAE0] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Error / Success feedback */}
+            {editVehicleError && (
+              <div className="p-3 rounded-xl bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[12.5px] font-semibold flex items-center gap-2">
+                <X className="w-4 h-4 shrink-0" />
+                <span>{editVehicleError}</span>
+              </div>
+            )}
+            {editVehicleSuccess && (
+              <div className="p-3 rounded-xl bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[12.5px] font-semibold flex items-center gap-2">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>Vehicle profile updated successfully!</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateVehicle} className="flex flex-col gap-4">
+              {/* License Plate */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#241F1B]">
+                  License Plate Number <span className="text-[#C93B2F]">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editPlate}
+                  onChange={(e) => setEditPlate(e.target.value.toUpperCase())}
+                  placeholder="e.g. MH02AB1234"
+                  required
+                  className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[14px] font-bold uppercase focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                />
+                <span className="text-[11px] text-[#70675F]">
+                  Active and upcoming parking assignments link to this plate number.
+                </span>
+              </div>
+
+              {/* Vehicle Type */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#241F1B]">Vehicle Class / Type</label>
+                <select
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value as any)}
+                  className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] font-medium focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                >
+                  <option value="sedan">Sedan</option>
+                  <option value="suv">SUV</option>
+                  <option value="hatchback">Hatchback</option>
+                  <option value="ev">Electric Vehicle (EV)</option>
+                  <option value="motorcycle">Motorcycle / Two-Wheeler</option>
+                </select>
+              </div>
+
+              {/* Make & Model in 2 columns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-[#241F1B]">Make / Brand</label>
+                  <input
+                    type="text"
+                    value={editMake}
+                    onChange={(e) => setEditMake(e.target.value)}
+                    placeholder="e.g. Tata, Hyundai, Honda"
+                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-[#241F1B]">Model</label>
+                  <input
+                    type="text"
+                    value={editModel}
+                    onChange={(e) => setEditModel(e.target.value)}
+                    placeholder="e.g. Nexon EV, Creta, City"
+                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                  />
+                </div>
+              </div>
+
+              {/* Colour & Phone in 2 columns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-[#241F1B]">Vehicle Colour</label>
+                  <input
+                    type="text"
+                    value={editColour}
+                    onChange={(e) => setEditColour(e.target.value)}
+                    placeholder="e.g. White, Silver, Black"
+                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-[#241F1B]">Contact Phone Number</label>
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="e.g. 9876543210"
+                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#DED3C7]">
+                <button
+                  type="button"
+                  onClick={() => setIsEditVehicleOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingVehicle || !editPlate.trim()}
+                  className="px-5 py-2.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {isUpdatingVehicle ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Save Vehicle Profile</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

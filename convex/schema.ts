@@ -108,6 +108,19 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     vehicleNumber: v.optional(v.string()), // Customers can register their vehicle
+    vehicleType: v.optional(
+      v.union(
+        v.literal("sedan"),
+        v.literal("suv"),
+        v.literal("hatchback"),
+        v.literal("ev"),
+        v.literal("motorcycle")
+      )
+    ),
+    vehicleMake: v.optional(v.string()),
+    vehicleModel: v.optional(v.string()),
+    vehicleColour: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
   })
     .index("by_email", ["email"])
     .index("by_vehicleNumber", ["vehicleNumber"]),
