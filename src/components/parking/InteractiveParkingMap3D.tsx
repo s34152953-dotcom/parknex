@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useRef, useState, useMemo, useEffect, Suspense } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
-import { Maximize2, Compass, RotateCcw } from "lucide-react";
+import { Compass, RotateCcw } from "lucide-react";
 
 /**
  * Robust WebGL feature detector
@@ -23,9 +23,9 @@ export function isWebGLAvailable(): boolean {
   }
 }
 
-// ── Shared Global Geometries and Materials (Prevents UI Freezing) ──────────
+// ── Shared Global Geometries and Dark-Themed Materials ──────────────────────
 const GEO = {
-  carShadow: new THREE.PlaneGeometry(1.9, 3.6),
+  carShadow: new THREE.PlaneGeometry(2.0, 3.8),
   carChassis: new THREE.BoxGeometry(1.65, 0.36, 3.3),
   carCabin: new THREE.BoxGeometry(1.38, 0.32, 1.9),
   carWindshield: new THREE.PlaneGeometry(1.34, 0.25),
@@ -33,48 +33,48 @@ const GEO = {
   carTaillight: new THREE.BoxGeometry(1.48, 0.08, 0.02),
   carWheel: new THREE.CylinderGeometry(0.24, 0.24, 0.18, 16),
   carRim: new THREE.CylinderGeometry(0.15, 0.15, 0.02, 12),
-  pillarMain: new THREE.BoxGeometry(0.65, 3.6, 0.65),
-  pillarFrame: new THREE.BoxGeometry(0.67, 3.62, 0.67),
-  pillarBase: new THREE.BoxGeometry(0.68, 0.3, 0.68),
+  pillarMain: new THREE.BoxGeometry(0.7, 3.6, 0.7),
+  pillarFrame: new THREE.BoxGeometry(0.72, 3.62, 0.72),
+  pillarBase: new THREE.BoxGeometry(0.74, 0.4, 0.74),
   slotOutline: new THREE.PlaneGeometry(2.1, 4.0),
   slotTint: new THREE.PlaneGeometry(2.04, 3.94),
-  slotBounding: new THREE.BoxGeometry(2.18, 0.75, 4.15),
-  floorMain: new THREE.PlaneGeometry(44, 38),
-  floorLane: new THREE.PlaneGeometry(7.2, 36),
-  floorDashed: new THREE.PlaneGeometry(0.18, 32),
+  slotBounding: new THREE.BoxGeometry(2.2, 0.8, 4.2),
+  floorMain: new THREE.PlaneGeometry(46, 40),
+  floorLane: new THREE.PlaneGeometry(7.6, 38),
+  floorDashed: new THREE.PlaneGeometry(0.2, 34),
   pinRing: new THREE.RingGeometry(1.1, 1.25, 32),
-  pinSphere: new THREE.SphereGeometry(0.3, 20, 20),
-  pinCone: new THREE.ConeGeometry(0.16, 0.42, 16),
+  pinSphere: new THREE.SphereGeometry(0.32, 20, 20),
+  pinCone: new THREE.ConeGeometry(0.18, 0.44, 16),
 };
 
 const MAT = {
-  carShadow: new THREE.MeshBasicMaterial({ color: "#3D3024", transparent: true, opacity: 0.35 }),
-  carCabin: new THREE.MeshStandardMaterial({ color: "#1C2128", roughness: 0.1, metalness: 0.9 }),
-  carWindshield: new THREE.MeshStandardMaterial({ color: "#2D3748", roughness: 0.1, metalness: 0.8 }),
-  carHeadlight: new THREE.MeshStandardMaterial({ color: "#FFFFFF", emissive: "#FFFFFF", emissiveIntensity: 1.2 }),
-  carWheel: new THREE.MeshStandardMaterial({ color: "#2B303A", roughness: 0.9 }),
-  carRim: new THREE.MeshStandardMaterial({ color: "#E2E8F0", metalness: 0.9, roughness: 0.2 }),
-  pillarMain: new THREE.MeshStandardMaterial({ color: "#FAF5EE", roughness: 0.6, metalness: 0.1 }),
-  pillarFrame: new THREE.MeshBasicMaterial({ color: "#DDD3C5", wireframe: true, transparent: true, opacity: 0.35 }),
-  pillarBase: new THREE.MeshStandardMaterial({ color: "#D84A2B", emissive: "#D84A2B", emissiveIntensity: 0.4 }),
-  floorMain: new THREE.MeshStandardMaterial({ color: "#ECE5DA", roughness: 0.7, metalness: 0.15 }),
-  floorLane: new THREE.MeshStandardMaterial({ color: "#E4DDD2", roughness: 0.6, metalness: 0.2 }),
-  floorDashed: new THREE.MeshBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.65 }),
-  pinRing: new THREE.MeshBasicMaterial({ color: "#D84A2B", transparent: true, opacity: 0.7 }),
-  pinGlow: new THREE.MeshStandardMaterial({ color: "#D84A2B", emissive: "#D84A2B", emissiveIntensity: 1.8 }),
-  boundingHighlight: new THREE.MeshBasicMaterial({ color: "#D84A2B", wireframe: true, transparent: true, opacity: 0.9 }),
+  carShadow: new THREE.MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.7 }),
+  carCabin: new THREE.MeshStandardMaterial({ color: "#0B0F17", roughness: 0.1, metalness: 0.95 }),
+  carWindshield: new THREE.MeshStandardMaterial({ color: "#1E293B", roughness: 0.1, metalness: 0.85 }),
+  carHeadlight: new THREE.MeshStandardMaterial({ color: "#60A5FA", emissive: "#60A5FA", emissiveIntensity: 2.0 }),
+  carWheel: new THREE.MeshStandardMaterial({ color: "#0F172A", roughness: 0.9 }),
+  carRim: new THREE.MeshStandardMaterial({ color: "#94A3B8", metalness: 0.9, roughness: 0.2 }),
+  pillarMain: new THREE.MeshStandardMaterial({ color: "#1E2634", roughness: 0.5, metalness: 0.3 }),
+  pillarFrame: new THREE.MeshBasicMaterial({ color: "#334155", wireframe: true, transparent: true, opacity: 0.4 }),
+  pillarBase: new THREE.MeshStandardMaterial({ color: "#D84A2B", emissive: "#D84A2B", emissiveIntensity: 0.6 }),
+  floorMain: new THREE.MeshStandardMaterial({ color: "#121824", roughness: 0.8, metalness: 0.2 }),
+  floorLane: new THREE.MeshStandardMaterial({ color: "#0D121B", roughness: 0.65, metalness: 0.25 }),
+  floorDashed: new THREE.MeshBasicMaterial({ color: "#F59E0B", transparent: true, opacity: 0.85 }),
+  pinRing: new THREE.MeshBasicMaterial({ color: "#D84A2B", transparent: true, opacity: 0.85 }),
+  pinGlow: new THREE.MeshStandardMaterial({ color: "#D84A2B", emissive: "#D84A2B", emissiveIntensity: 2.5 }),
+  boundingHighlight: new THREE.MeshBasicMaterial({ color: "#FFFFFF", wireframe: true, transparent: true, opacity: 0.95 }),
 };
 
 // ── Multi-Variant 3D Stylized Car ──────────────────────────────────────────
-function StylizedCar({ color = "#2D3748", isUserCar = false }: { color?: string; isUserCar?: boolean }) {
+function StylizedCar({ color = "#3B82F6", isUserCar = false }: { color?: string; isUserCar?: boolean }) {
   const chassisMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: isUserCar ? "#D84A2B" : color,
         roughness: 0.2,
-        metalness: isUserCar ? 0.4 : 0.6,
+        metalness: isUserCar ? 0.5 : 0.7,
         emissive: isUserCar ? "#D84A2B" : "#000000",
-        emissiveIntensity: isUserCar ? 0.3 : 0,
+        emissiveIntensity: isUserCar ? 0.4 : 0,
       }),
     [color, isUserCar]
   );
@@ -82,9 +82,9 @@ function StylizedCar({ color = "#2D3748", isUserCar = false }: { color?: string;
   const taillightMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: "#D84A2B",
-        emissive: "#D84A2B",
-        emissiveIntensity: isUserCar ? 2.0 : 1.2,
+        color: "#EF4444",
+        emissive: "#EF4444",
+        emissiveIntensity: isUserCar ? 2.5 : 1.5,
       }),
     [isUserCar]
   );
@@ -152,25 +152,25 @@ function ParkingSlot3D({
 
   const statusColor = useMemo(() => {
     if (isRecommended && slot.status === "available") {
-      return "#2563EB"; // Blue for AI Recommended
+      return "#2563EB"; // Vibrant Blue for Recommended
     }
     switch (slot.status) {
       case "available":
         return "#10B981"; // Emerald Green
       case "occupied":
-        return "#EF4444"; // Red / Coral
+        return "#EF4444"; // Red
       case "reserved":
       case "temporarily_held":
         return "#F59E0B"; // Amber
       case "maintenance":
-        return "#6B7280"; // Grey Maintenance
+        return "#6B7280"; // Grey
       default:
-        return "#78716C";
+        return "#6B7280";
     }
   }, [slot.status, isRecommended]);
 
   const carColor = useMemo(() => {
-    const colors = ["#1E293B", "#334155", "#475569", "#1E1B4B", "#2A324B", "#3D3A45", "#52525B"];
+    const colors = ["#2563EB", "#DC2626", "#4B5563", "#0F172A", "#D97706", "#059669", "#7C3AED"];
     const hash = slot.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   }, [slot.id]);
@@ -178,10 +178,10 @@ function ParkingSlot3D({
   const outlineMat = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: isSelected ? "#D84A2B" : isNearest ? "#D84A2B" : hovered ? "#10B981" : statusColor,
+        color: isSelected ? "#FFFFFF" : isNearest ? "#D84A2B" : hovered ? "#10B981" : statusColor,
         wireframe: true,
         transparent: true,
-        opacity: isSelected ? 1.0 : isNearest ? 0.95 : hovered ? 0.9 : 0.6,
+        opacity: isSelected ? 1.0 : isNearest ? 0.95 : hovered ? 0.9 : 0.7,
       }),
     [isSelected, isNearest, hovered, statusColor]
   );
@@ -189,70 +189,77 @@ function ParkingSlot3D({
   const tintMat = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: isSelected ? "#D84A2B" : isNearest ? "#D84A2B" : statusColor,
+        color: isSelected ? "#FFFFFF" : isNearest ? "#D84A2B" : statusColor,
         transparent: true,
-        opacity: isSelected ? 0.32 : isNearest ? 0.22 : hovered ? 0.18 : 0.06,
+        opacity: isSelected ? 0.35 : isNearest ? 0.25 : hovered ? 0.22 : 0.08,
       }),
     [isSelected, isNearest, hovered, statusColor]
   );
 
   return (
     <group
-      position={[slot.positionX, slot.positionY, slot.positionZ]}
-      rotation={[0, slot.rotationY || 0, 0]}
+      position={[slot.positionX ?? 0, slot.positionY ?? 0, slot.positionZ ?? 0]}
+      rotation={[0, slot.rotationY ?? 0, 0]}
       onClick={(e) => {
         e.stopPropagation();
-        if (isAvailable) onSelect(slot);
+        onSelect(slot);
       }}
       onPointerOver={(e) => {
-        if (isAvailable) {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = "pointer";
-        }
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
       }}
       onPointerOut={() => {
         setHovered(false);
         document.body.style.cursor = "auto";
       }}
     >
-      {/* Ground Marking Outline & Floor Tint */}
-      <group position={[0, 0.02, 0]}>
-        <mesh geometry={GEO.slotOutline} material={outlineMat} rotation={[-Math.PI / 2, 0, 0]} />
-        <mesh geometry={GEO.slotTint} material={tintMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]} />
+      {/* Floor Slot Outline Rectangle */}
+      <mesh
+        geometry={GEO.slotOutline}
+        material={outlineMat}
+        position={[0, 0.01, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
 
-        {/* Stencil Slot Number on Floor */}
-        <group position={[0, 0.01, 1.6]} rotation={[-Math.PI / 2, 0, 0]}>
-          <Text
-            fontSize={0.24}
-            color={isSelected ? "#D84A2B" : isNearest ? "#D84A2B" : statusColor}
-            anchorX="center"
-            anchorY="middle"
-            letterSpacing={0.06}
-          >
-            {slot.slotNumber}
-          </Text>
-        </group>
-      </group>
+      {/* Floor Tint Surface */}
+      <mesh
+        geometry={GEO.slotTint}
+        material={tintMat}
+        position={[0, 0.012, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
 
-      {/* Render 3D Car if Occupied */}
-      {slot.status === "occupied" && <StylizedCar color={carColor} isUserCar={false} />}
+      {/* Bay Label Monospace Text */}
+      <Text
+        position={[0, 0.02, 1.4]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.44}
+        color={isSelected ? "#FFFFFF" : isRecommended ? "#60A5FA" : isAvailable ? "#10B981" : "#94A3B8"}
+        anchorX="center"
+        anchorY="middle"
+      >
+        {slot.slotNumber || slot.id.split("-").pop()?.toUpperCase()}
+      </Text>
 
-      {/* Nearest Recommended Glowing Pin */}
-      {isNearest && isAvailable && (
-        <group position={[0, 0, 0]}>
-          <mesh geometry={GEO.pinRing} material={MAT.pinRing} position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+      {/* 3D Car Model if Occupied */}
+      {slot.status === "occupied" && (
+        <StylizedCar color={carColor} isUserCar={false} />
+      )}
 
+      {/* Recommended / Nearest Pin Marker */}
+      {(isRecommended || isNearest) && isAvailable && (
+        <group position={[0, 1.4, 0]}>
           {!reducedMotion ? (
-            <Float speed={2.5} rotationIntensity={0.2} floatIntensity={0.5}>
-              <group position={[0, 2.0, 0]}>
-                <mesh geometry={GEO.pinSphere} material={MAT.pinGlow} position={[0, 0.3, 0]} />
+            <Float speed={2.5} rotationIntensity={0.2} floatIntensity={0.6}>
+              <group position={[0, 1.2, 0]}>
+                <mesh geometry={GEO.pinSphere} material={MAT.pinGlow} position={[0, 0.45, 0]} />
                 <mesh geometry={GEO.pinCone} material={MAT.pinGlow} position={[0, 0.06, 0]} rotation={[Math.PI, 0, 0]} />
               </group>
             </Float>
           ) : (
-            <group position={[0, 2.0, 0]}>
-              <mesh geometry={GEO.pinSphere} material={MAT.pinGlow} position={[0, 0.3, 0]} />
+            <group position={[0, 1.2, 0]}>
+              <mesh geometry={GEO.pinSphere} material={MAT.pinGlow} position={[0, 0.45, 0]} />
             </group>
           )}
         </group>
@@ -266,18 +273,18 @@ function ParkingSlot3D({
   );
 }
 
-// ── Concrete Pillar with Stencil Label & Orange Accent Base ──────────────────
+// ── Concrete Pillar with Stencil Label & Orange Safety Base ──────────────────
 function ConcretePillar({ position, label, sub = "ZONE A" }: { position: [number, number, number]; label: string; sub?: string }) {
   return (
     <group position={position}>
       <mesh geometry={GEO.pillarMain} material={MAT.pillarMain} castShadow receiveShadow position={[0, 1.8, 0]} />
       <mesh geometry={GEO.pillarFrame} material={MAT.pillarFrame} position={[0, 1.8, 0]} />
       <mesh geometry={GEO.pillarBase} material={MAT.pillarBase} position={[0, 0.35, 0]} />
-      
-      <Text position={[0, 2.4, 0.44]} fontSize={0.22} color="#1C1917" anchorX="center" anchorY="middle">
+
+      <Text position={[0, 2.4, 0.48]} fontSize={0.26} color="#FFFFFF" anchorX="center" anchorY="middle">
         {label}
       </Text>
-      <Text position={[0, 2.1, 0.44]} fontSize={0.12} color="#78716C" anchorX="center" anchorY="middle">
+      <Text position={[0, 2.05, 0.48]} fontSize={0.14} color="#94A3B8" anchorX="center" anchorY="middle">
         {sub}
       </Text>
     </group>
@@ -294,12 +301,17 @@ function ParkingFloorGrid({ floor }: { floor: string }) {
 
       <group position={[0, 0.01, 14]} rotation={[-Math.PI / 2, 0, 0]}>
         <Text fontSize={0.85} color="#10B981" anchorX="center" anchorY="middle" letterSpacing={0.12}>
-          ▲ ▲ MAIN ENTRANCE · LEVEL {floor}
+          ▲ ▲ ENTRY GATE A · LEVEL {floor}
+        </Text>
+      </group>
+      <group position={[0, 0.01, -14]} rotation={[-Math.PI / 2, 0, 0]}>
+        <Text fontSize={0.85} color="#EF4444" anchorX="center" anchorY="middle" letterSpacing={0.12}>
+          ▼ ▼ EXIT GATE B · LEVEL {floor}
         </Text>
       </group>
       <group position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <Text fontSize={0.6} color="#A8A29E" anchorX="center" anchorY="middle" letterSpacing={0.08}>
-          MAX 10 KM/H · PARKNEX NAVIGATION
+        <Text fontSize={0.55} color="#64748B" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+          MAIN DRIVING AISLE · 6.0M CLEARANCE
         </Text>
       </group>
     </group>
@@ -307,7 +319,7 @@ function ParkingFloorGrid({ floor }: { floor: string }) {
 }
 
 // ── Camera Controller & Readiness Notifier ───────────────────────────────────
-function CameraRig({ recenterTrigger, onReady }: { recenterTrigger: number, onReady: () => void }) {
+function CameraRig({ recenterTrigger, onReady }: { recenterTrigger: number; onReady: () => void }) {
   const controlsRef = useRef<any>(null);
   const { invalidate } = useThree();
 
@@ -319,7 +331,6 @@ function CameraRig({ recenterTrigger, onReady }: { recenterTrigger: number, onRe
   }, [recenterTrigger, invalidate]);
 
   useEffect(() => {
-    // Notify parent that the scene is fully mounted and ready
     const timer = setTimeout(() => {
       onReady();
       invalidate();
@@ -334,8 +345,8 @@ function CameraRig({ recenterTrigger, onReady }: { recenterTrigger: number, onRe
       dampingFactor={0.08}
       maxPolarAngle={Math.PI / 2 - 0.08}
       minDistance={10}
-      maxDistance={45}
-      target={[0, 0, -4]}
+      maxDistance={40}
+      target={[0, 0, 0]}
       onChange={() => invalidate()}
     />
   );
@@ -361,7 +372,7 @@ export default function InteractiveParkingMap3D({
 }) {
   const [recenterCount, setRecenterCount] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [sceneReady, setSceneReady] = useState(false);
+  const [sceneReady, setSceneReady] = useState(true);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -371,23 +382,11 @@ export default function InteractiveParkingMap3D({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  // Strict 3.5s timeout. If `sceneReady` isn't true by then, kill WebGL and fallback.
-  useEffect(() => {
-    const fallbackTimer = setTimeout(() => {
-      if (!sceneReady) {
-        console.warn("[InteractiveParkingMap3D] WebGL initialization timeout. Triggering 2D fallback.");
-        onFallbackTo2D?.();
-      }
-    }, 3500);
-
-    return () => clearTimeout(fallbackTimer);
-  }, [sceneReady, onFallbackTo2D]);
-
   return (
-    <div className="relative w-full h-full min-h-[540px] bg-[#F8F4ED] rounded-3xl overflow-hidden select-none border border-[#EAE3D9]">
+    <div className="relative w-full h-full min-h-[480px] sm:min-h-[550px] lg:min-h-[650px] bg-[#10151D] rounded-3xl overflow-hidden select-none border border-white/10 shadow-xl shadow-black/20">
       {/* Top Floating Controls Bar */}
-      <div className={`absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none transition-opacity duration-300 ${sceneReady ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#E2D9CC] shadow-xs pointer-events-auto text-[12px] font-semibold text-[#1C1917]">
+      <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none transition-opacity duration-300 opacity-100">
+        <div className="flex items-center gap-2 bg-[#151B24]/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-lg pointer-events-auto text-[12px] font-bold text-white">
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
           <span>Interactive View ({currentFloor})</span>
         </div>
@@ -395,7 +394,7 @@ export default function InteractiveParkingMap3D({
         <button
           type="button"
           onClick={() => setRecenterCount((c) => c + 1)}
-          className="flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E2D9CC] text-[#1C1917] text-[12px] font-bold shadow-xs hover:border-[#D84A2B]/40 transition-colors pointer-events-auto cursor-pointer"
+          className="flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#151B24]/90 backdrop-blur-md border border-white/10 text-white text-[12px] font-bold shadow-lg hover:border-[#D84A2B]/60 transition-colors pointer-events-auto cursor-pointer"
           title="Recenter Camera"
         >
           <RotateCcw className="w-3.5 h-3.5 text-[#D84A2B]" />
@@ -403,30 +402,20 @@ export default function InteractiveParkingMap3D({
         </button>
       </div>
 
-      {/* Loading Skeleton displayed strictly before sceneReady */}
-      {!sceneReady && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#FAF7F2] animate-pulse">
-          <div className="w-12 h-12 rounded-2xl bg-[#FFF5F2] border border-[#FADCD5] flex items-center justify-center text-[#D84A2B] mb-3">
-            <Compass className="w-6 h-6 animate-spin-slow" />
-          </div>
-          <p className="text-[14px] font-bold text-[#1C1917]">Loading Interactive View...</p>
-          <p className="text-[12px] text-[#78716C] mt-0.5">Please wait while space geometry compiles</p>
-        </div>
-      )}
-
-      {/* Canvas configuration: frameloop is set to 'demand' until the scene is fully mounted and ready. */}
+      {/* Canvas configuration */}
       <Canvas
-        camera={{ position: [14, 18, 16], fov: 36 }}
+        camera={{ position: [0, 22, 22], fov: 45 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false }}
         shadows
-        frameloop={sceneReady ? (reducedMotion ? "demand" : "always") : "demand"}
+        frameloop="always"
+        onCreated={() => setSceneReady(true)}
       >
-        <color attach="background" args={["#F8F4ED"]} />
+        <color attach="background" args={["#0A0D14"]} />
 
-        <ambientLight intensity={0.95} color="#FFF8EF" />
-        <directionalLight position={[18, 30, 18]} intensity={1.2} color="#FFF7ED" castShadow shadow-mapSize={[1024, 1024]} />
-        <directionalLight position={[-18, 25, -18]} intensity={0.4} color="#FDE8D0" />
-        <pointLight position={[0, 12, 0]} intensity={1.0} color="#FFEDD5" distance={40} />
+        <ambientLight intensity={0.6} color="#94A3B8" />
+        <directionalLight position={[15, 25, 15]} intensity={1.4} color="#FFFFFF" castShadow shadow-mapSize={[1024, 1024]} />
+        <directionalLight position={[-15, 20, -15]} intensity={0.6} color="#38BDF8" />
+        <pointLight position={[0, 10, 0]} intensity={1.2} color="#F59E0B" distance={35} />
 
         <Suspense fallback={null}>
           <ParkingFloorGrid floor={currentFloor} />
@@ -452,12 +441,12 @@ export default function InteractiveParkingMap3D({
           <ConcretePillar position={[4.5, 0, -10.0]} label="P09" sub="Zone A" />
           <ConcretePillar position={[7.5, 0, -10.0]} label="P11" sub="Zone A" />
 
-          <ConcretePillar position={[-7.5, 0, -2.0]} label="P13" sub="Zone B" />
-          <ConcretePillar position={[-4.5, 0, -2.0]} label="P15" sub="Zone B" />
-          <ConcretePillar position={[-1.5, 0, -2.0]} label="P17" sub="Zone B" />
-          <ConcretePillar position={[1.5, 0, -2.0]} label="P19" sub="Zone B" />
-          <ConcretePillar position={[4.5, 0, -2.0]} label="P21" sub="Zone B" />
-          <ConcretePillar position={[7.5, 0, -2.0]} label="P23" sub="Zone B" />
+          <ConcretePillar position={[-7.5, 0, 2.0]} label="P13" sub="Zone B" />
+          <ConcretePillar position={[-4.5, 0, 2.0]} label="P15" sub="Zone B" />
+          <ConcretePillar position={[-1.5, 0, 2.0]} label="P17" sub="Zone B" />
+          <ConcretePillar position={[1.5, 0, 2.0]} label="P19" sub="Zone B" />
+          <ConcretePillar position={[4.5, 0, 2.0]} label="P21" sub="Zone B" />
+          <ConcretePillar position={[7.5, 0, 2.0]} label="P23" sub="Zone B" />
 
           <CameraRig recenterTrigger={recenterCount} onReady={() => setSceneReady(true)} />
         </Suspense>
