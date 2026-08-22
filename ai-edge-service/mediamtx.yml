@@ -1,0 +1,37 @@
+# MediaMTX Configuration for ParkNex CCTV Gateway
+# Bridges on-premises IP Camera RTSP feeds to secure WebRTC (WHEP) and HLS for browser playback.
+
+logLevel: info
+logDestinations: [stdout]
+
+# RTSP Inbound Server (CCTV Cameras push/pull)
+rtsp: yes
+rtspAddress: :8554
+protocols: [tcp, udp]
+
+# WebRTC (WHEP) Server for ultra-low latency browser playback (< 250ms)
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: optional
+webrtcAllowOrigin: "*"
+
+# HLS Server for reliable fallback streaming across mobile/desktop
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigin: "*"
+hlsSegmentCount: 3
+hlsSegmentDuration: 1s
+
+# Camera Stream Paths (Routed internally without exposing RTSP credentials)
+paths:
+  cam-entry-01:
+    source: rtsp://127.0.0.1:8554/cam-entry-01
+    sourceOnDemand: yes
+    
+  cam-floor-b2-zonea:
+    source: rtsp://127.0.0.1:8554/cam-floor-b2-zonea
+    sourceOnDemand: yes
+
+  cam-exit-01:
+    source: rtsp://127.0.0.1:8554/cam-exit-01
+    sourceOnDemand: yes

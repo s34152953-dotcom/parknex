@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Settings,
   LogOut,
+  Video,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 import { signOut } from "next-auth/react";
@@ -19,6 +20,7 @@ const adminNavLinks = [
   { label: "Live Parking Map", href: "/admin/booking", icon: MapPin },
   { label: "New Entry", href: "/admin/new-entry", icon: CarFront },
   { label: "Gate Scanner", href: "/admin/scan-exit", icon: QrCode },
+  { label: "CCTV Monitoring", href: "/admin/cctv", icon: Video },
   { label: "Active Sessions", href: "/admin/active-sessions", icon: Layers },
   { label: "Parking History", href: "/admin/history", icon: History },
   { label: "Customer Issues", href: "/admin/customer-issues", icon: AlertTriangle },

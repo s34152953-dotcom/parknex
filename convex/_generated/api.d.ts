@@ -10,6 +10,7 @@
 
 import type * as audit from "../audit.js";
 import type * as bookings from "../bookings.js";
+import type * as cctv from "../cctv.js";
 import type * as crypto from "../crypto.js";
 import type * as http from "../http.js";
 import type * as occupancy from "../occupancy.js";
@@ -28,6 +29,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   audit: typeof audit;
   bookings: typeof bookings;
+  cctv: typeof cctv;
   crypto: typeof crypto;
   http: typeof http;
   occupancy: typeof occupancy;

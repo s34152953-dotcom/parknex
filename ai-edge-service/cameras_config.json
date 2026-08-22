@@ -1,0 +1,75 @@
+{
+  "cameras": [
+    {
+      "cameraId": "cam-entry-01",
+      "name": "Gate A Entry ANPR Camera",
+      "type": "ENTRY",
+      "floor": "G",
+      "zone": "Entry Gate A",
+      "rtspUrl": "rtsp://127.0.0.1:8554/cam-entry-01",
+      "webrtcUrl": "http://127.0.0.1:8889/cam-entry-01",
+      "hlsUrl": "http://127.0.0.1:8888/cam-entry-01/index.m3u8",
+      "plateRoi": {
+        "x": 0.25,
+        "y": 0.40,
+        "width": 0.50,
+        "height": 0.45
+      }
+    },
+    {
+      "cameraId": "cam-floor-b2-zonea",
+      "name": "Floor B2 Zone A Overhead CCTV",
+      "type": "FLOOR",
+      "floor": "B2",
+      "zone": "Zone A",
+      "rtspUrl": "rtsp://127.0.0.1:8554/cam-floor-b2-zonea",
+      "webrtcUrl": "http://127.0.0.1:8889/cam-floor-b2-zonea",
+      "hlsUrl": "http://127.0.0.1:8888/cam-floor-b2-zonea/index.m3u8",
+      "slotPolygons": [
+        {
+          "slotId": "b2-a01",
+          "polygon": [
+            [0.10, 0.20],
+            [0.22, 0.20],
+            [0.22, 0.55],
+            [0.10, 0.55]
+          ]
+        },
+        {
+          "slotId": "b2-a02",
+          "polygon": [
+            [0.24, 0.20],
+            [0.36, 0.20],
+            [0.36, 0.55],
+            [0.24, 0.55]
+          ]
+        },
+        {
+          "slotId": "b2-a03",
+          "polygon": [
+            [0.38, 0.20],
+            [0.50, 0.20],
+            [0.50, 0.55],
+            [0.38, 0.55]
+          ]
+        }
+      ]
+    },
+    {
+      "cameraId": "cam-exit-01",
+      "name": "Gate B Exit ANPR Camera",
+      "type": "EXIT",
+      "floor": "G",
+      "zone": "Exit Gate B",
+      "rtspUrl": "rtsp://127.0.0.1:8554/cam-exit-01",
+      "webrtcUrl": "http://127.0.0.1:8889/cam-exit-01",
+      "hlsUrl": "http://127.0.0.1:8888/cam-exit-01/index.m3u8",
+      "plateRoi": {
+        "x": 0.25,
+        "y": 0.40,
+        "width": 0.50,
+        "height": 0.45
+      }
+    }
+  ]
+}

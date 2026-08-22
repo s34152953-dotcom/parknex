@@ -94,6 +94,11 @@ export default function CustomerDashboard() {
     vehicleNumber ? { vehicleNumber } : "skip"
   );
 
+  const latestCctvSighting = useQuery(
+    api.cctv.getLatestSighting,
+    vehicleNumber ? { plateNumber: vehicleNumber } : "skip"
+  );
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/customer/login");
@@ -699,6 +704,32 @@ export default function CustomerDashboard() {
 
                   {/* Right 1/3 Column: Landmark Selector & Step Guidance */}
                   <div className="flex flex-col gap-4">
+                    {/* Latest Confirmed CCTV Sighting Card (if sighted) */}
+                    {latestCctvSighting && (
+                      <div className="bg-[#FFFFFF] border border-[#2F7D5A]/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/25 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D5A] animate-pulse" />
+                            CONFIRMED CCTV SIGHTING
+                          </span>
+                          <span className="text-[11px] text-[#70675F]">
+                            {new Date(latestCctvSighting.timestamp).toLocaleTimeString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="text-[13px] font-bold text-[#241F1B]">
+                          {latestCctvSighting.cameraName}
+                        </div>
+                        <div className="flex items-center justify-between text-[11.5px] text-[#70675F] pt-1 border-t border-[#DED3C7]">
+                          <span>
+                            Floor {latestCctvSighting.floor} · {latestCctvSighting.zone}
+                          </span>
+                          <span className="font-bold text-[#2F7D5A]">
+                            {(latestCctvSighting.confidence * 100).toFixed(1)}% Confidence
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Landmark Selector Card */}
                     <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3.5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
                       <div className="flex items-center justify-between pb-2.5 border-b border-[#DED3C7]">
