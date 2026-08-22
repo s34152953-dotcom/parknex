@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Car, ShieldCheck, Navigation, QrCode } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Car, ShieldCheck, Navigation, QrCode } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
+import LoadingFallback from "@/components/landing/LoadingFallback";
+
+// Dynamic import of ParkingHero to prevent SSR canvas issues and ensure fast load
+const ParkingHero = dynamic(() => import("@/components/landing/ParkingHero"), {
+  ssr: false,
+  loading: () => <LoadingFallback isReady={false} />,
+});
 
 export default function HomePage() {
   return (
@@ -28,75 +36,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── HERO SECTION ── */}
-      <section className="relative min-h-[max(calc(100dvh-72px),640px)] w-full flex flex-col justify-center py-12 lg:py-20 overflow-hidden">
-        {/* Background Indian Cars Image + Warm Beige Editorial Overlay */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-no-repeat bg-[center_right_20%] sm:bg-[center_right_15%] lg:bg-[right_center] w-full h-full opacity-45"
-          style={{
-            backgroundImage: 'url("/images/hero-indian-cars.jpg")',
-          }}
-        />
-
-        {/* Gradient Overlay for high text contrast and editorial aesthetics */}
-        <div
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            background: `
-              linear-gradient(
-                to right,
-                #FAF7F2 0%,
-                rgba(250, 247, 242, 0.97) 38%,
-                rgba(250, 247, 242, 0.75) 60%,
-                rgba(250, 247, 242, 0.25) 100%
-              )
-            `,
-          }}
-        />
-
-        {/* Hero Content Container */}
-        <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="w-full lg:w-[54%] flex flex-col">
-            {/* Editorial Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#DED3C7] bg-[#FFFFFF] text-[#241F1B] text-[12px] font-bold uppercase shadow-xs self-start mb-5">
-              <span className="w-2 h-2 rounded-full bg-[#C93B2F]" />
-              <span>Smart Mall Parking Management</span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-[36px] sm:text-[48px] lg:text-[56px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight">
-              Park in seconds.
-              <span className="block text-[#C93B2F]">Find your car</span>
-              <span className="block text-[#C93B2F]">instantly.</span>
-            </h1>
-
-            {/* Description */}
-            <p className="text-[16px] sm:text-[17.5px] text-[#70675F] mt-5 text-left leading-relaxed max-w-[500px]">
-              Drive in, receive your assigned parking space via SMS, and navigate back to your vehicle directly on your phone without downloading an app.
-            </p>
-
-            {/* Action Row */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3.5 w-full max-w-[440px]">
-              <Link
-                href="/customer/login"
-                className="flex items-center justify-center gap-2.5 w-full min-h-[48px] px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[15px] font-bold transition-all shadow-[0_4px_16px_rgba(201,59,47,0.25)]"
-              >
-                <Car className="w-5 h-5" />
-                <span>Customer Portal</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <Link
-                href="/auth/login"
-                className="flex items-center justify-center gap-2 w-full min-h-[48px] px-6 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[15px] font-bold transition-all shadow-xs"
-              >
-                <ShieldCheck className="w-5 h-5 text-[#C93B2F]" />
-                <span>Operator Portal</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── 3D WEBGL HERO SECTION ── */}
+      <ParkingHero />
 
       {/* ── INFO MICRO-DETAILS ── */}
       <section className="w-full px-4 sm:px-6 lg:px-8 bg-[#F3EAE0] py-6 border-y border-[#DED3C7]">
