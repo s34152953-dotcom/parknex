@@ -357,7 +357,10 @@ export const completeExitWithVerification = mutation({
   handler: async (ctx, args) => {
     let input = (args.tokenOrCode || "").trim();
     if (!input) {
-      throw new Error("Missing exit pass token or code.");
+      return {
+        success: false,
+        error: "Please enter a parking slot name (e.g. A-01, B-12) or scan an exit pass.",
+      };
     }
 
     // If input is a URL (e.g. https://.../customer/TOKEN or /customer/TOKEN?token=...)
@@ -397,7 +400,7 @@ export const completeExitWithVerification = mutation({
       }
     }
 
-    // 2.5. Try finding by Parking Slot Identifier (e.g. B12, B-12, A-01, B2-A01, b2-a01)
+    // 3. Try finding by Parking Slot Identifier (e.g. A-01, A01, A1, B-12, B12, b2-zonea-01)
     if (!booking) {
       const cleanSlot = input.replace(/[^A-Z0-9]/gi, "").toUpperCase();
       if (cleanSlot.length >= 1) {
@@ -406,7 +409,7 @@ export const completeExitWithVerification = mutation({
           .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
           .collect();
 
-        // Check directly against booking slotId
+        // Check against active booking slotId
         booking =
           activeBookings.find((b) => {
             const bSlotClean = (b.slotId || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
@@ -418,16 +421,25 @@ export const completeExitWithVerification = mutation({
             );
           }) || null;
 
-        // If not found directly, check slots table slotNumber / pillar + slotNumber
+        // If not found directly, match against all slots in database
         if (!booking) {
           const allSlots = await ctx.db.query("slots").collect();
           const matchedSlot = allSlots.find((s) => {
             const sNumClean = (s.slotNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
             const sIdClean = (s.slotId || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
-            const sPillarClean = (s.pillar || "").replace(/[^A-Z0-9]/gi, "").toUpperCase() + sNumClean;
+            const sPillarClean = (s.pillar || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+            // Handle variations like "A1" -> "A01", "B2" -> "B02"
+            let zeroPadded = cleanSlot;
+            if (/^[A-Z][1-9]$/.test(cleanSlot)) {
+              zeroPadded = cleanSlot[0] + "0" + cleanSlot[1];
+            }
+
             return (
               sNumClean === cleanSlot ||
+              sNumClean === zeroPadded ||
               sIdClean === cleanSlot ||
+              sIdClean.endsWith(cleanSlot) ||
               sPillarClean === cleanSlot ||
               (s.slotNumber && s.slotNumber.toUpperCase() === input.toUpperCase())
             );
@@ -435,12 +447,19 @@ export const completeExitWithVerification = mutation({
 
           if (matchedSlot) {
             booking = activeBookings.find((b) => b.slotId === matchedSlot.slotId) || null;
+            if (!booking) {
+              return {
+                success: false,
+                notFound: true,
+                error: `Space "${matchedSlot.slotNumber}" (${matchedSlot.floor} · ${matchedSlot.zone}) is currently ${matchedSlot.status.toUpperCase()} with no active session.`,
+              };
+            }
           }
         }
       }
     }
 
-    // 3. Try finding directly by Convex ID if input matches an ID format
+    // 4. Try finding directly by Convex Document ID
     if (!booking) {
       try {
         const maybeBooking = await ctx.db.get(input as any);
@@ -450,7 +469,7 @@ export const completeExitWithVerification = mutation({
       } catch {}
     }
 
-    // 4. If input is a JWT, verify signature and retrieve bookingId from payload
+    // 5. If input is a JWT, verify signature and retrieve bookingId from payload
     if (!booking && input.includes(".")) {
       try {
         const verified = await verifyExitToken(input);
@@ -462,7 +481,7 @@ export const completeExitWithVerification = mutation({
       } catch {}
     }
 
-    // 5. Try finding by vehicle number if operator entered or scanned plate string
+    // 6. Try finding by vehicle registration number (e.g. AP28 AX 7029 or MH02AB1234)
     if (!booking) {
       const normalizedPlate = input.replace(/[^A-Z0-9]/gi, "").toUpperCase();
       if (normalizedPlate.length >= 4) {
@@ -471,13 +490,14 @@ export const completeExitWithVerification = mutation({
           .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
           .collect();
 
-        booking = activeBookings.find(
-          (b) => b.vehicleNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase() === normalizedPlate
-        ) || null;
+        booking =
+          activeBookings.find(
+            (b) => b.vehicleNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase() === normalizedPlate
+          ) || null;
       }
     }
 
-    // 6. Search active bookings for matching exitPassToken
+    // 7. Search active bookings for matching exitPassToken
     if (!booking) {
       const activeBookings = await ctx.db
         .query("bookings")
@@ -488,7 +508,11 @@ export const completeExitWithVerification = mutation({
     }
 
     if (!booking) {
-      throw new Error(`No active parking session found for slot "${input}" or pass token. Please verify slot name.`);
+      return {
+        success: false,
+        notFound: true,
+        error: `No active parking session found for "${input}". Please check the space number (e.g. A-01) or vehicle plate.`,
+      };
     }
 
     // Handle already completed state gracefully

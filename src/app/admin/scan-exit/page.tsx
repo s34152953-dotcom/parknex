@@ -134,7 +134,8 @@ export default function AdminScanExitPage() {
         setMismatchData(null);
       }
     } catch (err: any) {
-      const msg = err.message || "Failed to process exit";
+      let msg = err.message || "Failed to process exit";
+      msg = msg.replace(/^\[CONVEX\s+[A-Z]\([^)]+\)\]\s*(?:\[Request ID:[^\]]+\]\s*)?/i, "");
       setErrorMessage(msg);
     } finally {
       setIsVerifying(false);
