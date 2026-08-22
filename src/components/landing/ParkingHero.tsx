@@ -25,14 +25,11 @@ function checkWebGL(): boolean {
 export default function ParkingHero() {
   const [canRender3D, setCanRender3D] = useState(false);
   const [isSceneReady, setIsSceneReady] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const isSmallDevice = window.innerWidth < 768;
-    setIsMobile(isSmallDevice);
     const hasWebGL = checkWebGL();
 
-    // Enable WebGL on desktop/tablet with WebGL support
     if (hasWebGL && !isSmallDevice) {
       setCanRender3D(true);
     }
@@ -50,7 +47,7 @@ export default function ParkingHero() {
       {/* ── Smooth Cross-Fade Loading / Fallback Layer ── */}
       <LoadingFallback isReady={canRender3D && isSceneReady} />
 
-      {/* ── Editorial Gradient Overlay for High Text Contrast ── */}
+      {/* ── Editorial Gradient Overlay: Crisp Text on Left, 100% Crystal-Clear 3D Garage on Right ── */}
       <div
         className="absolute inset-0 z-[2] pointer-events-none"
         style={{
@@ -58,9 +55,10 @@ export default function ParkingHero() {
             linear-gradient(
               to right,
               #FAF7F2 0%,
-              rgba(250, 247, 242, 0.96) 38%,
-              rgba(250, 247, 242, 0.72) 62%,
-              rgba(250, 247, 242, 0.18) 100%
+              rgba(250, 247, 242, 0.92) 28%,
+              rgba(250, 247, 242, 0.5) 46%,
+              rgba(250, 247, 242, 0.05) 70%,
+              transparent 100%
             )
           `,
         }}
@@ -68,7 +66,7 @@ export default function ParkingHero() {
 
       {/* ── HERO CONTENT (Standard HTML / CSS Layer above 3D) ── */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="w-full lg:w-[54%] flex flex-col">
+        <div className="w-full lg:w-[52%] flex flex-col">
           {/* Editorial Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#DED3C7] bg-[#FFFFFF]/90 backdrop-blur-xs text-[#241F1B] text-[12px] font-bold uppercase shadow-xs self-start mb-5">
             <span className="w-2 h-2 rounded-full bg-[#C93B2F]" />
@@ -76,7 +74,7 @@ export default function ParkingHero() {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-[36px] sm:text-[48px] lg:text-[56px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight">
+          <h1 className="text-[36px] sm:text-[48px] lg:text-[56px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight drop-shadow-xs">
             Park in seconds.
             <span className="block text-[#C93B2F]">Find your car</span>
             <span className="block text-[#C93B2F]">instantly.</span>

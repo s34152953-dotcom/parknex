@@ -21,13 +21,13 @@ export default function ParkingScene({ onReady }: { onReady?: () => void }) {
       <Canvas
         shadows
         dpr={dpr}
-        camera={{ position: [0, 1.62, 16], fov: 48, near: 0.1, far: 65 }}
+        camera={{ position: [0, 1.62, 16], fov: 48, near: 0.1, far: 75 }}
         gl={{
           antialias: true,
           alpha: false,
           powerPreference: "high-performance",
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.95,
+          toneMappingExposure: 1.15,
         }}
         onCreated={({ gl }) => {
           gl.shadowMap.enabled = true;
@@ -35,9 +35,9 @@ export default function ParkingScene({ onReady }: { onReady?: () => void }) {
           if (onReady) onReady();
         }}
       >
-        {/* Background Atmosphere & Atmospheric Underground Falloff Fog */}
-        <color attach="background" args={["#24201D"]} />
-        <fog attach="fog" args={["#24201D", 12, 54]} />
+        {/* Clean, authentic underground atmosphere & distant depth falloff */}
+        <color attach="background" args={["#36302A"]} />
+        <fog attach="fog" args={["#36302A", 22, 68]} />
 
         {/* Lighting Setup */}
         <EnvironmentLighting />

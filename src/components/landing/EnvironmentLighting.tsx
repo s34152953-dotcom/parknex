@@ -5,46 +5,51 @@ import React from "react";
 export default function EnvironmentLighting() {
   return (
     <>
-      {/* Cool-neutral ambient underground illumination */}
-      <ambientLight intensity={0.55} color="#D6CEBE" />
+      {/* Bright, clean ambient underground illumination */}
+      <ambientLight intensity={0.9} color="#EDE4D8" />
 
       {/* Subtle floor bounce light */}
       <directionalLight
         position={[0, -2, 0]}
-        intensity={0.2}
-        color="#8B8173"
+        intensity={0.3}
+        color="#B0A696"
       />
 
-      {/* Primary down-lights along the driving aisle */}
+      {/* Primary bright down-lights along the driving aisle */}
       <directionalLight
-        position={[0, 8, 10]}
-        intensity={1.2}
-        color="#FAF5EE"
+        position={[0, 8, 12]}
+        intensity={1.8}
+        color="#FFFDF9"
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-bias={-0.0001}
         shadow-camera-near={1}
-        shadow-camera-far={40}
-        shadow-camera-left={-15}
-        shadow-camera-right={15}
-        shadow-camera-top={15}
-        shadow-camera-bottom={-15}
+        shadow-camera-far={45}
+        shadow-camera-left={-18}
+        shadow-camera-right={18}
+        shadow-camera-top={18}
+        shadow-camera-bottom={-18}
       />
 
       {/* Secondary rear fill light for depth */}
       <directionalLight
-        position={[5, 6, -20]}
-        intensity={0.6}
-        color="#E3DDD3"
+        position={[5, 6, -18]}
+        intensity={0.9}
+        color="#F5EFE6"
       />
 
-      {/* Additional aisle accent lights mimicking overhead LED fixtures */}
-      <pointLight position={[-4, 3.8, 8]} intensity={1.8} distance={14} color="#FFF8EE" decay={2} />
-      <pointLight position={[4, 3.8, 0]} intensity={1.8} distance={14} color="#FFF8EE" decay={2} />
-      <pointLight position={[-4, 3.8, -8]} intensity={1.8} distance={14} color="#FFF8EE" decay={2} />
-      <pointLight position={[4, 3.8, -16]} intensity={1.8} distance={14} color="#FFF8EE" decay={2} />
-      <pointLight position={[-4, 3.8, -24]} intensity={1.8} distance={14} color="#FFF8EE" decay={2} />
+      {/* Bright overhead LED tube point lights along the driveway aisle */}
+      <pointLight position={[-3.6, 3.9, 14]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[3.6, 3.9, 14]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[-3.6, 3.9, 4]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[3.6, 3.9, 4]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[-3.6, 3.9, -6]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[3.6, 3.9, -6]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[-3.6, 3.9, -16]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[3.6, 3.9, -16]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[-3.6, 3.9, -26]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
+      <pointLight position={[3.6, 3.9, -26]} intensity={3.5} distance={18} color="#FFFBF2" decay={1.8} />
     </>
   );
 }
