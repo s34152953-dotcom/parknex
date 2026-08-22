@@ -3,136 +3,143 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
 
-// ── Shared Shared Static Geometries to guarantee 60 FPS ──────────────────────
+// ── Optimized Shared Geometries (Expanded for Ultra-Wide Full Bleed) ─────────
 const G = {
-  floor: new THREE.PlaneGeometry(36, 90),
-  ceiling: new THREE.PlaneGeometry(36, 90),
-  beam: new THREE.BoxGeometry(36, 0.5, 0.7),
+  floor: new THREE.PlaneGeometry(160, 160),
+  ceiling: new THREE.PlaneGeometry(160, 160),
+  wallSide: new THREE.PlaneGeometry(160, 4.6),
+  wallBack: new THREE.PlaneGeometry(160, 4.6),
+  beam: new THREE.BoxGeometry(160, 0.5, 0.7),
   pillar: new THREE.BoxGeometry(0.85, 4.2, 0.85),
   pillarSkirt: new THREE.BoxGeometry(0.88, 0.4, 0.88),
-  pillarSign: new THREE.PlaneGeometry(0.7, 0.4),
+  pillarSign: new THREE.PlaneGeometry(0.7, 0.38),
   fireExtinguisher: new THREE.CylinderGeometry(0.09, 0.09, 0.45, 16),
   fireCabinet: new THREE.BoxGeometry(0.35, 0.6, 0.18),
-  pipeMain: new THREE.CylinderGeometry(0.045, 0.045, 88, 12),
-  pipeConduit: new THREE.CylinderGeometry(0.025, 0.025, 88, 12),
-  cableTray: new THREE.BoxGeometry(0.35, 0.06, 88),
+  pipeMain: new THREE.CylinderGeometry(0.045, 0.045, 150, 12),
+  pipeConduit: new THREE.CylinderGeometry(0.025, 0.025, 150, 12),
+  cableTray: new THREE.BoxGeometry(0.35, 0.06, 150),
   lightFixture: new THREE.BoxGeometry(0.18, 0.08, 2.8),
   lightDiffuser: new THREE.BoxGeometry(0.12, 0.02, 2.6),
-  stallLine: new THREE.PlaneGeometry(0.1, 5.0),
+  stallLine: new THREE.PlaneGeometry(0.1, 5.2),
   stallEndLine: new THREE.PlaneGeometry(2.5, 0.1),
   laneDivider: new THREE.PlaneGeometry(0.12, 1.8),
   arrowShaft: new THREE.PlaneGeometry(0.18, 1.2),
   arrowHead: new THREE.ConeGeometry(0.32, 0.5, 3),
   wheelStop: new THREE.BoxGeometry(1.8, 0.12, 0.16),
   // Vehicle Body Geometries
-  carChassis: new THREE.BoxGeometry(1.9, 0.52, 4.2),
-  carCabin: new THREE.BoxGeometry(1.68, 0.46, 2.4),
-  carWindshieldFront: new THREE.PlaneGeometry(1.6, 0.44),
-  carWindshieldRear: new THREE.PlaneGeometry(1.6, 0.42),
+  carChassis: new THREE.BoxGeometry(1.9, 0.52, 4.3),
+  carCabin: new THREE.BoxGeometry(1.68, 0.46, 2.5),
+  carWindshieldFront: new THREE.PlaneGeometry(1.6, 0.46),
+  carWindshieldRear: new THREE.PlaneGeometry(1.6, 0.44),
   carWheel: new THREE.CylinderGeometry(0.34, 0.34, 0.24, 18),
   carRim: new THREE.CylinderGeometry(0.22, 0.22, 0.25, 14),
   headlight: new THREE.BoxGeometry(0.38, 0.12, 0.04),
   taillight: new THREE.BoxGeometry(0.48, 0.1, 0.04),
-  carShadow: new THREE.PlaneGeometry(2.2, 4.5),
+  carShadow: new THREE.PlaneGeometry(2.2, 4.6),
 };
 
 // ── Realistic PBR Materials ──────────────────────────────────────────────────
 const M = {
   floor: new THREE.MeshStandardMaterial({
-    color: "#4A4641",
-    roughness: 0.42,
-    metalness: 0.15,
+    color: "#524E48",
+    roughness: 0.38,
+    metalness: 0.18,
   }),
   ceiling: new THREE.MeshStandardMaterial({
-    color: "#3D3934",
-    roughness: 0.88,
+    color: "#3F3A34",
+    roughness: 0.85,
     metalness: 0.05,
   }),
+  wall: new THREE.MeshStandardMaterial({
+    color: "#59544D",
+    roughness: 0.75,
+    metalness: 0.08,
+  }),
   beam: new THREE.MeshStandardMaterial({
-    color: "#38342F",
-    roughness: 0.85,
+    color: "#423D37",
+    roughness: 0.8,
   }),
   pillar: new THREE.MeshStandardMaterial({
-    color: "#E2DDD5",
-    roughness: 0.65,
+    color: "#ECE6DC",
+    roughness: 0.6,
     metalness: 0.08,
   }),
   pillarSkirt: new THREE.MeshStandardMaterial({
-    color: "#D4A017",
-    roughness: 0.5,
+    color: "#D99B14",
+    roughness: 0.45,
     metalness: 0.2,
   }),
   pillarSign: new THREE.MeshStandardMaterial({
-    color: "#241F1B",
-    roughness: 0.4,
+    color: "#2C2621",
+    roughness: 0.35,
   }),
   fireRed: new THREE.MeshStandardMaterial({
-    color: "#B3281E",
+    color: "#C22E22",
     roughness: 0.35,
     metalness: 0.4,
   }),
   conduitMetal: new THREE.MeshStandardMaterial({
-    color: "#8F9499",
+    color: "#9EA4AA",
     roughness: 0.3,
     metalness: 0.85,
   }),
   cableTray: new THREE.MeshStandardMaterial({
-    color: "#72777D",
+    color: "#7E848A",
     roughness: 0.45,
     metalness: 0.75,
   }),
   lightFixture: new THREE.MeshStandardMaterial({
-    color: "#2C2A28",
+    color: "#33302C",
     roughness: 0.6,
   }),
   lightGlow: new THREE.MeshStandardMaterial({
     color: "#FFFBF2",
     emissive: "#FFFBF2",
-    emissiveIntensity: 1.6,
+    emissiveIntensity: 1.8,
     roughness: 0.2,
   }),
   paintWhite: new THREE.MeshBasicMaterial({
     color: "#FAF7F2",
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.88,
   }),
   paintYellow: new THREE.MeshBasicMaterial({
-    color: "#E5A922",
+    color: "#F0B429",
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.88,
   }),
   wheelStop: new THREE.MeshStandardMaterial({
-    color: "#2F2B27",
+    color: "#302B27",
     roughness: 0.8,
   }),
   carShadow: new THREE.MeshBasicMaterial({
     color: "#181512",
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.6,
   }),
   carGlass: new THREE.MeshStandardMaterial({
-    color: "#181D24",
+    color: "#1B2129",
     roughness: 0.08,
     metalness: 0.95,
   }),
   carTire: new THREE.MeshStandardMaterial({
-    color: "#1E1C1A",
+    color: "#201E1B",
     roughness: 0.92,
   }),
   carRim: new THREE.MeshStandardMaterial({
-    color: "#DCE1E6",
+    color: "#E2E7EC",
     metalness: 0.9,
     roughness: 0.2,
   }),
   headlightGlow: new THREE.MeshStandardMaterial({
     color: "#FFFFFF",
     emissive: "#FFFFFF",
-    emissiveIntensity: 1.8,
+    emissiveIntensity: 2.0,
   }),
   taillightGlow: new THREE.MeshStandardMaterial({
-    color: "#D83A2D",
-    emissive: "#D83A2D",
-    emissiveIntensity: 1.4,
+    color: "#E0382B",
+    emissive: "#E0382B",
+    emissiveIntensity: 1.5,
   }),
 };
 
@@ -174,28 +181,28 @@ function RealisticParkedCar({
       <mesh geometry={G.carChassis} material={paintMat} position={[0, 0.48, 0]} castShadow receiveShadow />
 
       {/* Cabin Roof / Greenhouse */}
-      <mesh geometry={G.carCabin} material={paintMat} position={[0, 0.92, -0.2]} castShadow />
+      <mesh geometry={G.carCabin} material={paintMat} position={[0, 0.94, -0.15]} castShadow />
 
       {/* Windshields & Windows */}
       <mesh
         geometry={G.carWindshieldFront}
         material={M.carGlass}
-        position={[0, 0.92, 0.95]}
+        position={[0, 0.94, 1.05]}
         rotation={[-0.45, 0, 0]}
       />
       <mesh
         geometry={G.carWindshieldRear}
         material={M.carGlass}
-        position={[0, 0.92, -1.35]}
+        position={[0, 0.94, -1.35]}
         rotation={[0.45, 0, 0]}
       />
 
       {/* Wheels */}
       {([
-        [-0.92, 0.34, 1.25],
-        [0.92, 0.34, 1.25],
-        [-0.92, 0.34, -1.25],
-        [0.92, 0.34, -1.25],
+        [-0.94, 0.34, 1.25],
+        [0.94, 0.34, 1.25],
+        [-0.94, 0.34, -1.25],
+        [0.94, 0.34, -1.25],
       ] as const).map(([wx, wy, wz], idx) => (
         <group key={idx} position={[wx, wy, wz]}>
           <mesh geometry={G.carWheel} material={M.carTire} rotation={[0, 0, Math.PI / 2]} />
@@ -204,12 +211,12 @@ function RealisticParkedCar({
       ))}
 
       {/* Front Headlights */}
-      <mesh geometry={G.headlight} material={M.headlightGlow} position={[-0.65, 0.52, 2.1]} />
-      <mesh geometry={G.headlight} material={M.headlightGlow} position={[0.65, 0.52, 2.1]} />
+      <mesh geometry={G.headlight} material={M.headlightGlow} position={[-0.65, 0.52, 2.15]} />
+      <mesh geometry={G.headlight} material={M.headlightGlow} position={[0.65, 0.52, 2.15]} />
 
       {/* Rear Taillights */}
-      <mesh geometry={G.taillight} material={M.taillightGlow} position={[-0.65, 0.55, -2.1]} />
-      <mesh geometry={G.taillight} material={M.taillightGlow} position={[0.65, 0.55, -2.1]} />
+      <mesh geometry={G.taillight} material={M.taillightGlow} position={[-0.65, 0.55, -2.15]} />
+      <mesh geometry={G.taillight} material={M.taillightGlow} position={[0.65, 0.55, -2.15]} />
     </group>
   );
 }
@@ -217,57 +224,82 @@ function RealisticParkedCar({
 // ── Main Garage Environment ──────────────────────────────────────────────────
 export default function GarageModel() {
   // Pillars spaced along Z
-  const pillarZPositions = useMemo(() => [16, 8, 0, -8, -16, -24, -32, -40], []);
+  const pillarZPositions = useMemo(() => [24, 16, 8, 0, -8, -16, -24, -32, -40, -48], []);
   // Ceiling Beams spaced along Z
-  const beamZPositions = useMemo(() => [20, 12, 4, -4, -12, -20, -28, -36], []);
-  // Overhead Linear Light Positions
+  const beamZPositions = useMemo(() => [28, 20, 12, 4, -4, -12, -20, -28, -36, -44, -52], []);
+  
+  // Overhead Linear Light Positions (Central & Side Aisles)
   const lightPositions = useMemo(
     () => [
-      [-2.4, 4.05, 14],
-      [2.4, 4.05, 14],
-      [-2.4, 4.05, 6],
-      [2.4, 4.05, 6],
-      [-2.4, 4.05, -2],
-      [2.4, 4.05, -2],
-      [-2.4, 4.05, -10],
-      [2.4, 4.05, -10],
-      [-2.4, 4.05, -18],
-      [2.4, 4.05, -18],
-      [-2.4, 4.05, -26],
-      [2.4, 4.05, -26],
-      [-2.4, 4.05, -34],
-      [2.4, 4.05, -34],
+      [-2.4, 4.05, 20], [2.4, 4.05, 20],
+      [-2.4, 4.05, 12], [2.4, 4.05, 12],
+      [-2.4, 4.05, 4], [2.4, 4.05, 4],
+      [-2.4, 4.05, -4], [2.4, 4.05, -4],
+      [-2.4, 4.05, -12], [2.4, 4.05, -12],
+      [-2.4, 4.05, -20], [2.4, 4.05, -20],
+      [-2.4, 4.05, -28], [2.4, 4.05, -28],
+      [-2.4, 4.05, -36], [2.4, 4.05, -36],
+      [-2.4, 4.05, -44], [2.4, 4.05, -44],
+      // Outer aisle lights for edge illumination
+      [-10.5, 4.05, 12], [10.5, 4.05, 12],
+      [-10.5, 4.05, -4], [10.5, 4.05, -4],
+      [-10.5, 4.05, -20], [10.5, 4.05, -20],
+      [-10.5, 4.05, -36], [10.5, 4.05, -36],
     ],
     []
   );
 
-  // Parking Bays (X: -7.5 left, +7.5 right)
+  // Parking Bays (X: -7.6 left, +7.6 right, plus outer bays)
   const parkingStalls = useMemo(() => {
     const stalls: { x: number; z: number; side: "left" | "right" }[] = [];
-    for (let z = 18; z >= -42; z -= 3.2) {
+    for (let z = 22; z >= -50; z -= 3.2) {
       stalls.push({ x: -7.6, z, side: "left" });
       stalls.push({ x: 7.6, z, side: "right" });
+      stalls.push({ x: -15.8, z, side: "left" });
+      stalls.push({ x: 15.8, z, side: "right" });
     }
     return stalls;
   }, []);
 
   return (
     <group>
-      {/* ── Floor ── */}
+      {/* ── Floor (Wide 160x160m to prevent edge gaps on any screen) ── */}
       <mesh
         geometry={G.floor}
         material={M.floor}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0, -12]}
+        position={[0, 0, -15]}
         receiveShadow
       />
 
-      {/* ── Ceiling ── */}
+      {/* ── Ceiling (Wide 160x160m) ── */}
       <mesh
         geometry={G.ceiling}
         material={M.ceiling}
         rotation={[Math.PI / 2, 0, 0]}
-        position={[0, 4.2, -12]}
+        position={[0, 4.2, -15]}
+      />
+
+      {/* ── Perimeter Boundary Walls (Closes all open edges) ── */}
+      {/* Left Wall */}
+      <mesh
+        geometry={G.wallSide}
+        material={M.wall}
+        position={[-35, 2.1, -15]}
+        rotation={[0, Math.PI / 2, 0]}
+      />
+      {/* Right Wall */}
+      <mesh
+        geometry={G.wallSide}
+        material={M.wall}
+        position={[35, 2.1, -15]}
+        rotation={[0, -Math.PI / 2, 0]}
+      />
+      {/* Back Wall */}
+      <mesh
+        geometry={G.wallBack}
+        material={M.wall}
+        position={[0, 2.1, -65]}
       />
 
       {/* ── Structural Cross-Beams ── */}
@@ -286,21 +318,38 @@ export default function GarageModel() {
       <mesh
         geometry={G.pipeMain}
         material={M.fireRed}
-        position={[-3.6, 3.75, -12]}
+        position={[-3.6, 3.75, -15]}
+        rotation={[Math.PI / 2, 0, 0]}
+      />
+      <mesh
+        geometry={G.pipeMain}
+        material={M.fireRed}
+        position={[11.6, 3.75, -15]}
         rotation={[Math.PI / 2, 0, 0]}
       />
       {/* Electrical Conduit */}
       <mesh
         geometry={G.pipeConduit}
         material={M.conduitMetal}
-        position={[3.6, 3.8, -12]}
+        position={[3.6, 3.8, -15]}
+        rotation={[Math.PI / 2, 0, 0]}
+      />
+      <mesh
+        geometry={G.pipeConduit}
+        material={M.conduitMetal}
+        position={[-11.6, 3.8, -15]}
         rotation={[Math.PI / 2, 0, 0]}
       />
       {/* Heavy Cable Tray */}
       <mesh
         geometry={G.cableTray}
         material={M.cableTray}
-        position={[0, 3.85, -12]}
+        position={[0, 3.85, -15]}
+      />
+      <mesh
+        geometry={G.cableTray}
+        material={M.cableTray}
+        position={[15.2, 3.85, -15]}
       />
 
       {/* ── Overhead Fluorescent / LED Fixtures ── */}
@@ -311,10 +360,10 @@ export default function GarageModel() {
         </group>
       ))}
 
-      {/* ── Concrete Pillars with Hazard Skirts & Zone Signs ── */}
+      {/* ── Concrete Pillars across Central and Outer Bays ── */}
       {pillarZPositions.map((pz, idx) => (
         <React.Fragment key={idx}>
-          {/* Left Pillar */}
+          {/* Inner Left Pillar */}
           <group position={[-5.2, 2.1, pz]}>
             <mesh geometry={G.pillar} material={M.pillar} castShadow receiveShadow />
             <mesh geometry={G.pillarSkirt} material={M.pillarSkirt} position={[0, -1.9, 0]} />
@@ -324,13 +373,12 @@ export default function GarageModel() {
               position={[0.44, 0.4, 0]}
               rotation={[0, Math.PI / 2, 0]}
             />
-            {/* Fire Cabinet on alternating left pillars */}
             {idx % 2 === 0 && (
               <mesh geometry={G.fireCabinet} material={M.fireRed} position={[0.48, -0.2, 0]} />
             )}
           </group>
 
-          {/* Right Pillar */}
+          {/* Inner Right Pillar */}
           <group position={[5.2, 2.1, pz]}>
             <mesh geometry={G.pillar} material={M.pillar} castShadow receiveShadow />
             <mesh geometry={G.pillarSkirt} material={M.pillarSkirt} position={[0, -1.9, 0]} />
@@ -340,10 +388,21 @@ export default function GarageModel() {
               position={[-0.44, 0.4, 0]}
               rotation={[0, -Math.PI / 2, 0]}
             />
-            {/* Fire Extinguisher on alternating right pillars */}
             {idx % 2 === 1 && (
               <mesh geometry={G.fireExtinguisher} material={M.fireRed} position={[-0.48, -0.4, 0]} />
             )}
+          </group>
+
+          {/* Outer Left Pillar for ultra-wide coverage */}
+          <group position={[-18.5, 2.1, pz]}>
+            <mesh geometry={G.pillar} material={M.pillar} castShadow receiveShadow />
+            <mesh geometry={G.pillarSkirt} material={M.pillarSkirt} position={[0, -1.9, 0]} />
+          </group>
+
+          {/* Outer Right Pillar for ultra-wide coverage */}
+          <group position={[18.5, 2.1, pz]}>
+            <mesh geometry={G.pillar} material={M.pillar} castShadow receiveShadow />
+            <mesh geometry={G.pillarSkirt} material={M.pillarSkirt} position={[0, -1.9, 0]} />
           </group>
         </React.Fragment>
       ))}
@@ -382,7 +441,7 @@ export default function GarageModel() {
       })}
 
       {/* ── Central Lane Markings & Directional Arrows ── */}
-      {[-30, -22, -14, -6, 2, 10, 18].map((lz, idx) => (
+      {[-44, -36, -28, -20, -12, -4, 4, 12, 20].map((lz, idx) => (
         <mesh
           key={idx}
           geometry={G.laneDivider}
@@ -393,21 +452,21 @@ export default function GarageModel() {
       ))}
 
       {/* Directional Floor Guidance Arrows */}
-      {[-24, -8, 8].map((az, idx) => (
+      {[-32, -16, 0, 16].map((az, idx) => (
         <group key={idx} position={[1.4, 0.014, az]} rotation={[-Math.PI / 2, 0, 0]}>
           <mesh geometry={G.arrowShaft} material={M.paintYellow} position={[0, -0.4, 0]} />
           <mesh geometry={G.arrowHead} material={M.paintYellow} position={[0, 0.4, 0]} />
         </group>
       ))}
-      {[-16, 0, 16].map((az, idx) => (
+      {[-24, -8, 8, 24].map((az, idx) => (
         <group key={idx} position={[-1.4, 0.014, az]} rotation={[-Math.PI / 2, 0, Math.PI]}>
           <mesh geometry={G.arrowShaft} material={M.paintYellow} position={[0, -0.4, 0]} />
           <mesh geometry={G.arrowHead} material={M.paintYellow} position={[0, 0.4, 0]} />
         </group>
       ))}
 
-      {/* ── Realistic Parked Vehicles (Spacious & Distant) ── */}
-      {/* Left Bay 1: Pearl White Tata Nexon EV styled SUV */}
+      {/* ── Realistic Parked Vehicles (Spacious & Believable) ── */}
+      {/* Left Bay: Pearl White Tata Nexon EV styled SUV */}
       <RealisticParkedCar
         position={[-7.4, 0, 8.5]}
         rotation={[0, Math.PI / 2, 0]}
@@ -416,7 +475,7 @@ export default function GarageModel() {
         roughness={0.15}
       />
 
-      {/* Left Bay 2: Metallic Charcoal Sedan */}
+      {/* Left Bay: Metallic Charcoal Indian Sedan */}
       <RealisticParkedCar
         position={[-7.4, 0, -7.5]}
         rotation={[0, Math.PI / 2, 0]}
@@ -425,7 +484,7 @@ export default function GarageModel() {
         roughness={0.18}
       />
 
-      {/* Right Bay 1: Silver Metallic Compact Crossover */}
+      {/* Right Bay: Silver Metallic Compact Crossover */}
       <RealisticParkedCar
         position={[7.4, 0, 1.5]}
         rotation={[0, -Math.PI / 2, 0]}
@@ -434,7 +493,7 @@ export default function GarageModel() {
         roughness={0.14}
       />
 
-      {/* Right Bay 2: Deep Crimson Indian SUV */}
+      {/* Right Bay: Deep Crimson SUV */}
       <RealisticParkedCar
         position={[7.4, 0, -21.5]}
         rotation={[0, -Math.PI / 2, 0]}
@@ -443,13 +502,22 @@ export default function GarageModel() {
         roughness={0.2}
       />
 
-      {/* Left Bay 3: Distant Midnight Blue Sedan */}
+      {/* Outer Left Bay: Deep Blue Metallic Vehicle */}
       <RealisticParkedCar
-        position={[-7.4, 0, -30.5]}
+        position={[-15.6, 0, -14.5]}
         rotation={[0, Math.PI / 2, 0]}
         paintColor="#1B2838"
         metallic={0.85}
         roughness={0.22}
+      />
+
+      {/* Outer Right Bay: Bronze Gold Crossover */}
+      <RealisticParkedCar
+        position={[15.6, 0, -6.5]}
+        rotation={[0, -Math.PI / 2, 0]}
+        paintColor="#8C6E48"
+        metallic={0.82}
+        roughness={0.2}
       />
     </group>
   );
