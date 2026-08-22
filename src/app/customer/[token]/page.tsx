@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import ParknexLogo from "@/components/ui/ParknexLogo";
 
 interface CustomerBookingData {
   id: string;
@@ -238,7 +239,7 @@ export default function CustomerFindMySpacePage({
         {/* QR Code Container with High-Contrast White Backing */}
         <div className="relative p-5 sm:p-6 rounded-3xl bg-white border-2 border-[#EAE3D9] shadow-md flex items-center justify-center max-w-full">
           <QRCodeSVG
-            value={booking.customerAccessToken}
+            value={booking.exitPassToken}
             size={230}
             level="H"
             fgColor={isCompleted ? "#78716C" : "#1C1917"}

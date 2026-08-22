@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { ParkingSlot } from "@/lib/parking/nearestSlot";
 import AdminParkingMap from "@/components/admin/AdminParkingMap";
@@ -23,7 +23,7 @@ import {
   Box,
 } from "lucide-react";
 import Link from "next/link";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvex } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 
 // Lazy-load the Three.js 3D component to optimize initial load
@@ -54,6 +54,8 @@ export default function AdminBookingPage() {
   const holdSlotMutation = useMutation(api.slots.holdSlot);
   const updateSlotStatus = useMutation(api.slots.updateSlotStatus);
   const retrySmsMutation = useMutation(api.bookings.retrySms);
+  const updateSmsStatus = useMutation(api.bookings.updateSmsStatus);
+  const submittingRef = useRef(false);
 
   const slots = (slotsData?.slots || []).map((s: any) => ({ ...s, id: s.slotId }));
   const nearestSlot = slotsData?.nearestAvailableSlot ? { ...slotsData.nearestAvailableSlot, id: slotsData.nearestAvailableSlot.slotId } : null;
@@ -133,10 +135,12 @@ export default function AdminBookingPage() {
     }
   };
 
-  // Handle Confirm Booking with validation
+  // Handle Confirm Booking with validation + SMS dispatch
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) return;
+    // Prevent duplicate submissions
+    if (submittingRef.current) return;
 
     const cleanPlate = vehicleNumber.trim().toUpperCase().replace(/\s+/g, " ");
     const cleanPhone = phoneNumber.trim();
@@ -152,12 +156,14 @@ export default function AdminBookingPage() {
       return;
     }
 
-    const fullPhone = cleanPhone.startsWith("+") ? cleanPhone : `${countryCode} ${digitsOnly}`;
+    const fullPhone = cleanPhone.startsWith("+") ? cleanPhone : `${countryCode}${digitsOnly}`;
 
     setSubmitting(true);
+    submittingRef.current = true;
     setFormError(null);
 
     try {
+      // Step 1: Create booking in Convex (atomic - reserves slot + generates tokens)
       const result = await createBooking({
         vehicleNumber: cleanPlate,
         phoneNumber: fullPhone,
@@ -165,31 +171,117 @@ export default function AdminBookingPage() {
         mallName: selectedSlot.mallName,
       });
 
+      const customerLink = `${typeof window !== "undefined" ? window.location.origin : ""}/customer/${result.customerAccessToken}`;
+
+      // Step 2: Dispatch SMS via Next.js API route (calls real SMS provider)
+      let smsStatus = "PENDING";
+      let smsProvider = "none";
+      let smsMessageId = "";
+      let smsError = "";
+
+      try {
+        const smsRes = await fetch("/api/bookings/send-sms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: result.bookingId,
+            phoneNumber: fullPhone,
+            vehicleNumber: cleanPlate,
+            customerAccessToken: result.customerAccessToken,
+            floor: result.floor,
+            zone: result.zone,
+            pillar: result.pillar,
+            slotNumber: result.slotNumber,
+          }),
+        });
+
+        const smsData = await smsRes.json();
+        smsStatus = smsData.smsStatus || "FAILED";
+        smsProvider = smsData.provider || "none";
+        smsMessageId = smsData.messageId || "";
+        smsError = smsData.error || "";
+      } catch (smsErr: any) {
+        smsStatus = "FAILED";
+        smsError = smsErr.message || "Network error sending SMS.";
+      }
+
+      // Step 3: Update Convex with SMS delivery status
+      try {
+        await updateSmsStatus({
+          bookingId: result.bookingId,
+          smsStatus: smsStatus as "SENT" | "FAILED" | "PENDING",
+          smsMessageId: smsMessageId || undefined,
+          smsProvider: smsProvider || undefined,
+        });
+      } catch (e) {
+        // Non-critical: booking was already created successfully
+      }
+
       setBookedResult({
         id: result.bookingId,
         vehicleNumber: cleanPlate,
-        slotNumber: selectedSlot.slotNumber,
-        floor: selectedSlot.floor,
-        zone: selectedSlot.zone,
-        customerLink: `${typeof window !== "undefined" ? window.location.origin : ""}/customer/${result.token}`,
+        phoneNumber: fullPhone,
+        slotNumber: result.slotNumber,
+        floor: result.floor,
+        zone: result.zone,
+        pillar: result.pillar,
+        distanceFromEntrance: result.distanceFromEntrance,
+        customerAccessToken: result.customerAccessToken,
+        customerLink,
+        entryTime: new Date().toISOString(),
+        smsStatus,
+        smsProvider,
+        smsError,
       });
     } catch (err: any) {
       setFormError(err.message || "Error confirming booking.");
     } finally {
       setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
-  // Resend SMS via Convex mutation
+  // Resend SMS via API (reuses existing booking + customer access token)
   const handleResendSms = async () => {
     if (!bookedResult?.id) return;
     setResendingSms(true);
     setSmsStatusMessage(null);
     try {
-      await retrySmsMutation({ bookingId: bookedResult.id });
-      setSmsStatusMessage("SMS retry queued. Check SMS provider status.");
+      // Mark as pending in Convex
+      const retryData = await retrySmsMutation({ bookingId: bookedResult.id });
+
+      // Actually send the SMS via API
+      const smsRes = await fetch("/api/bookings/send-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: bookedResult.id,
+          phoneNumber: retryData.phoneNumber || bookedResult.phoneNumber,
+          vehicleNumber: retryData.vehicleNumber || bookedResult.vehicleNumber,
+          customerAccessToken: retryData.customerAccessToken || bookedResult.customerAccessToken,
+          floor: retryData.floor || bookedResult.floor,
+          zone: retryData.zone || bookedResult.zone,
+          pillar: retryData.pillar || bookedResult.pillar,
+          slotNumber: retryData.slotNumber || bookedResult.slotNumber,
+        }),
+      });
+
+      const smsData = await smsRes.json();
+      if (smsData.success) {
+        setSmsStatusMessage(`SMS sent via ${smsData.provider}.`);
+        setBookedResult((prev: any) => prev ? { ...prev, smsStatus: "SENT", smsProvider: smsData.provider } : prev);
+        await updateSmsStatus({
+          bookingId: bookedResult.id,
+          smsStatus: "SENT",
+          smsMessageId: smsData.messageId || undefined,
+          smsProvider: smsData.provider || undefined,
+        });
+      } else {
+        setSmsStatusMessage(`SMS failed: ${smsData.error || "Unknown error"}. Use Copy Link to share manually.`);
+        await updateSmsStatus({ bookingId: bookedResult.id, smsStatus: "FAILED" });
+      }
     } catch (err: any) {
-      setSmsStatusMessage(err.message || "Failed to queue SMS retry.");
+      setSmsStatusMessage(err.message || "Failed to send SMS. Use Copy Link instead.");
     } finally {
       setResendingSms(false);
     }

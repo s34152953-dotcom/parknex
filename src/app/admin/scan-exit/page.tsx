@@ -83,13 +83,19 @@ export default function AdminScanExitPage() {
     setCompletedSuccess(false);
 
     try {
-      const booking = await convex.query(api.bookings.getBookingByToken, { token: rawToken.trim() });
+      // First try to find by exitPassToken
+      let booking = await convex.query(api.bookings.getBookingByExitPass, { exitPassToken: rawToken.trim() });
+      
+      // Fallback: try as customerAccessToken for backwards compatibility
+      if (!booking) {
+        booking = await convex.query(api.bookings.getBookingByToken, { token: rawToken.trim() });
+      }
       
       if (booking) {
-        if (booking.status === "ACTIVE") {
+        if (booking.status === "ACTIVE" && !booking.exitPassUsed) {
           setResult({ isValid: true, status: "VALID", booking: { ...booking, id: booking._id, floor: booking.slotDetails?.floor, zone: booking.slotDetails?.zone, slotNumber: booking.slotDetails?.slotNumber } });
         } else {
-          setResult({ isValid: false, status: "ALREADY_USED", message: "This pass has already been used to exit." });
+          setResult({ isValid: false, status: "ALREADY_USED", message: "This exit pass has already been used or the booking is no longer active." });
         }
       } else {
         setResult({
@@ -111,15 +117,18 @@ export default function AdminScanExitPage() {
 
   // Complete Exit
   const handleCompleteExit = async () => {
-    if (!result?.booking?.customerAccessToken) return;
+    if (!result?.booking) return;
+    const exitToken = result.booking.exitPassToken || result.booking.customerAccessToken;
+    if (!exitToken) return;
 
     setCompleting(true);
     try {
-      await completeExitMutation({ token: result.booking.customerAccessToken });
+      await completeExitMutation({ token: exitToken });
       setCompletedSuccess(true);
       setResult((prev) => (prev ? { ...prev, isValid: false, status: "ALREADY_USED" } : null));
     } catch (err: any) {
-      alert("Error completing exit. Please retry.");
+      const errMsg = err.message || "Error completing exit. Please retry.";
+      setResult((prev) => prev ? { ...prev, isValid: false, status: "INVALID", message: errMsg } : null);
     } finally {
       setCompleting(false);
     }

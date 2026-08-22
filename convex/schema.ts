@@ -32,11 +32,17 @@ export default defineSchema({
     exitTime: v.optional(v.string()),
     mallName: v.string(),
     customerAccessToken: v.string(),
+    exitPassToken: v.string(), // Cryptographically signed single-use exit pass
+    exitPassUsed: v.boolean(), // Whether the exit pass has been scanned
     smsStatus: v.union(v.literal("PENDING"), v.literal("SENT"), v.literal("FAILED")),
+    smsMessageId: v.optional(v.string()),
+    smsProvider: v.optional(v.string()),
   })
     .index("by_slotId", ["slotId"])
     .index("by_customerAccessToken", ["customerAccessToken"])
-    .index("by_status", ["status"]),
+    .index("by_exitPassToken", ["exitPassToken"])
+    .index("by_status", ["status"])
+    .index("by_vehicleNumber", ["vehicleNumber"]),
 
   users: defineTable({
     name: v.string(),

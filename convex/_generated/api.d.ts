@@ -10,6 +10,7 @@
 
 import type * as bookings from "../bookings.js";
 import type * as crypto from "../crypto.js";
+import type * as migrations from "../migrations.js";
 import type * as operators from "../operators.js";
 import type * as seed from "../seed.js";
 import type * as slots from "../slots.js";
@@ -24,6 +25,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   bookings: typeof bookings;
   crypto: typeof crypto;
+  migrations: typeof migrations;
   operators: typeof operators;
   seed: typeof seed;
   slots: typeof slots;
