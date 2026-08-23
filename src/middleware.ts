@@ -29,12 +29,18 @@ export async function middleware(req: NextRequest) {
   const isCustomerLogin = pathname === "/customer/login";
   const isCustomerDashboard = pathname.startsWith("/customer/dashboard");
 
+  const makeRedirect = (url: URL) => {
+    const res = NextResponse.redirect(url);
+    res.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+    return res;
+  };
+
   // 1. Unauthenticated users accessing /admin/* -> redirect to /auth/login
   if (!isAuth && isAdminRoute) {
     const url = req.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", pathname + (search || ""));
-    return NextResponse.redirect(url);
+    return makeRedirect(url);
   }
 
   // 2. Customers trying to access /admin/* -> redirect to /customer/dashboard
@@ -42,7 +48,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/customer/dashboard";
     url.search = "";
-    return NextResponse.redirect(url);
+    return makeRedirect(url);
   }
 
   // 3. Unauthenticated users accessing /customer/dashboard -> redirect to /customer/login
@@ -50,7 +56,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/customer/login";
     url.search = "";
-    return NextResponse.redirect(url);
+    return makeRedirect(url);
   }
 
   // 4. Authenticated operators visiting /auth/login -> redirect to /admin
@@ -58,7 +64,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/admin";
     url.search = "";
-    return NextResponse.redirect(url);
+    return makeRedirect(url);
   }
 
   // 5. Authenticated customers visiting /customer/login -> redirect to /customer/dashboard
@@ -66,7 +72,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/customer/dashboard";
     url.search = "";
-    return NextResponse.redirect(url);
+    return makeRedirect(url);
   }
 
   return NextResponse.next();
