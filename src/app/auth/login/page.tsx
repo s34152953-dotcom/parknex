@@ -10,7 +10,7 @@ import ParknexLogo from "@/components/ui/ParknexLogo";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams?.get("redirect") || "/admin/booking";
+  const redirectPath = searchParams?.get("redirect") || "/admin";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
