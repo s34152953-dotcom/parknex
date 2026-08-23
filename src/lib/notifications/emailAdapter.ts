@@ -22,6 +22,12 @@ export interface EmailDeliveryResult {
   status: "sent" | "failed" | "not_requested";
   providerId?: string;
   error?: string;
+  uiErrorCategory?:
+    | "Email sent"
+    | "Email not requested"
+    | "Email failed: Resend sandbox recipient restriction"
+    | "Email failed: Email service is not configured"
+    | "Email failed: Delivery provider rejected the request";
   recipient?: string;
   maskedRecipient?: string;
   sentAt?: string;
@@ -51,33 +57,47 @@ export function isValidEmail(email?: string): boolean {
 
 /**
  * Real Server-Side Transactional Email Sender via Resend
+ * Runs strictly in the Next.js Node.js server runtime.
  */
 export async function sendParkingPassEmail(params: SendParkingEmailParams): Promise<EmailDeliveryResult> {
   const cleanEmail = params.to ? params.to.trim().toLowerCase() : "";
+  const masked = maskEmail(cleanEmail);
 
   if (!cleanEmail || !isValidEmail(cleanEmail)) {
     return {
       success: false,
       status: "failed",
       error: "Invalid customer email address format.",
+      uiErrorCategory: "Email failed: Delivery provider rejected the request",
       recipient: cleanEmail,
-      maskedRecipient: maskEmail(cleanEmail),
+      maskedRecipient: masked,
     };
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.PARKNEX_EMAIL_FROM || "ParkNex <onboarding@resend.dev>";
-  const appUrl = (process.env.PARKNEX_APP_URL || process.env.NEXTAUTH_URL || "https://parknex.vercel.app").replace(/\/$/, "");
+  const isEnvConfigured = Boolean(
+    apiKey &&
+      !apiKey.includes("placeholder") &&
+      apiKey !== "re_your_server_side_key" &&
+      apiKey !== "re_your_resend_api_key_here"
+  );
 
-  if (!apiKey || apiKey.includes("placeholder") || apiKey === "re_your_server_side_key") {
+  console.log(`[assignment-email] environment configured: ${isEnvConfigured}`);
+
+  if (!isEnvConfigured) {
+    console.log("[assignment-email] Resend rejected: status 500 RESEND_API_KEY is not configured");
     return {
       success: false,
       status: "failed",
-      error: "RESEND_API_KEY is not configured in server environment variables.",
+      error: "Email service is not configured in server environment variables.",
+      uiErrorCategory: "Email failed: Email service is not configured",
       recipient: cleanEmail,
-      maskedRecipient: maskEmail(cleanEmail),
+      maskedRecipient: masked,
     };
   }
+
+  const fromEmail = process.env.PARKNEX_EMAIL_FROM || "ParkNex <onboarding@resend.dev>";
+  const appUrl = (process.env.PARKNEX_APP_URL || process.env.NEXTAUTH_URL || "https://parknex.vercel.app").replace(/\/$/, "");
 
   const secureDashboardUrl = `${appUrl}/customer/access/${params.customerAccessToken}`;
   const formattedTime = params.entryTime
@@ -114,40 +134,55 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
     });
 
     if (error) {
-      let friendlyError = error.message || "Failed to send email via Resend.";
-      if (
-        friendlyError.toLowerCase().includes("only send testing emails to your own email address") ||
-        friendlyError.toLowerCase().includes("verify a domain")
-      ) {
-        friendlyError =
-          "Resend Sandbox Mode: When using onboarding@resend.dev, emails can only be delivered to your registered Resend account email. Verify a custom domain to send to any customer email.";
-      }
+      const errMessage = error.message || "Failed to send email via Resend.";
+      const isSandboxRestriction =
+        errMessage.toLowerCase().includes("only send testing emails to your own email address") ||
+        errMessage.toLowerCase().includes("verify a domain") ||
+        errMessage.toLowerCase().includes("testing emails");
+
+      console.log(`[assignment-email] Resend rejected: status ${error.name || "403"} ${isSandboxRestriction ? "Sandbox restriction" : errMessage}`);
+
+      const safeError = isSandboxRestriction
+        ? "Resend sandbox allows delivery only to the registered test email."
+        : `Delivery provider rejected the request: ${errMessage}`;
+
+      const uiCategory: EmailDeliveryResult["uiErrorCategory"] = isSandboxRestriction
+        ? "Email failed: Resend sandbox recipient restriction"
+        : "Email failed: Delivery provider rejected the request";
 
       return {
         success: false,
         status: "failed",
-        error: friendlyError,
+        error: safeError,
+        uiErrorCategory: uiCategory,
         recipient: cleanEmail,
-        maskedRecipient: maskEmail(cleanEmail),
+        maskedRecipient: masked,
       };
     }
+
+    const messageId = data?.id;
+    console.log(`[assignment-email] Resend accepted: message ID ${messageId}`);
 
     const now = new Date().toISOString();
     return {
       success: true,
       status: "sent",
-      providerId: data?.id,
+      providerId: messageId,
+      uiErrorCategory: "Email sent",
       recipient: cleanEmail,
-      maskedRecipient: maskEmail(cleanEmail),
+      maskedRecipient: masked,
       sentAt: now,
     };
   } catch (err: any) {
+    const errorMsg = err.message || "Resend connection error.";
+    console.log(`[assignment-email] Resend rejected: connection error ${errorMsg}`);
     return {
       success: false,
       status: "failed",
-      error: err.message || "Resend connection error.",
+      error: `Delivery provider error: ${errorMsg}`,
+      uiErrorCategory: "Email failed: Delivery provider rejected the request",
       recipient: cleanEmail,
-      maskedRecipient: maskEmail(cleanEmail),
+      maskedRecipient: masked,
     };
   }
 }

@@ -121,6 +121,7 @@ function NewEntryContent() {
   const rawSlots = slotsData?.slots || [];
   const createWalkInEntryMutation = useMutation(api.bookings.createWalkInEntry);
   const recordManualVerificationMutation = useMutation(api.bookings.recordManualVehicleVerification);
+  const retryEmailDeliveryMutation = useMutation(api.bookings.retryEmailDelivery);
 
   // Form Setup
   const {
@@ -338,7 +339,7 @@ function NewEntryContent() {
     return true; // Vehicle verification & physical match are optional
   }, [activeBooking]);
 
-  // Form Submission
+  // Form Submission (Assign Space Click)
   const onSubmit = async (data: EntryFormData) => {
     if (activeBooking) {
       alert("Vehicle already has an active parking session. Duplicate passes cannot be issued.");
@@ -351,7 +352,7 @@ function NewEntryContent() {
     try {
       const selectedRec = topRecommendations.find((r) => r.slot.slotId === data.slotId);
 
-      // 1. Commit parking assignment in Convex atomically
+      // 1. Commit parking assignment in Convex atomically (Space reserved at entry gate)
       const result = await createWalkInEntryMutation({
         slotId: data.slotId,
         vehicleNumber: normalizedPlate,
@@ -381,8 +382,9 @@ function NewEntryContent() {
       const directToken = result.customerAccessToken || result.token;
       const secureDashboardLink = `${origin}/customer/access/${directToken}`;
 
-      // 3. Trigger server-side transactional email if customer email was provided
+      // 3. Await server-side transactional email call (Next.js Node.js runtime)
       let emailStatus = cleanEmail ? "queued" : "not_requested";
+      let uiStatusMessage = cleanEmail ? "Queued" : "Email not requested";
       let maskedEmail = "";
       let emailError = "";
 
@@ -394,22 +396,16 @@ function NewEntryContent() {
             body: JSON.stringify({
               bookingId: result.bookingId,
               to: cleanEmail,
-              vehicleNumber: normalizedPlate,
-              slotNumber: result.slotNumber,
-              floor: result.floor,
-              zone: result.zone,
-              pillar: result.pillar,
-              mallName: "Central Mall Grand",
-              customerAccessToken: directToken,
-              fallbackCode: result.fallbackCode,
             }),
           });
           const emailData = await emailRes.json();
           emailStatus = emailData.status || (emailData.success ? "sent" : "failed");
+          uiStatusMessage = emailData.uiStatusMessage || (emailData.success ? "Email sent" : "Email failed");
           maskedEmail = emailData.maskedRecipient || cleanEmail;
           emailError = emailData.error || "";
         } catch (e: any) {
           emailStatus = "failed";
+          uiStatusMessage = "Email failed: Delivery provider rejected the request";
           emailError = e.message || "Failed to deliver email notification.";
         }
       }
@@ -421,6 +417,7 @@ function NewEntryContent() {
         email: cleanEmail,
         maskedEmail,
         emailStatus,
+        uiStatusMessage,
         emailError,
         vehicleType: data.vehicleType,
         dashboardLink: secureDashboardLink,
@@ -436,33 +433,35 @@ function NewEntryContent() {
     if (!completedPass?.bookingId || !completedPass?.email) return;
     setIsRetryingEmail(true);
     try {
+      // 1. Verify operator session & increment retry state in Convex
+      await retryEmailDeliveryMutation({
+        bookingId: completedPass.bookingId,
+        email: completedPass.email,
+      });
+
+      // 2. Dispatch email via server-side API route (Next.js runtime)
       const emailRes = await fetch("/api/notifications/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId: completedPass.bookingId,
           to: completedPass.email,
-          vehicleNumber: completedPass.vehicleNumber,
-          slotNumber: completedPass.slotNumber,
-          floor: completedPass.floor,
-          zone: completedPass.zone,
-          pillar: completedPass.pillar,
-          mallName: "Central Mall Grand",
-          customerAccessToken: completedPass.customerAccessToken || completedPass.token,
-          fallbackCode: completedPass.fallbackCode,
+          isRetry: true,
         }),
       });
       const emailData = await emailRes.json();
       setCompletedPass((prev: any) => ({
         ...prev,
         emailStatus: emailData.status || (emailData.success ? "sent" : "failed"),
-        maskedEmail: emailData.maskedRecipient || prev.email,
+        uiStatusMessage: emailData.uiStatusMessage || (emailData.success ? "Email sent" : "Email failed"),
+        maskedEmail: emailData.maskedRecipient || prev.maskedEmail || prev.email,
         emailError: emailData.error || "",
       }));
     } catch (err: any) {
       setCompletedPass((prev: any) => ({
         ...prev,
         emailStatus: "failed",
+        uiStatusMessage: "Email failed: Delivery provider rejected the request",
         emailError: err.message || "Retry delivery failed",
       }));
     } finally {
@@ -1071,7 +1070,7 @@ function NewEntryContent() {
               {completedPass.emailStatus === "sent" && (
                 <span className="px-2.5 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/30 text-[11px] font-extrabold flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  EMAIL DELIVERED
+                  EMAIL SENT
                 </span>
               )}
               {completedPass.emailStatus === "failed" && (
@@ -1082,7 +1081,7 @@ function NewEntryContent() {
               )}
               {completedPass.emailStatus === "not_requested" && (
                 <span className="px-2.5 py-0.5 rounded-full bg-[#FAF7F2] text-[#70675F] border border-[#DED3C7] text-[11px] font-bold">
-                  NO EMAIL PROVIDED
+                  NOT REQUESTED
                 </span>
               )}
             </div>
@@ -1091,7 +1090,7 @@ function NewEntryContent() {
               {completedPass.emailStatus === "sent" && (
                 <p className="text-[#2F7D5A] font-semibold flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Assignment email sent to {completedPass.maskedEmail || completedPass.email}.</span>
+                  <span>Email sent to {completedPass.maskedEmail || completedPass.email}</span>
                 </p>
               )}
               {completedPass.emailStatus === "failed" && (
@@ -1099,7 +1098,7 @@ function NewEntryContent() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <p className="text-[#C93B2F] font-semibold flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Space assigned, but email delivery failed.</span>
+                      <span>{completedPass.uiStatusMessage || "Email failed: Delivery provider rejected the request"}</span>
                     </p>
                     <button
                       type="button"
@@ -1112,15 +1111,15 @@ function NewEntryContent() {
                     </button>
                   </div>
                   {completedPass.emailError && (
-                    <p className="text-[11.5px] text-[#70675F] bg-white p-2 rounded-lg border border-[#DED3C7] leading-relaxed">
+                    <p className="text-[11.5px] text-[#70675F] bg-white p-2.5 rounded-lg border border-[#DED3C7] leading-relaxed">
                       {completedPass.emailError}
                     </p>
                   )}
                 </div>
               )}
               {completedPass.emailStatus === "not_requested" && (
-                <p className="text-[#70675F]">
-                  Parking space assigned successfully. Pass issued for on-screen view or physical print.
+                <p className="text-[#70675F] font-medium">
+                  Email not requested. Parking space assigned successfully and pass generated.
                 </p>
               )}
             </div>

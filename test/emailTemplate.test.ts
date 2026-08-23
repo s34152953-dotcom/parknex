@@ -86,7 +86,8 @@ describe("Transactional Email Template & Helpers", () => {
 
     expect(result.success).toBe(false);
     expect(result.status).toBe("failed");
-    expect(result.error).toContain("RESEND_API_KEY is not configured");
+    expect(result.error).toContain("Email service is not configured");
+    expect(result.uiErrorCategory).toBe("Email failed: Email service is not configured");
 
     if (origKey) process.env.RESEND_API_KEY = origKey;
   });
