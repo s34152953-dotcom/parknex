@@ -17,11 +17,50 @@ const INITIAL_SLOTS = [
 export const seedSlots = mutation({
   handler: async (ctx) => {
     const existing = await ctx.db.query("slots").collect();
-    if (existing.length > 0) return "Already seeded.";
-
-    for (const slot of INITIAL_SLOTS) {
-      await ctx.db.insert("slots", slot as any);
+    if (existing.length === 0) {
+      for (const slot of INITIAL_SLOTS) {
+        await ctx.db.insert("slots", slot as any);
+      }
     }
+
+    const existingFacilities = await ctx.db.query("facilities").collect();
+    if (existingFacilities.length === 0) {
+      await ctx.db.insert("facilities", {
+        facilityId: "cm-grand",
+        name: "Central Mall Grand",
+        address: "100 Innovation Boulevard, Tech District",
+        totalCapacity: 10,
+        ratesPerHour: 50,
+        operatingHours: "24/7 Multi-Level Parking",
+        zones: ["Zone A", "Zone B"],
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const existingZones = await ctx.db.query("parking_zones").collect();
+    if (existingZones.length === 0) {
+      await ctx.db.insert("parking_zones", {
+        zoneId: "zone-b2-a",
+        facilityId: "cm-grand",
+        name: "Zone A",
+        floor: "B2",
+        totalSlots: 5,
+        evSlots: 1,
+        handicappedSlots: 1,
+        nearbyLandmarks: ["Food Court", "Main Entrance", "Elevator Core A"],
+      });
+      await ctx.db.insert("parking_zones", {
+        zoneId: "zone-b2-b",
+        facilityId: "cm-grand",
+        name: "Zone B",
+        floor: "B2",
+        totalSlots: 5,
+        evSlots: 1,
+        handicappedSlots: 0,
+        nearbyLandmarks: ["Cinema Complex", "Retail Corridor", "Elevator Core B"],
+      });
+    }
+
     return "Seeded successfully.";
   },
 });

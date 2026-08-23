@@ -1,0 +1,94 @@
+{
+  "version": "1.0",
+  "name": "parking-verification",
+  "description": "Multi-stage parking verification pipeline validating license plate format, spatial zone assignment, active session conflict, and visual confirmation with confidence scoring",
+  "metadata": {
+    "author": "ParkNex AI Architecture Team",
+    "target": "RocketRide Engine 2.0",
+    "domain": "Smart Parking Infrastructure"
+  },
+  "nodes": [
+    {
+      "id": "checkin_event_input",
+      "provider": "input",
+      "config": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "vehicleNumber": { "type": "string" },
+            "vehicleModel": { "type": "string" },
+            "vehicleType": { "type": "string" },
+            "facility": { "type": "string" },
+            "zone": { "type": "string" },
+            "pillar": { "type": "string" },
+            "slotId": { "type": "string" },
+            "spaceImageUrl": { "type": "string" },
+            "destination": { "type": "string" }
+          },
+          "required": ["vehicleNumber", "facility", "zone", "pillar", "slotId"]
+        }
+      }
+    },
+    {
+      "id": "plate_syntax_validator",
+      "provider": "transform",
+      "config": {
+        "type": "regex_validation",
+        "parameters": {
+          "field": "vehicleNumber",
+          "normalizeUppercase": true,
+          "stripWhitespace": true
+        }
+      },
+      "input": "checkin_event_input"
+    },
+    {
+      "id": "spatial_occupancy_checker",
+      "provider": "transform",
+      "config": {
+        "type": "state_consistency_check",
+        "parameters": {
+          "verifySlotAvailable": true,
+          "preventDuplicateActiveVehicle": true,
+          "matchZoneFacility": true
+        }
+      },
+      "input": "plate_syntax_validator"
+    },
+    {
+      "id": "verification_ai_evaluator",
+      "provider": "llm",
+      "config": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.1,
+        "systemPrompt": "You are the ParkNex Parking Verification AI. Analyze vehicle registration data, location consistency, spatial zone matching, and optical evidence. Return a strict JSON object with fields: verificationStatus (VERIFIED, INVALID, MISMATCH, UNAVAILABLE), confidence (0.00 to 1.00), explanation, riskAssessment, reviewRequired (boolean), and recommendedAction."
+      },
+      "input": "spatial_occupancy_checker"
+    },
+    {
+      "id": "confidence_threshold_guard",
+      "provider": "validator",
+      "config": {
+        "minConfidenceThreshold": 0.85,
+        "highImpactFields": ["slotId", "vehicleNumber"],
+        "flagReviewIfBelow": true
+      },
+      "input": "verification_ai_evaluator"
+    },
+    {
+      "id": "verification_sink",
+      "provider": "output",
+      "config": {
+        "format": "json"
+      },
+      "input": "confidence_threshold_guard"
+    }
+  ],
+  "edges": [
+    { "from": "checkin_event_input", "to": "plate_syntax_validator" },
+    { "from": "plate_syntax_validator", "to": "spatial_occupancy_checker" },
+    { "from": "spatial_occupancy_checker", "to": "verification_ai_evaluator" },
+    { "from": "verification_ai_evaluator", "to": "confidence_threshold_guard" },
+    { "from": "confidence_threshold_guard", "to": "verification_sink" }
+  ]
+}

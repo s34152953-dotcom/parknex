@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  LayoutDashboard,
   MapPin,
   CarFront,
   QrCode,
@@ -15,6 +16,9 @@ import {
   Video,
   X,
   ShieldCheck,
+  ShieldAlert,
+  Sparkles,
+  UploadCloud,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 import { signOut } from "next-auth/react";
@@ -23,7 +27,11 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 const adminNavLinks = [
+  { label: "Command Center", href: "/admin", icon: LayoutDashboard },
   { label: "Live Parking Map", href: "/admin/booking", icon: MapPin },
+  { label: "AI Review Queue", href: "/admin/ai-review", icon: ShieldAlert },
+  { label: "RocketRide Runs", href: "/admin/ai-runs", icon: Sparkles },
+  { label: "Batch Reconciliation", href: "/admin/batch-reconciliation", icon: UploadCloud },
   { label: "New Entry", href: "/admin/new-entry", icon: CarFront },
   { label: "Gate Scanner", href: "/admin/scan-exit", icon: QrCode },
   { label: "CCTV Monitoring", href: "/admin/cctv", icon: Video },
@@ -71,9 +79,7 @@ export default function AdminSidebar() {
           </p>
 
           {adminNavLinks.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href === "/admin/booking" && (pathname === "/admin" || pathname === "/admin/"));
+            const isActive = pathname === item.href;
 
             return (
               <Link
@@ -181,9 +187,7 @@ export default function AdminSidebar() {
               </p>
 
               {adminNavLinks.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href === "/admin/booking" && (pathname === "/admin" || pathname === "/admin/"));
+                const isActive = pathname === item.href;
 
                 return (
                   <Link

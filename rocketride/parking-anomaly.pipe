@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "name": "parking-anomaly",
+  "description": "Continuous and on-demand parking anomaly detection engine identifying duplicate space assignments, phantom occupancies, unregistered entries, missing exits, and excessive durations",
+  "metadata": {
+    "author": "ParkNex AI Architecture Team",
+    "target": "RocketRide Engine 2.0",
+    "domain": "Smart Parking Security & Integrity"
+  },
+  "nodes": [
+    {
+      "id": "anomaly_scan_input",
+      "provider": "input",
+      "config": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "facilityId": { "type": "string" },
+            "activeSessions": { "type": "array" },
+            "slots": { "type": "array" },
+            "recentEntryEvents": { "type": "array" },
+            "recentExitEvents": { "type": "array" }
+          },
+          "required": ["facilityId", "activeSessions", "slots"]
+        }
+      }
+    },
+    {
+      "id": "rule_heuristic_analyzer",
+      "provider": "transform",
+      "config": {
+        "type": "parking_integrity_rules",
+        "rules": [
+          "DUPLICATE_SPACE_ASSIGNMENT",
+          "MULTIPLE_ACTIVE_SESSIONS_PER_VEHICLE",
+          "ENTRY_WITHOUT_REGISTRATION",
+          "EXIT_WITHOUT_CHECKOUT",
+          "OCCUPIED_SLOT_WITHOUT_SESSION",
+          "ACTIVE_SESSION_WITH_AVAILABLE_SLOT",
+          "INVALID_FACILITY_ZONE_SLOT_COMBINATION",
+          "EXCESSIVE_PARKING_DURATION",
+          "CONFLICTING_VEHICLE_RECORDS",
+          "DUPLICATE_ENTRY_EVENTS",
+          "DUPLICATE_EXIT_EVENTS"
+        ]
+      },
+      "input": "anomaly_scan_input"
+    },
+    {
+      "id": "anomaly_ai_classifier",
+      "provider": "llm",
+      "config": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.1,
+        "systemPrompt": "You are the ParkNex Anomaly & Incident Auditor. Analyze detected inconsistencies in parking states, entry/exit logs, and slot occupancy. For each anomaly, generate: type, severity (low, medium, high, critical), confidence (0.00 to 1.00), explanation, evidence (JSON snippet/text), relatedSessionId, relatedVehicle, recommendedAction, and reviewRequired (boolean). Critical and High severity anomalies must always require human review."
+      },
+      "input": "rule_heuristic_analyzer"
+    },
+    {
+      "id": "severity_threshold_guard",
+      "provider": "validator",
+      "config": {
+        "autoFlagHighCritical": true,
+        "preventAutoDestructiveExecution": true
+      },
+      "input": "anomaly_ai_classifier"
+    },
+    {
+      "id": "anomaly_sink",
+      "provider": "output",
+      "config": {
+        "format": "json"
+      },
+      "input": "severity_threshold_guard"
+    }
+  ],
+  "edges": [
+    { "from": "anomaly_scan_input", "to": "rule_heuristic_analyzer" },
+    { "from": "rule_heuristic_analyzer", "to": "anomaly_ai_classifier" },
+    { "from": "anomaly_ai_classifier", "to": "severity_threshold_guard" },
+    { "from": "severity_threshold_guard", "to": "anomaly_sink" }
+  ]
+}

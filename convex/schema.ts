@@ -120,12 +120,163 @@ export default defineSchema({
     fuelType: v.optional(v.string()),
     verifiedAt: v.optional(v.string()),
     manualVerificationReason: v.optional(v.string()),
+    // ParkNex AI x RocketRide additions
+    facility: v.optional(v.string()),
+    zone: v.optional(v.string()),
+    pillar: v.optional(v.string()),
+    destination: v.optional(v.string()),
+    spaceImageUrl: v.optional(v.string()),
+    aiConfidence: v.optional(v.number()),
+    pipelineExecutionId: v.optional(v.string()),
+    reviewRequired: v.optional(v.boolean()),
+    reviewId: v.optional(v.string()),
   })
     .index("by_slotId", ["slotId"])
     .index("by_customerAccessToken", ["customerAccessToken"])
     .index("by_status", ["status"])
     .index("by_vehicleNumber", ["vehicleNumber"])
     .index("by_fallbackCode", ["fallbackCode"]),
+
+  facilities: defineTable({
+    facilityId: v.string(),
+    name: v.string(),
+    address: v.string(),
+    totalCapacity: v.number(),
+    ratesPerHour: v.number(),
+    operatingHours: v.string(),
+    zones: v.array(v.string()),
+    createdAt: v.string(),
+  }).index("by_facilityId", ["facilityId"]),
+
+  parking_zones: defineTable({
+    zoneId: v.string(),
+    facilityId: v.string(),
+    name: v.string(),
+    floor: v.string(),
+    totalSlots: v.number(),
+    evSlots: v.number(),
+    handicappedSlots: v.number(),
+    nearbyLandmarks: v.array(v.string()),
+  })
+    .index("by_zoneId", ["zoneId"])
+    .index("by_facilityId", ["facilityId"]),
+
+  ai_reviews: defineTable({
+    reviewId: v.string(),
+    aiEventId: v.optional(v.string()),
+    pipelineExecutionId: v.string(),
+    anomalyType: v.string(),
+    vehicle: v.string(),
+    facility: v.string(),
+    parkingLocation: v.string(),
+    aiConfidence: v.number(),
+    aiExplanation: v.string(),
+    evidence: v.string(),
+    recommendedAction: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("investigating"),
+      v.literal("resolved")
+    ),
+    severity: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("critical")
+    ),
+    reviewer: v.optional(v.string()),
+    reviewedAt: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.optional(v.string()),
+  })
+    .index("by_status", ["status"])
+    .index("by_severity", ["severity"])
+    .index("by_vehicle", ["vehicle"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_reviewId", ["reviewId"]),
+
+  ai_events: defineTable({
+    eventId: v.string(),
+    pipeline: v.string(),
+    eventType: v.string(),
+    facility: v.string(),
+    vehicle: v.optional(v.string()),
+    slotId: v.optional(v.string()),
+    confidence: v.number(),
+    explanation: v.string(),
+    metadata: v.optional(v.string()),
+    reviewRequired: v.boolean(),
+    reviewId: v.optional(v.string()),
+    createdAt: v.string(),
+  })
+    .index("by_pipeline", ["pipeline"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_vehicle", ["vehicle"])
+    .index("by_reviewRequired", ["reviewRequired"]),
+
+  rocketride_runs: defineTable({
+    executionId: v.string(),
+    pipeline: v.string(),
+    userId: v.optional(v.string()),
+    facilityId: v.optional(v.string()),
+    status: v.union(
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("RUNNING"),
+      v.literal("CANCELLED"),
+      v.literal("NOT_CONFIGURED")
+    ),
+    startedAt: v.string(),
+    completedAt: v.optional(v.string()),
+    durationMs: v.number(),
+    confidence: v.optional(v.number()),
+    inputRecordCount: v.number(),
+    outputRecordCount: v.number(),
+    failedRecordCount: v.number(),
+    usage: v.optional(v.string()),
+    estimatedCost: v.optional(v.number()),
+    errorCode: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    inputSummary: v.optional(v.string()),
+    outputSummary: v.optional(v.string()),
+    reviewCreated: v.optional(v.boolean()),
+    associatedId: v.optional(v.string()),
+  })
+    .index("by_executionId", ["executionId"])
+    .index("by_pipeline", ["pipeline"])
+    .index("by_status", ["status"])
+    .index("by_startedAt", ["startedAt"]),
+
+  entry_events: defineTable({
+    eventId: v.string(),
+    facilityId: v.string(),
+    vehicleNumber: v.string(),
+    gate: v.string(),
+    timestamp: v.string(),
+    confidence: v.number(),
+    hasRegisteredSession: v.boolean(),
+    processed: v.boolean(),
+  })
+    .index("by_vehicleNumber", ["vehicleNumber"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_facilityId", ["facilityId"]),
+
+  exit_events: defineTable({
+    eventId: v.string(),
+    facilityId: v.string(),
+    vehicleNumber: v.string(),
+    gate: v.string(),
+    timestamp: v.string(),
+    confidence: v.number(),
+    checkoutCompleted: v.boolean(),
+    processed: v.boolean(),
+  })
+    .index("by_vehicleNumber", ["vehicleNumber"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_facilityId", ["facilityId"]),
 
   users: defineTable({
     name: v.string(),

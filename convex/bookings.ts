@@ -348,6 +348,219 @@ export const createWalkInEntry = mutation({
   },
 });
 
+export const createCustomerCheckIn = mutation({
+  args: {
+    vehicleNumber: v.string(),
+    vehicleModel: v.optional(v.string()),
+    vehicleType: v.optional(v.union(v.literal("sedan"), v.literal("suv"), v.literal("hatchback"), v.literal("ev"), v.literal("motorcycle"))),
+    facility: v.string(),
+    zone: v.string(),
+    pillar: v.string(),
+    slotId: v.string(),
+    phoneNumber: v.optional(v.string()),
+    email: v.optional(v.string()),
+    spaceImageUrl: v.optional(v.string()),
+    destination: v.optional(v.string()),
+    aiConfidence: v.optional(v.number()),
+    verificationStatus: v.optional(
+      v.union(
+        v.literal("NOT_CHECKED"),
+        v.literal("CHECKING"),
+        v.literal("VERIFIED"),
+        v.literal("INVALID"),
+        v.literal("MISMATCH"),
+        v.literal("UNAVAILABLE"),
+        v.literal("MANUAL_VERIFIED")
+      )
+    ),
+    pipelineExecutionId: v.optional(v.string()),
+    reviewRequired: v.optional(v.boolean()),
+    reviewId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const cleanPlate = args.vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+
+    // 1. Concurrency & duplicate active session check
+    const existingActive = await ctx.db
+      .query("bookings")
+      .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+      .filter((q) => q.eq(q.field("vehicleNumber"), cleanPlate))
+      .first();
+
+    if (existingActive) {
+      throw new Error(`Vehicle ${cleanPlate} already has an active parking session (Space: ${existingActive.slotId}).`);
+    }
+
+    // 2. Validate slot exists and is available
+    const slot = await ctx.db
+      .query("slots")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .first();
+
+    if (!slot) {
+      throw new Error(`Parking space ${args.slotId} does not exist in facility ${args.facility}.`);
+    }
+
+    if (slot.status !== "available" && slot.status !== "temporarily_held") {
+      throw new Error(`Space ${slot.slotNumber || slot.slotId} is currently ${slot.status}. Please select another parking space.`);
+    }
+
+    const fallbackCode = generateSecureFallbackCode();
+
+    // 3. Atomically create active session
+    const bookingId = await ctx.db.insert("bookings", {
+      slotId: args.slotId,
+      vehicleNumber: cleanPlate,
+      vehicleModel: args.vehicleModel,
+      vehicleType: args.vehicleType || "sedan",
+      facility: args.facility,
+      zone: args.zone,
+      pillar: args.pillar,
+      destination: args.destination,
+      spaceImageUrl: args.spaceImageUrl,
+      phoneNumber: args.phoneNumber || "",
+      email: args.email || "",
+      entryType: "walk_in",
+      status: "ACTIVE",
+      entryTime: new Date().toISOString(),
+      mallName: args.facility,
+      customerAccessToken: "",
+      smsStatus: args.phoneNumber ? "PENDING" : "SENT",
+      emailStatus: args.email ? "queued" : "not_requested",
+      exitPassUsed: false,
+      exitPassExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      fallbackCode,
+      aiConfidence: args.aiConfidence,
+      verificationStatus: args.verificationStatus || "VERIFIED",
+      pipelineExecutionId: args.pipelineExecutionId,
+      reviewRequired: args.reviewRequired,
+      reviewId: args.reviewId,
+    });
+
+    // 4. Generate signed cryptographic exit token
+    const token = await signExitToken(bookingId.toString(), cleanPlate);
+
+    await ctx.db.patch(bookingId, {
+      customerAccessToken: token,
+      exitPassToken: token,
+    });
+
+    // 5. Lock space atomically
+    await ctx.db.patch(slot._id, {
+      status: "occupied",
+      lastOccupancySource: "operator_confirmation",
+      occupancyConfidence: args.aiConfidence || 1.0,
+    });
+
+    // 6. Record entry event
+    await ctx.db.insert("entry_events", {
+      eventId: `ent-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      facilityId: args.facility,
+      vehicleNumber: cleanPlate,
+      gate: "Main Customer Check-in",
+      timestamp: new Date().toISOString(),
+      confidence: args.aiConfidence || 1.0,
+      hasRegisteredSession: true,
+      processed: true,
+    });
+
+    return {
+      bookingId,
+      token,
+      customerAccessToken: token,
+      exitPassToken: token,
+      fallbackCode,
+      slotNumber: slot.slotNumber,
+      floor: slot.floor,
+      zone: slot.zone,
+      pillar: slot.pillar,
+    };
+  },
+});
+
+export const customerCheckout = mutation({
+  args: {
+    tokenOrId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const input = args.tokenOrId.trim();
+
+    // Query by token or ID
+    let booking = await ctx.db
+      .query("bookings")
+      .withIndex("by_customerAccessToken", (q) => q.eq("customerAccessToken", input))
+      .first();
+
+    if (!booking) {
+      // Try by fallback code
+      booking = await ctx.db
+        .query("bookings")
+        .withIndex("by_fallbackCode", (q) => q.eq("fallbackCode", input.toUpperCase()))
+        .first();
+    }
+
+    if (!booking) {
+      // Try by vehicle plate
+      const cleanPlate = input.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+      booking = await ctx.db
+        .query("bookings")
+        .withIndex("by_status", (q) => q.eq("status", "ACTIVE"))
+        .filter((q) => q.eq(q.field("vehicleNumber"), cleanPlate))
+        .first();
+    }
+
+    if (!booking) {
+      throw new Error("Active parking session not found for checkout.");
+    }
+
+    if (booking.status === "COMPLETED" || booking.exitPassUsed) {
+      throw new Error("This parking session has already been checked out.");
+    }
+
+    const exitTime = new Date().toISOString();
+
+    // Close session atomically
+    await ctx.db.patch(booking._id, {
+      status: "COMPLETED",
+      exitTime,
+      exitPassUsed: true,
+    });
+
+    // Release slot
+    const slot = await ctx.db
+      .query("slots")
+      .withIndex("by_slotId", (q) => q.eq("slotId", booking.slotId))
+      .first();
+
+    if (slot) {
+      await ctx.db.patch(slot._id, {
+        status: "available",
+        lastOccupancySource: "operator_confirmation",
+      });
+    }
+
+    // Record exit event
+    await ctx.db.insert("exit_events", {
+      eventId: `ext-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      facilityId: booking.facility || booking.mallName || "Central Mall Grand",
+      vehicleNumber: booking.vehicleNumber,
+      gate: "Customer App Checkout",
+      timestamp: exitTime,
+      confidence: 1.0,
+      checkoutCompleted: true,
+      processed: true,
+    });
+
+    return {
+      success: true,
+      bookingId: booking._id,
+      vehicleNumber: booking.vehicleNumber,
+      exitTime,
+      slotId: booking.slotId,
+    };
+  },
+});
+
 export const completeExitWithVerification = mutation({
   args: {
     tokenOrCode: v.string(),

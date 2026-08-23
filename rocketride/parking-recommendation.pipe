@@ -1,0 +1,82 @@
+{
+  "version": "1.0",
+  "name": "parking-recommendation",
+  "description": "Real-time AI parking recommendation engine selecting optimal parking bays based on destination proximity, live occupancy, zone congestion, and accessibility/EV constraints",
+  "metadata": {
+    "author": "ParkNex AI Architecture Team",
+    "target": "RocketRide Engine 2.0",
+    "domain": "Smart Parking Infrastructure"
+  },
+  "nodes": [
+    {
+      "id": "recommendation_request_input",
+      "provider": "input",
+      "config": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "facilityId": { "type": "string" },
+            "destination": { "type": "string" },
+            "preferences": {
+              "type": "object",
+              "properties": {
+                "isEV": { "type": "boolean" },
+                "isHandicapped": { "type": "boolean" },
+                "fastExit": { "type": "boolean" },
+                "lowCongestion": { "type": "boolean" }
+              }
+            },
+            "availableSlots": { "type": "array" }
+          },
+          "required": ["facilityId", "destination", "availableSlots"]
+        }
+      }
+    },
+    {
+      "id": "spatial_distance_filter",
+      "provider": "transform",
+      "config": {
+        "type": "distance_matrix_scoring",
+        "parameters": {
+          "landmarkWeight": 0.45,
+          "congestionWeight": 0.35,
+          "walkingPenalty": 0.20
+        }
+      },
+      "input": "recommendation_request_input"
+    },
+    {
+      "id": "recommendation_intelligence",
+      "provider": "llm",
+      "config": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.2,
+        "systemPrompt": "You are the ParkNex Parking Optimization Engine. Given the customer destination, vehicle constraints, and live available parking slots, calculate the top 3 optimal spaces. Return a JSON structure with recommendedSlots: array of { slotId, slotNumber, floor, zone, pillar, confidence (0.0 to 1.0), reason, relativeConvenience (e.g. 'Closest to Food Court elevator') }. Never fabricate indoor walking meters if unavailable."
+      },
+      "input": "spatial_distance_filter"
+    },
+    {
+      "id": "ranking_validator",
+      "provider": "validator",
+      "config": {
+        "requireAvailableOnly": true,
+        "maxResults": 3
+      },
+      "input": "recommendation_intelligence"
+    },
+    {
+      "id": "recommendation_sink",
+      "provider": "output",
+      "config": {
+        "format": "json"
+      },
+      "input": "ranking_validator"
+    }
+  ],
+  "edges": [
+    { "from": "recommendation_request_input", "to": "spatial_distance_filter" },
+    { "from": "spatial_distance_filter", "to": "recommendation_intelligence" },
+    { "from": "recommendation_intelligence", "to": "ranking_validator" },
+    { "from": "ranking_validator", "to": "recommendation_sink" }
+  ]
+}
