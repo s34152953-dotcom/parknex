@@ -23,6 +23,8 @@ import {
   ShieldAlert,
   FileCheck,
   ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getTop3Recommendations, SlotRecommendationInput } from "@/lib/parking/recommendation";
@@ -62,7 +64,15 @@ const entryFormSchema = z.object({
     .min(4, "Vehicle plate must have at least 4 characters")
     .max(15, "Vehicle plate is too long"),
   phoneNumber: z.string().optional(),
-  email: z.string().optional(),
+  email: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val.trim()),
+      {
+        message: "Please enter a valid customer email address (e.g. name@domain.com)",
+      }
+    ),
   vehicleType: z.enum(["sedan", "suv", "hatchback", "ev", "motorcycle"]),
   slotId: z.string().min(1, "Please select a parking space"),
   isHandicapped: z.boolean(),
@@ -84,6 +94,8 @@ function NewEntryContent() {
   const [cameraStatusMsg, setCameraStatusMsg] = useState<string>("");
   const [isProcessingEntry, setIsProcessingEntry] = useState(false);
   const [completedPass, setCompletedPass] = useState<any | null>(null);
+  const [isRetryingEmail, setIsRetryingEmail] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Verification States
   const [verificationData, setVerificationData] = useState<VerificationData>({
@@ -334,14 +346,17 @@ function NewEntryContent() {
     }
 
     setIsProcessingEntry(true);
+    const cleanEmail = data.email ? data.email.trim().toLowerCase() : undefined;
+
     try {
       const selectedRec = topRecommendations.find((r) => r.slot.slotId === data.slotId);
 
+      // 1. Commit parking assignment in Convex atomically
       const result = await createWalkInEntryMutation({
         slotId: data.slotId,
         vehicleNumber: normalizedPlate,
         phoneNumber: data.phoneNumber ? data.phoneNumber.trim() : undefined,
-        email: data.email ? data.email.trim() : undefined,
+        email: cleanEmail,
         vehicleType: data.vehicleType,
         entryType: "walk_in",
         mallName: "Central Mall Grand",
@@ -360,22 +375,106 @@ function NewEntryContent() {
       });
 
       stopCamera();
+
+      // 2. Build secure direct access token link
       const origin = typeof window !== "undefined" ? window.location.origin : "https://parknex.vercel.app";
-      const dashboardLink = `${origin}/customer/dashboard`;
+      const directToken = result.customerAccessToken || result.token;
+      const secureDashboardLink = `${origin}/customer/access/${directToken}`;
+
+      // 3. Trigger server-side transactional email if customer email was provided
+      let emailStatus = cleanEmail ? "queued" : "not_requested";
+      let maskedEmail = "";
+      let emailError = "";
+
+      if (cleanEmail) {
+        try {
+          const emailRes = await fetch("/api/notifications/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: result.bookingId,
+              to: cleanEmail,
+              vehicleNumber: normalizedPlate,
+              slotNumber: result.slotNumber,
+              floor: result.floor,
+              zone: result.zone,
+              pillar: result.pillar,
+              mallName: "Central Mall Grand",
+              customerAccessToken: directToken,
+              fallbackCode: result.fallbackCode,
+            }),
+          });
+          const emailData = await emailRes.json();
+          emailStatus = emailData.status || (emailData.success ? "sent" : "failed");
+          maskedEmail = emailData.maskedRecipient || cleanEmail;
+          emailError = emailData.error || "";
+        } catch (e: any) {
+          emailStatus = "failed";
+          emailError = e.message || "Failed to deliver email notification.";
+        }
+      }
 
       setCompletedPass({
         ...result,
         vehicleNumber: normalizedPlate,
         phoneNumber: data.phoneNumber,
-        email: data.email,
+        email: cleanEmail,
+        maskedEmail,
+        emailStatus,
+        emailError,
         vehicleType: data.vehicleType,
-        dashboardLink,
+        dashboardLink: secureDashboardLink,
       });
     } catch (err: any) {
       alert(err.message || "Failed to process entry");
     } finally {
       setIsProcessingEntry(false);
     }
+  };
+
+  const handleRetryEmail = async () => {
+    if (!completedPass?.bookingId || !completedPass?.email) return;
+    setIsRetryingEmail(true);
+    try {
+      const emailRes = await fetch("/api/notifications/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: completedPass.bookingId,
+          to: completedPass.email,
+          vehicleNumber: completedPass.vehicleNumber,
+          slotNumber: completedPass.slotNumber,
+          floor: completedPass.floor,
+          zone: completedPass.zone,
+          pillar: completedPass.pillar,
+          mallName: "Central Mall Grand",
+          customerAccessToken: completedPass.customerAccessToken || completedPass.token,
+          fallbackCode: completedPass.fallbackCode,
+        }),
+      });
+      const emailData = await emailRes.json();
+      setCompletedPass((prev: any) => ({
+        ...prev,
+        emailStatus: emailData.status || (emailData.success ? "sent" : "failed"),
+        maskedEmail: emailData.maskedRecipient || prev.email,
+        emailError: emailData.error || "",
+      }));
+    } catch (err: any) {
+      setCompletedPass((prev: any) => ({
+        ...prev,
+        emailStatus: "failed",
+        emailError: err.message || "Retry delivery failed",
+      }));
+    } finally {
+      setIsRetryingEmail(false);
+    }
+  };
+
+  const handleCopyDashboardLink = () => {
+    if (!completedPass?.dashboardLink) return;
+    navigator.clipboard.writeText(completedPass.dashboardLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
   };
 
   return (
@@ -795,16 +894,17 @@ function NewEntryContent() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11.5px] font-bold text-[#241F1B] flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-[#70675F]" />
-                    <span>Customer Email (Optional)</span>
+                    <span>Customer Email Address (Optional)</span>
                   </label>
                   <input
                     {...register("email")}
                     type="email"
+                    autoComplete="email"
                     placeholder="customer@domain.com"
                     className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[13.5px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                   {errors.email && (
-                    <p className="text-[11px] text-[#C93B2F]">{errors.email.message}</p>
+                    <p className="text-[11px] text-[#C93B2F] font-semibold">{errors.email.message}</p>
                   )}
                 </div>
               </div>
@@ -959,6 +1059,87 @@ function NewEntryContent() {
                   Space {completedPass.slotNumber} (Level {completedPass.floor})
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Delivery Feedback Banner */}
+          <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11.5px] font-bold uppercase tracking-wider text-[#70675F]">
+                Digital Pass Delivery
+              </span>
+              {completedPass.emailStatus === "sent" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/30 text-[11px] font-extrabold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  EMAIL DELIVERED
+                </span>
+              )}
+              {completedPass.emailStatus === "failed" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-[#C93B2F]/10 text-[#C93B2F] border border-[#C93B2F]/30 text-[11px] font-bold flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  EMAIL FAILED
+                </span>
+              )}
+              {completedPass.emailStatus === "not_requested" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FAF7F2] text-[#70675F] border border-[#DED3C7] text-[11px] font-bold">
+                  NO EMAIL PROVIDED
+                </span>
+              )}
+            </div>
+
+            <div className="text-[13px]">
+              {completedPass.emailStatus === "sent" && (
+                <p className="text-[#2F7D5A] font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>Assignment email sent to {completedPass.maskedEmail || completedPass.email}.</span>
+                </p>
+              )}
+              {completedPass.emailStatus === "failed" && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <p className="text-[#C93B2F] font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>Space assigned, but email delivery failed.</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleRetryEmail}
+                    disabled={isRetryingEmail}
+                    className="px-3 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shrink-0 shadow-xs"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isRetryingEmail ? "animate-spin" : ""}`} />
+                    <span>Retry Email</span>
+                  </button>
+                </div>
+              )}
+              {completedPass.emailStatus === "not_requested" && (
+                <p className="text-[#70675F]">
+                  Parking space assigned successfully. Pass issued for on-screen view or physical print.
+                </p>
+              )}
+            </div>
+
+            {/* Copy Dashboard Link */}
+            <div className="pt-2.5 border-t border-[#DED3C7] flex items-center justify-between gap-2">
+              <span className="text-[12px] text-[#70675F] truncate max-w-[280px] font-mono">
+                {completedPass.dashboardLink}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyDashboardLink}
+                className="px-3 py-1.5 rounded-lg border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[12px] font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 shadow-xs"
+              >
+                {linkCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#2F7D5A]" />
+                    <span className="text-[#2F7D5A]">Link Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-[#70675F]" />
+                    <span>Copy Customer Link</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 

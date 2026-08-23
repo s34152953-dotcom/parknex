@@ -66,7 +66,22 @@ export default defineSchema({
     mallName: v.string(),
     customerAccessToken: v.string(),
     smsStatus: v.union(v.literal("PENDING"), v.literal("SENT"), v.literal("FAILED")),
-    emailStatus: v.optional(v.union(v.literal("PENDING"), v.literal("SENT"), v.literal("FAILED"), v.literal("NOT_CONFIGURED"))),
+    emailStatus: v.optional(
+      v.union(
+        v.literal("not_requested"),
+        v.literal("queued"),
+        v.literal("sent"),
+        v.literal("failed"),
+        v.literal("PENDING"),
+        v.literal("SENT"),
+        v.literal("FAILED"),
+        v.literal("NOT_CONFIGURED")
+      )
+    ),
+    emailRecipient: v.optional(v.string()),
+    emailProviderId: v.optional(v.string()),
+    emailLastAttemptAt: v.optional(v.string()),
+    emailFailureReason: v.optional(v.string()),
     pillarConfirmedAt: v.optional(v.string()),
     confirmedPillar: v.optional(v.string()),
     exitPassToken: v.optional(v.string()),

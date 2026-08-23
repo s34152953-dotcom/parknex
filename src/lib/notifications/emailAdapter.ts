@@ -1,99 +1,136 @@
 import { Resend } from "resend";
+import { render } from "@react-email/components";
+import React from "react";
+import ParkingAssignedEmail from "../../../emails/parking-assigned";
 
 export interface SendParkingEmailParams {
+  bookingId: string;
   to: string;
   vehicleNumber: string;
   slotNumber: string;
   floor: string;
   zone: string;
-  pillar: string;
+  pillar?: string;
   mallName: string;
-  dashboardLink: string;
+  customerAccessToken: string;
   fallbackCode?: string;
 }
 
 export interface EmailDeliveryResult {
   success: boolean;
-  status: "SENT" | "NOT_CONFIGURED" | "FAILED";
-  messageId?: string;
+  status: "sent" | "failed" | "not_requested";
+  providerId?: string;
   error?: string;
+  recipient?: string;
+  maskedRecipient?: string;
 }
 
 /**
- * Resend Email Delivery Adapter
- * Strictly reports "Email provider is not configured." when RESEND_API_KEY is missing.
+ * Mask an email for secure operator/customer display: e.g. "m***@domain.com"
+ */
+export function maskEmail(email?: string): string {
+  if (!email || !email.includes("@")) return "";
+  const [user, domain] = email.split("@");
+  if (user.length <= 2) {
+    return `${user[0]}***@${domain}`;
+  }
+  return `${user[0]}***${user[user.length - 1]}@${domain}`;
+}
+
+/**
+ * Validate email format without external dependencies
+ */
+export function isValidEmail(email?: string): boolean {
+  if (!email) return false;
+  const trimmed = email.trim().toLowerCase();
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(trimmed);
+}
+
+/**
+ * Real Server-Side Transactional Email Sender via Resend
  */
 export async function sendParkingPassEmail(params: SendParkingEmailParams): Promise<EmailDeliveryResult> {
+  const cleanEmail = params.to ? params.to.trim().toLowerCase() : "";
+
+  if (!cleanEmail || !isValidEmail(cleanEmail)) {
+    return {
+      success: false,
+      status: "failed",
+      error: "Invalid customer email address.",
+      recipient: cleanEmail,
+      maskedRecipient: maskEmail(cleanEmail),
+    };
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || "ParkNex Parking <notifications@parknex.io>";
+  const fromEmail = process.env.PARKNEX_EMAIL_FROM || process.env.EMAIL_FROM || "ParkNex <onboarding@resend.dev>";
+  const appUrl = (process.env.PARKNEX_APP_URL || process.env.NEXTAUTH_URL || "https://parknex.vercel.app").replace(/\/$/, "");
 
   if (!apiKey || apiKey.includes("placeholder") || apiKey === "re_your_resend_api_key_here") {
     return {
       success: false,
-      status: "NOT_CONFIGURED",
-      error: "Email provider is not configured.",
+      status: "failed",
+      error: "RESEND_API_KEY is not configured on the server.",
+      recipient: cleanEmail,
+      maskedRecipient: maskEmail(cleanEmail),
     };
   }
 
+  const secureDashboardUrl = `${appUrl}/customer/access/${params.customerAccessToken}`;
+
   try {
     const resend = new Resend(apiKey);
-    const htmlBody = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #050507; color: #F5F7FA; padding: 24px; }
-            .card { background-color: #10151D; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto; }
-            .title { color: #D84A2B; font-size: 20px; font-weight: bold; margin-bottom: 8px; }
-            .highlight { color: #D84A2B; font-weight: bold; }
-            .code { font-family: monospace; background: #151B24; padding: 8px 12px; border-radius: 8px; font-size: 16px; display: inline-block; margin: 8px 0; border: 1px solid rgba(255,255,255,0.1); }
-            .btn { display: inline-block; background-color: #D84A2B; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; margin-top: 16px; }
-            .footer { margin-top: 20px; font-size: 12px; color: rgba(245,247,250,0.58); }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="title">ParkNex Smart Parking Pass</div>
-            <p>Your parking space at <strong>${params.mallName}</strong> is confirmed for vehicle <strong>${params.vehicleNumber}</strong>.</p>
-            <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 16px 0;" />
-            <p><strong>Floor:</strong> ${params.floor} &nbsp;|&nbsp; <strong>Zone:</strong> ${params.zone}</p>
-            <p><strong>Space:</strong> <span class="highlight">Slot ${params.slotNumber}</span> &nbsp;|&nbsp; <strong>Pillar:</strong> ${params.pillar}</p>
-            ${params.fallbackCode ? `<p><strong>Backup Exit Code:</strong> <br/><span class="code">${params.fallbackCode}</span></p>` : ""}
-            <p><a href="${params.dashboardLink}" class="btn">Open Customer Dashboard &amp; Exit Pass</a></p>
-            <div class="footer">
-              Please present your digital pass to the barrier scanner when exiting the facility.
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+
+    // Render React Email Component to HTML
+    const emailHtml = await render(
+      React.createElement(ParkingAssignedEmail, {
+        mallName: params.mallName,
+        plateNumber: params.vehicleNumber,
+        floor: params.floor,
+        zone: params.zone,
+        slotNumber: params.slotNumber,
+        dashboardUrl: secureDashboardUrl,
+      })
+    );
+
+    // Idempotency Key prevents duplicate deliveries on network retries
+    const idempotencyKey = `parking-assignment-${params.bookingId}`;
 
     const { data, error } = await resend.emails.send({
       from: fromEmail,
-      to: params.to,
-      subject: `Your ParkNex Parking Pass: Space ${params.slotNumber} (${params.vehicleNumber})`,
-      html: htmlBody,
+      to: cleanEmail,
+      subject: "ParkNex – Your parking space is confirmed",
+      html: emailHtml,
+      headers: {
+        "X-Entity-Ref-ID": idempotencyKey,
+      },
     });
 
     if (error) {
       return {
         success: false,
-        status: "FAILED",
+        status: "failed",
         error: error.message || "Failed to send email via Resend.",
+        recipient: cleanEmail,
+        maskedRecipient: maskEmail(cleanEmail),
       };
     }
 
     return {
       success: true,
-      status: "SENT",
-      messageId: data?.id,
+      status: "sent",
+      providerId: data?.id,
+      recipient: cleanEmail,
+      maskedRecipient: maskEmail(cleanEmail),
     };
   } catch (err: any) {
     return {
       success: false,
-      status: "FAILED",
+      status: "failed",
       error: err.message || "Resend connection error.",
+      recipient: cleanEmail,
+      maskedRecipient: maskEmail(cleanEmail),
     };
   }
 }

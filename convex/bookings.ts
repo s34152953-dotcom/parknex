@@ -287,7 +287,9 @@ export const createWalkInEntry = mutation({
       mallName: args.mallName,
       customerAccessToken: "",
       smsStatus: args.phoneNumber ? "PENDING" : "SENT",
-      emailStatus: args.email ? "PENDING" : "NOT_CONFIGURED",
+      emailStatus: args.email ? "queued" : "not_requested",
+      emailRecipient: args.email ? args.email.trim().toLowerCase() : undefined,
+      emailLastAttemptAt: args.email ? new Date().toISOString() : undefined,
       exitPassUsed: false,
       exitPassExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       fallbackCode,
@@ -880,5 +882,75 @@ export const retrySms = mutation({
 
     await ctx.db.patch(booking._id, { smsStatus: "PENDING" });
     return { bookingId: args.bookingId, status: "PENDING" };
+  },
+});
+
+export const updateEmailDeliveryStatus = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    emailStatus: v.union(
+      v.literal("not_requested"),
+      v.literal("queued"),
+      v.literal("sent"),
+      v.literal("failed")
+    ),
+    emailRecipient: v.optional(v.string()),
+    emailProviderId: v.optional(v.string()),
+    emailFailureReason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking) throw new Error("Booking not found");
+
+    await ctx.db.patch(args.bookingId, {
+      emailStatus: args.emailStatus,
+      emailRecipient: args.emailRecipient !== undefined ? args.emailRecipient : booking.emailRecipient,
+      emailProviderId: args.emailProviderId !== undefined ? args.emailProviderId : booking.emailProviderId,
+      emailFailureReason: args.emailFailureReason !== undefined ? args.emailFailureReason : booking.emailFailureReason,
+      emailLastAttemptAt: new Date().toISOString(),
+    });
+
+    return { success: true, bookingId: args.bookingId, emailStatus: args.emailStatus };
+  },
+});
+
+export const retryEmailDelivery = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    email: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking) throw new Error("Booking not found");
+    if (booking.status !== "ACTIVE") throw new Error("Can only retry email for active parking sessions");
+
+    const targetEmail = args.email ? args.email.trim().toLowerCase() : (booking.email || booking.emailRecipient);
+    if (!targetEmail) throw new Error("No customer email address on record for this session");
+
+    const slot = await ctx.db
+      .query("slots")
+      .withIndex("by_slotId", (q) => q.eq("slotId", booking.slotId))
+      .first();
+
+    await ctx.db.patch(args.bookingId, {
+      email: targetEmail,
+      emailRecipient: targetEmail,
+      emailStatus: "queued",
+      emailLastAttemptAt: new Date().toISOString(),
+      emailFailureReason: undefined,
+    });
+
+    return {
+      bookingId: booking._id,
+      token: booking.customerAccessToken || booking.exitPassToken,
+      email: targetEmail,
+      vehicleNumber: booking.vehicleNumber,
+      mallName: booking.mallName,
+      slotNumber: slot?.slotNumber || booking.slotId,
+      floor: slot?.floor || "B2",
+      zone: slot?.zone || "Zone A",
+      pillar: slot?.pillar || "Pillar",
+      fallbackCode: booking.fallbackCode,
+    };
   },
 });
