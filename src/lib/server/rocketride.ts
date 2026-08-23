@@ -283,10 +283,29 @@ export async function executeParkingRecommendation(
   const startTime = performance.now();
 
   try {
-    const available = input.availableSlots || [];
+    // Invoke RocketRide SDK if configured
+    await executeRocketRidePipeSdk("parking-recommendation.pipe", input);
+
+    let available = input.availableSlots || [];
     const destinationLower = (input.destination || "main entrance").toLowerCase();
 
-    // Score and rank available slots based on destination and constraints
+    // 1. Enforce strict constraint filters (e.g. Accessibility)
+    if (input.preferences?.isHandicapped) {
+      available = available.filter((slot) => slot.vehicleConstraints?.isHandicapped === true);
+    }
+
+    if (available.length === 0) {
+      const durationMs = Math.round(performance.now() - startTime);
+      return {
+        recommendedSlots: [],
+        destination: input.destination,
+        executionId,
+        durationMs,
+        totalAvailableChecked: 0,
+      };
+    }
+
+    // 2. Score and rank available slots based on destination and constraints
     const ranked = available
       .map((slot) => {
         let score = 80;
@@ -302,13 +321,14 @@ export async function executeParkingRecommendation(
             score += 5;
             convenience = "Walk via Core B corridor";
           }
-        } else if (destinationLower.includes("cinema") || destinationLower.includes("movie")) {
+        } else if (destinationLower.includes("cinema") || destinationLower.includes("movie") || destinationLower.includes("multiplex")) {
           if (slot.zone.toLowerCase().includes("zone b")) {
             score += 15;
             reason = "Fast-track stairs to IMAX & Cinema Lobby";
             convenience = "Closest to Cinema West Entrance (30m)";
           } else {
             score += 5;
+            convenience = "Standard corridor path";
           }
         } else if (destinationLower.includes("entrance") || destinationLower.includes("lobby")) {
           score += (slot.distanceFromEntrance ? Math.max(0, 50 - slot.distanceFromEntrance) : 10);
@@ -317,12 +337,16 @@ export async function executeParkingRecommendation(
         }
 
         if (input.preferences?.isEV && slot.vehicleConstraints?.isEV) {
-          score += 10;
+          score += 12;
           reason += " · Equipped with Type 2 Fast EV Charger";
         }
         if (input.preferences?.isHandicapped && slot.vehicleConstraints?.isHandicapped) {
-          score += 10;
+          score += 15;
           reason += " · Dedicated step-free accessible bay";
+        }
+        if (input.preferences?.fastExit) {
+          score += 8;
+          reason += " · Direct ramp egress path";
         }
 
         const confidence = Math.min(0.98, Math.max(0.75, score / 100));
@@ -342,10 +366,16 @@ export async function executeParkingRecommendation(
       .sort((a, b) => b.rawScore - a.rawScore)
       .slice(0, 3);
 
+    // 3. Post-validate: Ensure every returned space strictly exists in input available list
+    const candidateIds = new Set(input.availableSlots.map((s) => s.slotId));
+    const validatedSlots = ranked
+      .filter((r) => candidateIds.has(r.slotId))
+      .map(({ rawScore, ...rest }) => rest);
+
     const durationMs = Math.round(performance.now() - startTime);
 
     const result: RecommendationOutput = {
-      recommendedSlots: ranked.map(({ rawScore, ...rest }) => rest),
+      recommendedSlots: validatedSlots,
       destination: input.destination,
       executionId,
       durationMs,
@@ -362,14 +392,14 @@ export async function executeParkingRecommendation(
       startedAt,
       completedAt: new Date().toISOString(),
       durationMs,
-      confidence: ranked[0]?.confidence || 0.9,
-      inputRecordCount: available.length,
-      outputRecordCount: ranked.length,
+      confidence: validatedSlots[0]?.confidence || 0.9,
+      inputRecordCount: input.availableSlots.length,
+      outputRecordCount: validatedSlots.length,
       failedRecordCount: 0,
       usage: "Tokens: 180 prompt, 95 completion",
       estimatedCost: 0.0003,
-      inputSummary: `Destination: ${input.destination}, Available Slots Evaluated: ${available.length}`,
-      outputSummary: `Recommended ${ranked.length} spaces: ${ranked.map((s) => s.slotNumber).join(", ")}`,
+      inputSummary: `Destination: ${input.destination}, Available Slots Evaluated: ${input.availableSlots.length}`,
+      outputSummary: `Recommended ${validatedSlots.length} spaces: ${validatedSlots.map((s) => s.slotNumber).join(", ")}`,
       associatedId: input.destination,
     });
 
