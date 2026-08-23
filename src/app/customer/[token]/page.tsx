@@ -145,7 +145,7 @@ export default function CustomerFindMySpacePage({
             </div>
             <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5">
               <span className="text-[11px] font-bold uppercase text-[#70675F] block">Pillar</span>
-              <span className="text-[20px] font-black text-[#241F1B]">{booking.confirmedPillar || slot?.pillar || "P02"}</span>
+              <span className="text-[20px] font-black text-[#241F1B]">{slot?.pillar || "P02"}</span>
             </div>
             <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-3.5">
               <span className="text-[11px] font-bold uppercase text-[#70675F] block">Duration</span>
@@ -157,7 +157,7 @@ export default function CustomerFindMySpacePage({
           <CustomerFloorPlan2D
             floor={slot?.floor || booking.floor || "B2"}
             zone={slot?.zone || booking.zone || "Zone A"}
-            pillar={booking.confirmedPillar || slot?.pillar || "Pillar"}
+            pillar={slot?.pillar || "Pillar"}
             slotNumber={slot?.slotNumber || booking.slotId}
             distanceFromEntrance={slot?.distanceFromEntrance || 36}
           />

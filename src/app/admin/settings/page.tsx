@@ -195,7 +195,7 @@ export default function AdminSettingsPage() {
               <li>Convex real-time database &amp; state synchronization</li>
               <li>Local plate recognition service on operator laptop</li>
               <li>TextBee Android app with active SIM for free SMS</li>
-              <li>Printed physical QR tags on pillars for location confirmation</li>
+              <li>Live digital wayfinding &amp; turn-by-turn indoor route maps</li>
             </ul>
           </div>
 

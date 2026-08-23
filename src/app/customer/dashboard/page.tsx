@@ -10,7 +10,6 @@ import dynamic from "next/dynamic";
 import { QRCodeSVG } from "qrcode.react";
 import {
   MapPin,
-  ScanLine,
   History as HistoryIcon,
   ShieldCheck,
   Car,
@@ -35,7 +34,6 @@ import {
   Check,
 } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
-import QrCameraScanner from "@/components/customer/QrCameraScanner";
 import CustomerAssistanceModal from "@/components/customer/CustomerAssistanceModal";
 import CustomerFloorPlan2D from "@/components/customer/CustomerFloorPlan2D";
 import {
@@ -58,7 +56,7 @@ const FindMyCar3DMap = dynamic(
   }
 );
 
-type ActiveTabType = "find-my-car" | "scan-qr" | "history" | "exit-pass";
+type ActiveTabType = "find-my-car" | "history" | "exit-pass";
 
 function formatDurationLive(entryTime: string): string {
   const diff = Date.now() - new Date(entryTime).getTime();
@@ -87,7 +85,6 @@ export default function CustomerDashboard() {
   const user = useQuery(api.users.getUser, userEmail ? { email: userEmail } : "skip");
   const upsertUser = useMutation(api.users.upsertUser);
   const updateVehicleMutation = useMutation(api.users.updateVehicleDetails);
-  const confirmPillarMutation = useMutation(api.bookings.confirmPillarLocation);
 
   const vehicleNumber = user?.vehicleNumber || "";
 
@@ -182,7 +179,6 @@ export default function CustomerDashboard() {
   }, [activeBooking?.entryTime]);
 
   const hasActiveSession = Boolean(activeBooking && activeBooking.status === "ACTIVE");
-  const isPillarConfirmed = Boolean(activeBooking?.pillarConfirmedAt);
 
   const handleSaveVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,31 +201,6 @@ export default function CustomerDashboard() {
     }
   };
 
-  const handleConfirmPillar = async (codeOrToken: string) => {
-    if (!activeBooking?._id) {
-      return { success: false, error: "No active parking session found." };
-    }
-
-    try {
-      const res = await confirmPillarMutation({
-        bookingId: activeBooking._id,
-        pillarTokenOrCode: codeOrToken.trim(),
-      });
-
-      if (res.success) {
-        setActiveTab("find-my-car");
-        return {
-          success: true,
-          confirmedPillar: res.confirmedPillar || activeBooking.slotDetails?.pillar || "Confirmed",
-        };
-      } else {
-        return { success: false, error: (res as any).error || "Pillar verification failed." };
-      }
-    } catch (err: any) {
-      return { success: false, error: err.message || "Failed to confirm pillar." };
-    }
-  };
-
   const handleRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => {
@@ -247,7 +218,7 @@ export default function CustomerDashboard() {
       {
         floor: targetSlot.floor,
         zone: targetSlot.zone,
-        pillar: activeBooking.confirmedPillar || targetSlot.pillar,
+        pillar: targetSlot.pillar,
         slotNumber: targetSlot.slotNumber,
       }
     );
@@ -315,7 +286,7 @@ export default function CustomerDashboard() {
               Hello, {customerDisplayName}
             </h1>
             <p className="text-[14px] text-[#70675F] mt-0.5">
-              Manage live navigation, pillar verification, and digital exit passes.
+              Manage parking navigation, history and your digital exit pass.
             </p>
           </div>
 
@@ -460,7 +431,7 @@ export default function CustomerDashboard() {
                   Slot {activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
                 </span>
                 <span className="text-[12px] text-[#70675F] font-semibold truncate">
-                  {isPillarConfirmed ? (activeBooking.confirmedPillar || activeBooking.slotDetails?.pillar) : activeBooking.slotDetails?.pillar}
+                  {activeBooking.slotDetails?.pillar || "Standard Bay"}
                 </span>
               </div>
 
@@ -487,14 +458,14 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            {/* 4-Stage Status Timeline */}
+            {/* 3-Stage Status Timeline */}
             <div className="bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-4 sm:p-5 flex flex-col gap-3">
               <div className="text-[11px] font-bold uppercase tracking-wider text-[#70675F]">
                 Parking Session Timeline
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 relative">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 relative">
                 {/* Step 1 */}
-                <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
+                <div className="flex flex-col gap-1 p-3 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
                   <div className="flex items-center gap-1.5 text-[#2F7D5A] text-[12px] font-bold truncate">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">1. Vehicle Detected</span>
@@ -503,7 +474,7 @@ export default function CustomerDashboard() {
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
+                <div className="flex flex-col gap-1 p-3 rounded-lg bg-[#FFFFFF] border border-[#2F7D5A]/40 min-w-0">
                   <div className="flex items-center gap-1.5 text-[#2F7D5A] text-[12px] font-bold truncate">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">2. Space Assigned</span>
@@ -513,44 +484,21 @@ export default function CustomerDashboard() {
 
                 {/* Step 3 */}
                 <div
-                  className={`flex flex-col gap-1 p-2.5 rounded-lg border min-w-0 ${
-                    isPillarConfirmed
-                      ? "bg-[#FFFFFF] border-[#2F7D5A]/40 text-[#2F7D5A]"
-                      : "bg-[#FFFFFF] border-[#C93B2F] text-[#C93B2F]"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-[12px] font-bold truncate">
-                    {isPillarConfirmed ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    ) : (
-                      <span className="w-2 h-2 rounded-full bg-[#C93B2F] animate-pulse shrink-0" />
-                    )}
-                    <span className="truncate">3. Pillar Confirmed</span>
-                  </div>
-                  <span className="text-[11px] text-[#70675F] truncate">
-                    {isPillarConfirmed ? `${activeBooking.confirmedPillar || "Pillar"} verified` : "Action needed"}
-                  </span>
-                </div>
-
-                {/* Step 4 */}
-                <div
-                  className={`flex flex-col gap-1 p-2.5 rounded-lg border min-w-0 ${
+                  className={`flex flex-col gap-1 p-3 rounded-lg border min-w-0 ${
                     activeBooking.status === "COMPLETED"
                       ? "bg-[#FFFFFF] border-[#2F7D5A]/40 text-[#2F7D5A]"
-                      : isPillarConfirmed
-                      ? "bg-[#FFFFFF] border-[#DED3C7] text-[#241F1B]"
-                      : "bg-[#F3EAE0] border-[#DED3C7] text-[#938980]"
+                      : "bg-[#FFFFFF] border-[#DED3C7] text-[#241F1B]"
                   }`}
                 >
                   <div className="flex items-center gap-1.5 text-[12px] font-bold truncate">
                     {activeBooking.status === "COMPLETED" ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#2F7D5A]" />
                     ) : (
-                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-[#C93B2F]" />
                     )}
-                    <span className="truncate">4. Ready to Exit</span>
+                    <span className="truncate">3. Ready to Exit</span>
                   </div>
-                  <span className="text-[11px] text-[#70675F] truncate">Digital pass active</span>
+                  <span className="text-[11px] text-[#70675F] truncate">Digital exit pass active</span>
                 </div>
               </div>
             </div>
@@ -585,8 +533,8 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* ── 4. FOUR DASHBOARD OPTIONS (RESPONSIVE TAB SELECTOR) ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        {/* ── 4. THREE DASHBOARD ACTION CARDS (RESPONSIVE 3-CARD GRID) ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
           {/* Option 1: Find My Car */}
           <button
             type="button"
@@ -624,44 +572,7 @@ export default function CustomerDashboard() {
             </div>
           </button>
 
-          {/* Option 2: Scan QR */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("scan-qr")}
-            disabled={!hasActiveSession}
-            className={`min-h-[90px] p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
-              activeTab === "scan-qr"
-                ? "bg-[#FFFFFF] border-2 border-[#C93B2F] shadow-[0_8px_24px_rgba(70,48,35,0.08)] ring-2 ring-[#C93B2F]/20"
-                : hasActiveSession
-                ? "bg-[#FFFFFF] border-[#DED3C7] hover:bg-[#F3EAE0] hover:border-[#CBBCAE]"
-                : "bg-[#F3EAE0] border-[#DED3C7] opacity-65 cursor-not-allowed"
-            }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                  activeTab === "scan-qr"
-                    ? "bg-[#C93B2F] text-white"
-                    : "bg-[#F3EAE0] text-[#70675F]"
-                }`}
-              >
-                <ScanLine className="w-5 h-5" />
-              </div>
-              {!hasActiveSession && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] text-[#938980] border border-[#DED3C7] uppercase">
-                  Inactive
-                </span>
-              )}
-            </div>
-            <div className="mt-2">
-              <div className="text-[15px] font-bold text-[#241F1B]">Scan QR</div>
-              <div className="text-[12px] text-[#70675F] truncate">
-                {hasActiveSession ? "Confirm pillar location" : "Requires active space"}
-              </div>
-            </div>
-          </button>
-
-          {/* Option 3: History (Always Enabled) */}
+          {/* Option 2: History (Always Enabled) */}
           <button
             type="button"
             onClick={() => setActiveTab("history")}
@@ -693,7 +604,7 @@ export default function CustomerDashboard() {
             </div>
           </button>
 
-          {/* Option 4: Exit Pass */}
+          {/* Option 3: Exit Pass */}
           <button
             type="button"
             onClick={() => setActiveTab("exit-pass")}
@@ -736,202 +647,150 @@ export default function CustomerDashboard() {
           {/* TAB 1: FIND MY CAR */}
           {activeTab === "find-my-car" && hasActiveSession && activeBooking && (
             <div className="flex flex-col gap-5">
-              {!isPillarConfirmed ? (
-                /* Pre-confirmation Call to Action */
-                <div className="bg-[#FFFFFF] border border-[#C93B2F]/40 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
-                      <ScanLine className="w-6 h-6" />
+              {/* Find My Car Two-Column View: 2/3 Map, 1/3 Details */}
+              <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
+                {/* Left 2/3 Column: Map & Controls */}
+                <div className="lg:col-span-2 flex flex-col gap-4">
+                  <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                    {/* Map Mode Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Compass className="w-5 h-5 text-[#C93B2F]" />
+                        <span className="text-[15px] font-bold text-[#241F1B]">Indoor Navigation Guidance</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-[#F3EAE0] p-1 rounded-xl border border-[#DED3C7]">
+                        <button
+                          type="button"
+                          onClick={() => setMapMode("3D")}
+                          className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                            mapMode === "3D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
+                          }`}
+                        >
+                          Interactive View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMapMode("2D")}
+                          className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                            mapMode === "2D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
+                          }`}
+                        >
+                          Floor Plan
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#C93B2F]">
-                        Step Required
-                      </span>
-                      <h3 className="text-[19px] sm:text-[21px] font-bold text-[#241F1B] mt-0.5">
-                        Confirm where you parked
-                      </h3>
-                      <p className="text-[13.5px] text-[#70675F] mt-1 max-w-[460px] leading-relaxed">
-                        Scan the QR code on your parking pillar ({activeBooking.slotDetails?.pillar || "Pillar"} · {activeBooking.slotDetails?.slotNumber}) to activate walking route guidance.
-                      </p>
+
+                    {/* Map Canvas */}
+                    <div className="w-full h-[360px] sm:h-[460px] rounded-xl overflow-hidden relative border border-[#DED3C7]">
+                      {mapMode === "3D" ? (
+                        <FindMyCar3DMap
+                          routePoints={routeData?.waypointCoordinates}
+                          slotNumber={activeBooking.slotDetails?.slotNumber}
+                          floor={activeBooking.slotDetails?.floor}
+                          zone={activeBooking.slotDetails?.zone}
+                          pillar={activeBooking.slotDetails?.pillar}
+                          startLandmarkName={routeData?.startLandmark.name}
+                          startLandmarkPos={routeData?.startLandmark.position}
+                        />
+                      ) : (
+                        <CustomerFloorPlan2D
+                          floor={activeBooking.slotDetails?.floor || "B2"}
+                          zone={activeBooking.slotDetails?.zone || "Zone A"}
+                          pillar={activeBooking.slotDetails?.pillar || "Pillar"}
+                          slotNumber={activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
+                          distanceFromEntrance={routeData?.totalDistanceMeters || 36}
+                        />
+                      )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("scan-qr")}
-                    className="h-12 px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs"
-                  >
-                    <ScanLine className="w-4 h-4" />
-                    <span>Scan Pillar QR Now</span>
-                  </button>
                 </div>
-              ) : (
-                /* Confirmed Find My Car View: Two-Column Desktop (2/3 Map, 1/3 Details) */
-                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
-                  {/* Left 2/3 Column: Map & Controls */}
-                  <div className="lg:col-span-2 flex flex-col gap-4">
-                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
-                      {/* Map Mode Header */}
+
+                {/* Right 1/3 Column: Landmark Selector & Step Guidance */}
+                <div className="flex flex-col gap-4">
+                  {/* Latest Confirmed CCTV Sighting Card (if sighted) */}
+                  {latestCctvSighting && (
+                    <div className="bg-[#FFFFFF] border border-[#2F7D5A]/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Compass className="w-5 h-5 text-[#C93B2F]" />
-                          <span className="text-[15px] font-bold text-[#241F1B]">Indoor Navigation Guidance</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-[#F3EAE0] p-1 rounded-xl border border-[#DED3C7]">
-                          <button
-                            type="button"
-                            onClick={() => setMapMode("3D")}
-                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                              mapMode === "3D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
-                            }`}
-                          >
-                            Interactive View
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setMapMode("2D")}
-                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                              mapMode === "2D" ? "bg-[#C93B2F] text-white shadow-xs" : "text-[#70675F] hover:text-[#241F1B]"
-                            }`}
-                          >
-                            Floor Plan
-                          </button>
-                        </div>
+                        <span className="text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/25 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D5A] animate-pulse" />
+                          CONFIRMED CCTV SIGHTING
+                        </span>
+                        <span className="text-[11px] text-[#70675F]">
+                          {new Date(latestCctvSighting.timestamp).toLocaleTimeString("en-IN")}
+                        </span>
                       </div>
-
-                      {/* Map Canvas */}
-                      <div className="w-full h-[360px] sm:h-[460px] rounded-xl overflow-hidden relative border border-[#DED3C7]">
-                        {mapMode === "3D" ? (
-                          <FindMyCar3DMap
-                            routePoints={routeData?.waypointCoordinates}
-                            slotNumber={activeBooking.slotDetails?.slotNumber}
-                            floor={activeBooking.slotDetails?.floor}
-                            zone={activeBooking.slotDetails?.zone}
-                            pillar={activeBooking.confirmedPillar || activeBooking.slotDetails?.pillar}
-                            startLandmarkName={routeData?.startLandmark.name}
-                            startLandmarkPos={routeData?.startLandmark.position}
-                          />
-                        ) : (
-                          <CustomerFloorPlan2D
-                            floor={activeBooking.slotDetails?.floor || "B2"}
-                            zone={activeBooking.slotDetails?.zone || "Zone A"}
-                            pillar={activeBooking.confirmedPillar || activeBooking.slotDetails?.pillar || "Pillar"}
-                            slotNumber={activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
-                            distanceFromEntrance={routeData?.totalDistanceMeters || 36}
-                          />
-                        )}
+                      <div className="text-[13px] font-bold text-[#241F1B]">
+                        {latestCctvSighting.cameraName}
+                      </div>
+                      <div className="flex items-center justify-between text-[11.5px] text-[#70675F] pt-1 border-t border-[#DED3C7]">
+                        <span>
+                          Floor {latestCctvSighting.floor} · {latestCctvSighting.zone}
+                        </span>
+                        <span className="font-bold text-[#2F7D5A]">
+                          {(latestCctvSighting.confidence * 100).toFixed(1)}% Confidence
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Right 1/3 Column: Landmark Selector & Step Guidance */}
-                  <div className="flex flex-col gap-4">
-                    {/* Latest Confirmed CCTV Sighting Card (if sighted) */}
-                    {latestCctvSighting && (
-                      <div className="bg-[#FFFFFF] border border-[#2F7D5A]/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/25 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D5A] animate-pulse" />
-                            CONFIRMED CCTV SIGHTING
-                          </span>
-                          <span className="text-[11px] text-[#70675F]">
-                            {new Date(latestCctvSighting.timestamp).toLocaleTimeString("en-IN")}
-                          </span>
-                        </div>
-                        <div className="text-[13px] font-bold text-[#241F1B]">
-                          {latestCctvSighting.cameraName}
-                        </div>
-                        <div className="flex items-center justify-between text-[11.5px] text-[#70675F] pt-1 border-t border-[#DED3C7]">
-                          <span>
-                            Floor {latestCctvSighting.floor} · {latestCctvSighting.zone}
-                          </span>
-                          <span className="font-bold text-[#2F7D5A]">
-                            {(latestCctvSighting.confidence * 100).toFixed(1)}% Confidence
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                  {/* Landmark Selector Card */}
+                  <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3.5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-[#DED3C7]">
+                      <span className="text-[12px] font-bold uppercase text-[#70675F]">
+                        Starting Landmark
+                      </span>
+                      <span className="text-[12px] text-[#2F7D5A] font-bold">
+                        {routeData?.totalDistanceMeters || 36}m ({routeData?.walkTimeMinutes || 1} min)
+                      </span>
+                    </div>
 
-                    {/* Landmark Selector Card */}
-                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3.5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
-                      <div className="flex items-center justify-between pb-2.5 border-b border-[#DED3C7]">
-                        <span className="text-[12px] font-bold uppercase text-[#70675F]">
-                          Starting Landmark
-                        </span>
-                        <span className="text-[12px] text-[#2F7D5A] font-bold">
-                          {routeData?.totalDistanceMeters || 36}m ({routeData?.walkTimeMinutes || 1} min)
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        {LANDMARKS.map((landmark) => (
-                          <button
-                            key={landmark.id}
-                            type="button"
-                            onClick={() => setSelectedLandmarkId(landmark.id)}
-                            className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
-                              selectedLandmarkId === landmark.id
-                                ? "bg-[#F9E3DE] border-[#C93B2F] text-[#241F1B]"
-                                : "bg-[#FFFFFF] border-[#DED3C7] text-[#70675F] hover:bg-[#F3EAE0]"
+                    <div className="flex flex-col gap-2">
+                      {LANDMARKS.map((landmark) => (
+                        <button
+                          key={landmark.id}
+                          type="button"
+                          onClick={() => setSelectedLandmarkId(landmark.id)}
+                          className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                            selectedLandmarkId === landmark.id
+                              ? "bg-[#F9E3DE] border-[#C93B2F] text-[#241F1B]"
+                              : "bg-[#FFFFFF] border-[#DED3C7] text-[#70675F] hover:bg-[#F3EAE0]"
+                          }`}
+                        >
+                          <Building2
+                            className={`w-4 h-4 shrink-0 mt-0.5 ${
+                              selectedLandmarkId === landmark.id ? "text-[#C93B2F]" : "text-[#70675F]"
                             }`}
-                          >
-                            <Building2
-                              className={`w-4 h-4 shrink-0 mt-0.5 ${
-                                selectedLandmarkId === landmark.id ? "text-[#C93B2F]" : "text-[#70675F]"
-                              }`}
-                            />
-                            <div>
-                              <div className="text-[13.5px] font-bold text-[#241F1B] leading-tight">{landmark.name}</div>
-                              <div className="text-[11.5px] text-[#70675F] mt-0.5">
-                                {landmark.description}
-                              </div>
+                          />
+                          <div>
+                            <div className="text-[13.5px] font-bold text-[#241F1B] leading-tight">{landmark.name}</div>
+                            <div className="text-[11.5px] text-[#70675F] mt-0.5">
+                              {landmark.description}
                             </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Turn-by-turn Directions */}
-                    <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
-                      <div className="text-[12px] font-bold uppercase tracking-wider text-[#70675F] flex items-center gap-1.5">
-                        <Navigation className="w-4 h-4 text-[#C93B2F]" />
-                        <span>Turn-by-Turn Route</span>
-                      </div>
-                      <div className="flex flex-col gap-2.5">
-                        {routeData?.directions.map((step, idx) => (
-                          <div key={idx} className="flex items-start gap-2.5 text-[13px] leading-relaxed">
-                            <span className="w-5 h-5 rounded-full bg-[#F9E3DE] text-[#C93B2F] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                              {idx + 1}
-                            </span>
-                            <span className="text-[#241F1B]">{step}</span>
                           </div>
-                        ))}
-                      </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Turn-by-turn Directions */}
+                  <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+                    <div className="text-[12px] font-bold uppercase tracking-wider text-[#70675F] flex items-center gap-1.5">
+                      <Navigation className="w-4 h-4 text-[#C93B2F]" />
+                      <span>Turn-by-Turn Route</span>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {routeData?.directions.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 text-[13px] leading-relaxed">
+                          <span className="w-5 h-5 rounded-full bg-[#F9E3DE] text-[#C93B2F] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span className="text-[#241F1B]">{step}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: SCAN QR */}
-          {activeTab === "scan-qr" && (
-            <div className="flex flex-col gap-5">
-              {!hasActiveSession || !activeBooking ? (
-                <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-8 text-center flex flex-col items-center justify-center gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
-                  <ScanLine className="w-8 h-8 text-[#70675F]" />
-                  <h4 className="text-[18px] font-bold text-[#241F1B]">QR Scanner is Inactive</h4>
-                  <p className="text-[14px] text-[#70675F] max-w-[400px]">
-                    Available after a parking space is assigned to your vehicle.
-                  </p>
-                </div>
-              ) : (
-                <QrCameraScanner
-                  onConfirmPillar={handleConfirmPillar}
-                  assignedPillar={activeBooking.slotDetails?.pillar || "Pillar"}
-                  assignedSlot={activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
-                  assignedFloor={activeBooking.slotDetails?.floor || "B2"}
-                />
-              )}
+              </div>
             </div>
           )}
 
@@ -1173,7 +1032,7 @@ export default function CustomerDashboard() {
         mallName={activeBooking?.mallName}
         slotNumber={activeBooking?.slotDetails?.slotNumber}
         floor={activeBooking?.slotDetails?.floor}
-        pillar={activeBooking?.confirmedPillar || activeBooking?.slotDetails?.pillar}
+        pillar={activeBooking?.slotDetails?.pillar}
       />
 
       {/* ── EDIT VEHICLE PROFILE MODAL ── */}

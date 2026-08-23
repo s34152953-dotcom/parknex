@@ -111,9 +111,9 @@ export default function AdminActiveSessionsPage() {
               <tr>
                 <th className="px-5 py-3.5">Vehicle Plate</th>
                 <th className="px-5 py-3.5">Assigned Space</th>
-                <th className="px-5 py-3.5">Pillar Confirmation</th>
+                <th className="px-5 py-3.5">Parking Location</th>
                 <th className="px-5 py-3.5">Duration</th>
-                <th className="px-5 py-3.5">Fallback Code</th>
+                <th className="px-5 py-3.5">Exit Pass Token</th>
                 <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -147,17 +147,10 @@ export default function AdminActiveSessionsPage() {
                     </td>
 
                     <td className="px-5 py-4">
-                      {s.pillarConfirmedAt ? (
-                        <div className="flex items-center gap-1.5 text-[#2F7D5A] font-bold text-[12px]">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Confirmed at {s.confirmedPillar || s.pillar}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-[#B7791F] font-bold text-[12px]">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Awaiting Customer Pillar Scan</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5 text-[#2F7D5A] font-bold text-[12px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Level {s.floor} · {s.pillar || "Assigned"}</span>
+                      </div>
                     </td>
 
                     <td className="px-5 py-4">

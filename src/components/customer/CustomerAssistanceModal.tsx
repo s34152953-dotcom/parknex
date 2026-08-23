@@ -13,7 +13,6 @@ import { api } from "../../../convex/_generated/api";
 
 const ISSUE_OPTIONS = [
   "Assigned space is occupied",
-  "Pillar QR is damaged",
   "Wrong vehicle information",
   "Cannot find my car",
   "Exit pass is not working",
