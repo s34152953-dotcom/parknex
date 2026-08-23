@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "fc87b9c9f28a34b22c7104b2a64c489c";
 
   // Robust token retrieval checking default, secure, and non-secure cookie formats
   let token = await getToken({ req, secret });

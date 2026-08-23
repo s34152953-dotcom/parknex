@@ -3,7 +3,7 @@
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { SessionProvider } from "next-auth/react";
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "https://astute-pony-718.convex.cloud";
 
 // We only initialize the client if the URL is present and not a mock
 const convex = convexUrl && !convexUrl.includes("mock") ? new ConvexReactClient(convexUrl) : null;
