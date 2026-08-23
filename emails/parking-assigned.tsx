@@ -12,6 +12,7 @@ import {
   Hr,
   Row,
   Column,
+  Img,
 } from "@react-email/components";
 
 export interface ParkingAssignedEmailProps {
@@ -22,6 +23,8 @@ export interface ParkingAssignedEmailProps {
   slotNumber: string;
   dashboardUrl: string;
   assignmentTime?: string;
+  exitQrCodeUrl?: string;
+  fallbackCode?: string;
 }
 
 export default function ParkingAssignedEmail({
@@ -32,11 +35,13 @@ export default function ParkingAssignedEmail({
   slotNumber = "A-14",
   dashboardUrl = "https://parknex.vercel.app/customer/dashboard",
   assignmentTime,
+  exitQrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fparknex.vercel.app%2Fcustomer%2Fdashboard&margin=8",
+  fallbackCode = "PNX-782910",
 }: ParkingAssignedEmailProps) {
   return (
     <Html lang="en">
       <Head />
-      <Preview>Your parking space {slotNumber} at {mallName} is confirmed</Preview>
+      <Preview>Your parking space {slotNumber} & Digital Exit Pass at {mallName}</Preview>
       <Body style={main}>
         <Container style={container}>
           {/* Header Brand */}
@@ -50,12 +55,42 @@ export default function ParkingAssignedEmail({
           {/* Main Content */}
           <Section style={contentSection}>
             <Text style={badge}>ENTRY CONFIRMED</Text>
-            <Heading style={heading}>Your parking space has been assigned.</Heading>
+            <Heading style={heading}>Your parking space & exit pass are ready.</Heading>
             <Text style={subheading}>
-              Your vehicle entry has been verified at {mallName}. Your space is ready and reserved for your current session.
+              Your vehicle entry has been verified at {mallName}. Your space is assigned and your digital exit barrier pass is active below.
             </Text>
 
-            {/* Details Table */}
+            {/* Exit Gate QR Pass Card */}
+            <Section style={exitPassCard}>
+              <Text style={exitPassBadge}>EXIT GATE PASS</Text>
+              <Heading style={exitPassHeading}>Digital Exit Barrier QR</Heading>
+              <Text style={exitPassSubtext}>
+                Scan this QR code at the automated barrier gate camera when driving out of {mallName}.
+              </Text>
+
+              {/* QR Code Image */}
+              {exitQrCodeUrl && (
+                <Section style={qrContainer}>
+                  <Img
+                    src={exitQrCodeUrl}
+                    width="180"
+                    height="180"
+                    alt="Exit Gate Barrier QR Code"
+                    style={qrImage}
+                  />
+                </Section>
+              )}
+
+              {/* Digital Offline Exit Code */}
+              {fallbackCode && (
+                <Section style={fallbackCodeBox}>
+                  <Text style={fallbackCodeLabel}>OFFLINE EXIT BACKUP CODE</Text>
+                  <Text style={fallbackCodeValue}>{fallbackCode}</Text>
+                </Section>
+              )}
+            </Section>
+
+            {/* Space Details Table */}
             <Section style={detailsCard}>
               <Row style={detailRow}>
                 <Column style={detailLabelCol}>
@@ -105,7 +140,7 @@ export default function ParkingAssignedEmail({
               {assignmentTime && (
                 <Row style={detailRowLast}>
                   <Column style={detailLabelCol}>
-                    <Text style={detailLabel}>Time</Text>
+                    <Text style={detailLabel}>Assigned</Text>
                   </Column>
                   <Column style={detailValueCol}>
                     <Text style={detailValue}>{assignmentTime}</Text>
@@ -122,11 +157,11 @@ export default function ParkingAssignedEmail({
             </Section>
 
             <Text style={infoText}>
-              Use the dashboard to view your assigned location, Find My Car navigation and digital exit pass.
+              Use the dashboard for 3D/2D indoor route guidance and real-time navigation back to your car.
             </Text>
 
             <Text style={securityNotice}>
-              This secure link is valid only for your current parking session.
+              This secure link and exit pass are valid only for your current active parking session.
             </Text>
 
             <Hr style={dividerLight} />
@@ -145,10 +180,10 @@ export default function ParkingAssignedEmail({
           {/* Footer */}
           <Section style={footerSection}>
             <Text style={footerText}>
-              ParkNex Automated Parking Infrastructure · Central Mall Grand
+              ParkNex Automated Parking Infrastructure · {mallName}
             </Text>
             <Text style={footerSubtext}>
-              This is an automated notification triggered upon physical gate entry.
+              This is an automated transactional pass issued upon entry verification.
             </Text>
           </Section>
         </Container>
@@ -157,7 +192,7 @@ export default function ParkingAssignedEmail({
   );
 }
 
-// ── Theme Styles (Red, White, Beige) ──
+// ── Theme Styles (Red, White, Beige Palette) ──
 const main = {
   backgroundColor: "#FAF7F2",
   fontFamily:
@@ -240,6 +275,85 @@ const subheading = {
   margin: "0 0 24px 0",
 };
 
+// ── Exit Pass QR Box ──
+const exitPassCard = {
+  backgroundColor: "#FAF7F2",
+  border: "2px solid #C93B2F",
+  borderRadius: "16px",
+  padding: "24px 20px",
+  margin: "0 0 24px 0",
+  textAlign: "center" as const,
+};
+
+const exitPassBadge = {
+  display: "inline-block",
+  backgroundColor: "#C93B2F",
+  borderRadius: "6px",
+  color: "#FFFFFF",
+  fontSize: "10.5px",
+  fontWeight: "900",
+  letterSpacing: "1.5px",
+  padding: "4px 12px",
+  margin: "0 0 10px 0",
+};
+
+const exitPassHeading = {
+  color: "#241F1B",
+  fontSize: "18px",
+  fontWeight: "800",
+  margin: "0 0 6px 0",
+};
+
+const exitPassSubtext = {
+  color: "#70675F",
+  fontSize: "12.5px",
+  lineHeight: "1.4",
+  margin: "0 0 16px 0",
+};
+
+const qrContainer = {
+  backgroundColor: "#FFFFFF",
+  border: "1px solid #DED3C7",
+  borderRadius: "12px",
+  display: "inline-block",
+  padding: "12px",
+  margin: "0 auto 16px auto",
+  boxShadow: "0 4px 12px rgba(70, 48, 35, 0.05)",
+};
+
+const qrImage = {
+  display: "block",
+  margin: "0 auto",
+  borderRadius: "8px",
+};
+
+const fallbackCodeBox = {
+  backgroundColor: "#FFFFFF",
+  border: "1px solid #DED3C7",
+  borderRadius: "10px",
+  padding: "10px 16px",
+  display: "inline-block",
+  margin: "0 auto",
+};
+
+const fallbackCodeLabel = {
+  color: "#70675F",
+  fontSize: "10px",
+  fontWeight: "700",
+  letterSpacing: "1px",
+  margin: "0 0 2px 0",
+};
+
+const fallbackCodeValue = {
+  color: "#C93B2F",
+  fontFamily: "monospace",
+  fontSize: "20px",
+  fontWeight: "900",
+  letterSpacing: "3px",
+  margin: "0",
+};
+
+// ── Details Table ──
 const detailsCard = {
   backgroundColor: "#FAF7F2",
   border: "1px solid #DED3C7",

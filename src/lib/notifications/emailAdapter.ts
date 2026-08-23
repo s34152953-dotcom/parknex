@@ -104,6 +104,10 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
     ? new Date(params.entryTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+  // Generate Exit Gate QR Code URL (Encodes token for barrier scanner)
+  const qrTarget = params.customerAccessToken || params.bookingId;
+  const exitQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrTarget)}&margin=8`;
+
   try {
     const resend = new Resend(apiKey);
 
@@ -117,6 +121,8 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
         slotNumber: params.slotNumber,
         dashboardUrl: secureDashboardUrl,
         assignmentTime: formattedTime,
+        exitQrCodeUrl: exitQrCodeUrl,
+        fallbackCode: params.fallbackCode,
       })
     );
 
@@ -126,7 +132,7 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: cleanEmail,
-      subject: "ParkNex – Your parking space is confirmed",
+      subject: `ParkNex – Your Exit Pass & Space ${params.slotNumber} Confirmed`,
       html: emailHtml,
       headers: {
         "X-Entity-Ref-ID": idempotencyKey,

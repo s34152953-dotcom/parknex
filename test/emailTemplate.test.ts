@@ -9,7 +9,7 @@ import {
 } from "../src/lib/notifications/emailAdapter";
 
 describe("Transactional Email Template & Helpers", () => {
-  it("renders ParkingAssignedEmail to valid HTML with required fields and time", async () => {
+  it("renders ParkingAssignedEmail with Exit Gate QR code and Digital Code", async () => {
     const html = await render(
       React.createElement(ParkingAssignedEmail, {
         mallName: "Central Mall Grand",
@@ -19,6 +19,8 @@ describe("Transactional Email Template & Helpers", () => {
         slotNumber: "A-14",
         dashboardUrl: "https://parknex.vercel.app/customer/access/token_test_123",
         assignmentTime: "10:30 AM",
+        exitQrCodeUrl: "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=token_test_123",
+        fallbackCode: "PNX-782910",
       })
     );
 
@@ -28,10 +30,13 @@ describe("Transactional Email Template & Helpers", () => {
     expect(html).toContain("Zone A");
     expect(html).toContain("A-14");
     expect(html).toContain("10:30 AM");
+    expect(html).toContain("Digital Exit Barrier QR");
+    expect(html).toContain("OFFLINE EXIT BACKUP CODE");
+    expect(html).toContain("PNX-782910");
+    expect(html).toContain("https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=token_test_123");
     expect(html).toContain("https://parknex.vercel.app/customer/access/token_test_123");
-    expect(html).toContain("Your parking space has been assigned.");
     expect(html).toContain("Open Customer Dashboard");
-    expect(html).toContain("This secure link is valid only for your current parking session.");
+    expect(html).toContain("This secure link and exit pass are valid only for your current active parking session.");
   });
 
   it("masks customer email properly for operator feedback", () => {
@@ -62,6 +67,7 @@ describe("Transactional Email Template & Helpers", () => {
       zone: "Zone A",
       mallName: "Central Mall Grand",
       customerAccessToken: "token_abc",
+      fallbackCode: "PNX-123456",
     });
 
     expect(result.success).toBe(false);
@@ -82,6 +88,7 @@ describe("Transactional Email Template & Helpers", () => {
       zone: "Zone A",
       mallName: "Central Mall Grand",
       customerAccessToken: "token_abc",
+      fallbackCode: "PNX-123456",
     });
 
     expect(result.success).toBe(false);
