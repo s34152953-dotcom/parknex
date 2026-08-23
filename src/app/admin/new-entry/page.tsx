@@ -77,7 +77,6 @@ function NewEntryContent() {
   const initialSlotId = searchParams.get("slotId") || "";
 
   // State Management
-  const [entryMode, setEntryMode] = useState<"walk_in" | "preregistered">("walk_in");
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraAvailable, setCameraAvailable] = useState<boolean | null>(null);
   const [detectedPlate, setDetectedPlate] = useState<string | null>(null);
@@ -85,8 +84,6 @@ function NewEntryContent() {
   const [cameraStatusMsg, setCameraStatusMsg] = useState<string>("");
   const [isProcessingEntry, setIsProcessingEntry] = useState(false);
   const [completedPass, setCompletedPass] = useState<any | null>(null);
-  const [preregTokenInput, setPreregTokenInput] = useState("");
-  const [preregError, setPreregError] = useState("");
 
   // Verification States
   const [verificationData, setVerificationData] = useState<VerificationData>({
@@ -323,25 +320,6 @@ function NewEntryContent() {
     }
   };
 
-  // Handle Preregistered Token Scan
-  const handleValidatePreregToken = async () => {
-    setPreregError("");
-    const token = preregTokenInput.trim();
-    if (!token) return;
-
-    const payload = await verifyEntryToken(token);
-    if (!payload || !payload.vehicleNumber) {
-      setPreregError("Invalid or expired pre-registered entry token.");
-      return;
-    }
-
-    setValue("vehicleNumber", payload.vehicleNumber);
-    if (payload.email) setValue("email", payload.email);
-    setDetectedPlate(payload.vehicleNumber);
-    setDetectionConfidence(1.0);
-    setCameraStatusMsg("Pre-registered token verified successfully.");
-  };
-
   // Gate Check: Can proceed to space assignment?
   const canProceedToAssign = useMemo(() => {
     if (activeBooking) return false;
@@ -365,7 +343,7 @@ function NewEntryContent() {
         phoneNumber: data.phoneNumber ? data.phoneNumber.trim() : undefined,
         email: data.email ? data.email.trim() : undefined,
         vehicleType: data.vehicleType,
-        entryType: entryMode,
+        entryType: "walk_in",
         mallName: "Central Mall Grand",
         operatorEmail: "operator:desk01",
         entryPlateConfidence: detectionConfidence || undefined,
@@ -411,38 +389,14 @@ function NewEntryContent() {
             </span>
             <span className="text-[12px] text-[#70675F]">· Gate A Inbound</span>
           </div>
-          <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
-            Process Vehicle Entry
-          </h1>
-          <p className="text-[13.5px] text-[#70675F] mt-0.5">
-            Two-step vehicle entry, plate verification, and space allocation.
-          </p>
-        </div>
-
-        {/* Entry Mode Selector */}
-        <div className="flex items-center bg-[#F3EAE0] border border-[#DED3C7] p-1 rounded-xl">
-          <button
-            type="button"
-            onClick={() => setEntryMode("walk_in")}
-            className={`px-3.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
-              entryMode === "walk_in"
-                ? "bg-[#C93B2F] text-white shadow-xs"
-                : "text-[#70675F] hover:text-[#241F1B]"
-            }`}
-          >
-            Walk-In Customer
-          </button>
-          <button
-            type="button"
-            onClick={() => setEntryMode("preregistered")}
-            className={`px-3.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
-              entryMode === "preregistered"
-                ? "bg-[#C93B2F] text-white shadow-xs"
-                : "text-[#70675F] hover:text-[#241F1B]"
-            }`}
-          >
-            Pre-Registered Pass
-          </button>
+          <div className="flex flex-col">
+            <h1 className="text-[24px] sm:text-[28px] font-black text-[#241F1B] tracking-tight">
+              Process Vehicle Entry
+            </h1>
+            <p className="text-[13.5px] text-[#70675F] mt-0.5">
+              Two-step vehicle entry, plate verification, and space allocation.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -450,37 +404,6 @@ function NewEntryContent() {
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Camera, Plate Entry & Verification (7 Cols) */}
           <div className="lg:col-span-7 flex flex-col gap-5">
-            {/* Preregistered Token Scan Box if active */}
-            {entryMode === "preregistered" && (
-              <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-3 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
-                <h3 className="text-[14px] font-bold text-[#241F1B] flex items-center gap-2">
-                  <QrCode className="w-4 h-4 text-[#C93B2F]" />
-                  <span>Scan or Enter Pre-Registered Pass Token</span>
-                </h3>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={preregTokenInput}
-                    onChange={(e) => setPreregTokenInput(e.target.value)}
-                    placeholder="Paste signed entry token..."
-                    className="flex-1 bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[13px] text-[#241F1B] font-mono placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleValidatePreregToken}
-                    className="px-4 py-2.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[13px] transition-colors cursor-pointer"
-                  >
-                    Verify Pass
-                  </button>
-                </div>
-                {preregError && (
-                  <p className="text-[12px] text-[#C93B2F] font-semibold flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{preregError}</span>
-                  </p>
-                )}
-              </div>
-            )}
 
             {/* Step 1: Camera / Plate Detection Box */}
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
