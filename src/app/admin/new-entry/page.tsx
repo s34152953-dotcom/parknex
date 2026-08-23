@@ -13,49 +13,18 @@ import {
   Camera,
   CheckCircle2,
   AlertCircle,
-  AlertTriangle,
   Phone,
   Mail,
-  QrCode,
   Printer,
   RefreshCw,
   ShieldCheck,
   ShieldAlert,
-  FileCheck,
   ExternalLink,
   Copy,
   Check,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getTop3Recommendations, SlotRecommendationInput } from "@/lib/parking/recommendation";
-import { verifyEntryToken } from "../../../../convex/crypto";
-import {
-  normalizeRegistrationNumber,
-  isValidIndianRegistration,
-} from "@/lib/verification/plateValidator";
-
-export type VerificationState =
-  | "NOT_CHECKED"
-  | "CHECKING"
-  | "VERIFIED"
-  | "INVALID"
-  | "MISMATCH"
-  | "UNAVAILABLE"
-  | "MANUAL_VERIFIED";
-
-export interface VerificationData {
-  status: VerificationState;
-  normalizedRegistrationNumber: string;
-  registrationStatus?: string;
-  make?: string;
-  model?: string;
-  colour?: string;
-  vehicleClass?: string;
-  fuelType?: string;
-  verifiedAt?: string;
-  errorMessage?: string;
-  manualReason?: string;
-}
 
 // Zod Schema for Vehicle Entry Form
 const entryFormSchema = z.object({
@@ -97,22 +66,6 @@ function NewEntryContent() {
   const [isRetryingEmail, setIsRetryingEmail] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Verification States
-  const [verificationData, setVerificationData] = useState<VerificationData>({
-    status: "NOT_CHECKED",
-    normalizedRegistrationNumber: "",
-  });
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [physicalMatchConfirmed, setPhysicalMatchConfirmed] = useState(false);
-
-  // Manual Verification Modal States
-  const [manualModalOpen, setManualModalOpen] = useState(false);
-  const [manualReason, setManualReason] = useState("");
-  const [manualPhysicalMake, setManualPhysicalMake] = useState("");
-  const [manualPhysicalModel, setManualPhysicalModel] = useState("");
-  const [manualPhysicalColour, setManualPhysicalColour] = useState("");
-  const [manualSubmitting, setManualSubmitting] = useState(false);
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -120,7 +73,6 @@ function NewEntryContent() {
   const slotsData = useQuery(api.slots.getSlots, { floor: undefined });
   const rawSlots = slotsData?.slots || [];
   const createWalkInEntryMutation = useMutation(api.bookings.createWalkInEntry);
-  const recordManualVerificationMutation = useMutation(api.bookings.recordManualVehicleVerification);
   const retryEmailDeliveryMutation = useMutation(api.bookings.retryEmailDelivery);
 
   // Form Setup
@@ -151,14 +103,8 @@ function NewEntryContent() {
 
   // Normalized Registration Number
   const normalizedPlate = useMemo(() => {
-    return normalizeRegistrationNumber(rawVehicleNumber || "");
+    return (rawVehicleNumber || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim();
   }, [rawVehicleNumber]);
-
-  // Indian Format Validation
-  const formatValidation = useMemo(() => {
-    if (!normalizedPlate) return null;
-    return isValidIndianRegistration(normalizedPlate);
-  }, [normalizedPlate]);
 
   // Duplicate Active Booking Query
   const activeBooking = useQuery(api.bookings.getActiveBookingByVehicle, {
@@ -196,17 +142,6 @@ function NewEntryContent() {
     }
   }, [initialSlotId, topRecommendations, currentSlotId, setValue]);
 
-  // Reset verification state when plate input changes
-  useEffect(() => {
-    if (normalizedPlate !== verificationData.normalizedRegistrationNumber) {
-      setVerificationData({
-        status: "NOT_CHECKED",
-        normalizedRegistrationNumber: normalizedPlate,
-      });
-      setPhysicalMatchConfirmed(false);
-    }
-  }, [normalizedPlate, verificationData.normalizedRegistrationNumber]);
-
   // Camera Management
   const startCamera = async () => {
     try {
@@ -227,7 +162,7 @@ function NewEntryContent() {
       console.warn("Camera failed to start:", err);
       setCameraActive(false);
       setCameraAvailable(false);
-      setCameraStatusMsg("Camera unavailable — manual plate entry required.");
+      setCameraStatusMsg("Camera unavailable — manual plate entry ready.");
     }
   };
 
@@ -238,106 +173,6 @@ function NewEntryContent() {
     }
     setCameraActive(false);
   };
-
-  // Perform External Vehicle Verification
-  const handleVerifyRegistration = async () => {
-    if (!normalizedPlate) return;
-    setIsVerifying(true);
-    setVerificationData((prev) => ({ ...prev, status: "CHECKING" }));
-
-    try {
-      const res = await fetch("/api/vehicle/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registrationNumber: normalizedPlate }),
-      });
-
-      const data = await res.json();
-
-      if (data.status === "verified") {
-        setVerificationData({
-          status: "VERIFIED",
-          normalizedRegistrationNumber: normalizedPlate,
-          registrationStatus: data.registrationStatus || "ACTIVE",
-          make: data.make,
-          model: data.model,
-          colour: data.colour,
-          vehicleClass: data.vehicleClass,
-          fuelType: data.fuelType,
-          verifiedAt: data.verifiedAt,
-        });
-        setPhysicalMatchConfirmed(false);
-      } else if (data.status === "invalid") {
-        setVerificationData({
-          status: "INVALID",
-          normalizedRegistrationNumber: normalizedPlate,
-          errorMessage: data.errorMessage || "Vehicle not found in registry records.",
-          verifiedAt: data.verifiedAt,
-        });
-      } else {
-        setVerificationData({
-          status: "UNAVAILABLE",
-          normalizedRegistrationNumber: normalizedPlate,
-          errorMessage: data.errorMessage || "Online verification is temporarily unavailable.",
-          verifiedAt: data.verifiedAt,
-        });
-      }
-    } catch (err: any) {
-      setVerificationData({
-        status: "UNAVAILABLE",
-        normalizedRegistrationNumber: normalizedPlate,
-        errorMessage: "Online verification is temporarily unavailable.",
-        verifiedAt: new Date().toISOString(),
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  // Handle Manual Verification Submit
-  const handleManualVerificationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!normalizedPlate || !manualReason.trim() || manualReason.trim().length < 4) {
-      alert("Please provide a valid mandatory reason for manual verification.");
-      return;
-    }
-
-    setManualSubmitting(true);
-    try {
-      const result = await recordManualVerificationMutation({
-        vehicleNumber: normalizedPlate,
-        operatorEmail: "operator:desk01",
-        reason: manualReason.trim(),
-        physicalMake: manualPhysicalMake.trim() || undefined,
-        physicalModel: manualPhysicalModel.trim() || undefined,
-        physicalColour: manualPhysicalColour.trim() || undefined,
-      });
-
-      setVerificationData({
-        status: "MANUAL_VERIFIED",
-        normalizedRegistrationNumber: normalizedPlate,
-        make: manualPhysicalMake.trim() || undefined,
-        model: manualPhysicalModel.trim() || undefined,
-        colour: manualPhysicalColour.trim() || undefined,
-        verifiedAt: result.verifiedAt,
-        manualReason: manualReason.trim(),
-      });
-
-      setPhysicalMatchConfirmed(true);
-      setManualModalOpen(false);
-      setManualReason("");
-    } catch (err: any) {
-      alert("Failed to record manual verification: " + err.message);
-    } finally {
-      setManualSubmitting(false);
-    }
-  };
-
-  // Gate Check: Can proceed to space assignment?
-  const canProceedToAssign = useMemo(() => {
-    if (activeBooking) return false;
-    return true; // Vehicle verification & physical match are optional
-  }, [activeBooking]);
 
   // Form Submission (Assign Space Click)
   const onSubmit = async (data: EntryFormData) => {
@@ -352,7 +187,7 @@ function NewEntryContent() {
     try {
       const selectedRec = topRecommendations.find((r) => r.slot.slotId === data.slotId);
 
-      // 1. Commit parking assignment in Convex atomically (Space reserved at entry gate)
+      // 1. Commit parking assignment in Convex atomically
       const result = await createWalkInEntryMutation({
         slotId: data.slotId,
         vehicleNumber: normalizedPlate,
@@ -365,14 +200,6 @@ function NewEntryContent() {
         entryPlateConfidence: detectionConfidence || undefined,
         recommendationScore: selectedRec?.score,
         recommendationReason: selectedRec?.reason,
-        verificationStatus: verificationData.status,
-        vehicleMake: verificationData.make,
-        vehicleModel: verificationData.model,
-        vehicleColour: verificationData.colour,
-        vehicleClass: verificationData.vehicleClass,
-        fuelType: verificationData.fuelType,
-        verifiedAt: verificationData.verifiedAt,
-        manualVerificationReason: verificationData.manualReason,
       });
 
       stopCamera();
@@ -382,7 +209,7 @@ function NewEntryContent() {
       const directToken = result.customerAccessToken || result.token;
       const secureDashboardLink = `${origin}/customer/access/${directToken}`;
 
-      // 3. Await server-side transactional email call (Next.js Node.js runtime)
+      // 3. Await server-side transactional email call
       let emailStatus = cleanEmail ? "queued" : "not_requested";
       let uiStatusMessage = cleanEmail ? "Queued" : "Email not requested";
       let maskedEmail = "";
@@ -433,13 +260,11 @@ function NewEntryContent() {
     if (!completedPass?.bookingId || !completedPass?.email) return;
     setIsRetryingEmail(true);
     try {
-      // 1. Verify operator session & increment retry state in Convex
       await retryEmailDeliveryMutation({
         bookingId: completedPass.bookingId,
         email: completedPass.email,
       });
 
-      // 2. Dispatch email via server-side API route (Next.js runtime)
       const emailRes = await fetch("/api/notifications/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -492,7 +317,7 @@ function NewEntryContent() {
               Process Vehicle Entry
             </h1>
             <p className="text-[13.5px] text-[#70675F] mt-0.5">
-              Two-step vehicle entry, plate verification, and space allocation.
+              Two-step vehicle entry, plate recording, and space allocation.
             </p>
           </div>
         </div>
@@ -500,9 +325,8 @@ function NewEntryContent() {
 
       {!completedPass ? (
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Camera, Plate Entry & Verification (7 Cols) */}
+          {/* Left Column: Camera, Plate Entry & Vehicle Types (7 Cols) */}
           <div className="lg:col-span-7 flex flex-col gap-5">
-
             {/* Step 1: Camera / Plate Detection Box */}
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
               <div className="flex items-center justify-between">
@@ -582,12 +406,6 @@ function NewEntryContent() {
                 {errors.vehicleNumber && (
                   <p className="text-[11.5px] text-[#C93B2F] font-semibold">{errors.vehicleNumber.message}</p>
                 )}
-                {formatValidation && !formatValidation.isValid && (
-                  <p className="text-[11.5px] text-[#C93B2F] font-medium flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{formatValidation.error}</span>
-                  </p>
-                )}
               </div>
 
               {/* Vehicle Type & Attributes */}
@@ -661,209 +479,13 @@ function NewEntryContent() {
               </div>
             )}
 
-            {/* ── VEHICLE REGISTRATION VERIFICATION SECTION ── */}
-            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#DED3C7]">
-                <div className="flex items-center gap-2.5">
-                  <FileCheck className="w-5 h-5 text-[#C93B2F]" />
-                  <h3 className="text-[15px] font-bold text-[#241F1B]">
-                    Vehicle Registration Verification
-                    <span className="ml-2 text-[12px] font-normal text-[#70675F]">(Optional)</span>
-                  </h3>
-                </div>
-
-                {/* Status Badges */}
-                <div>
-                  {verificationData.status === "NOT_CHECKED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#FAF7F2] text-[#70675F] border border-[#DED3C7] text-[11px] font-bold">
-                      NOT CHECKED
-                    </span>
-                  )}
-                  {verificationData.status === "CHECKING" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#3569A8]/10 text-[#3569A8] border border-[#3569A8]/30 text-[11px] font-bold flex items-center gap-1.5">
-                      <RefreshCw className="w-3 h-3 animate-spin" />
-                      VERIFYING...
-                    </span>
-                  )}
-                  {verificationData.status === "VERIFIED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/30 text-[11px] font-extrabold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      VERIFIED
-                    </span>
-                  )}
-                  {verificationData.status === "MANUAL_VERIFIED" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#3569A8]/10 text-[#3569A8] border border-[#3569A8]/30 text-[11px] font-extrabold flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      MANUALLY VERIFIED
-                    </span>
-                  )}
-                  {verificationData.status === "UNAVAILABLE" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#B7791F]/10 text-[#B7791F] border border-[#B7791F]/30 text-[11px] font-bold flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      SERVICE UNAVAILABLE
-                    </span>
-                  )}
-                  {verificationData.status === "INVALID" && (
-                    <span className="px-2.5 py-1 rounded-full bg-[#C93B2F]/10 text-[#C93B2F] border border-[#C93B2F]/30 text-[11px] font-bold flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      INVALID REGISTRATION
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Status & Details Body */}
-              {verificationData.status === "NOT_CHECKED" && (
-                <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[13.5px] font-bold text-[#241F1B]">
-                      Check the vehicle details before assigning a parking space.
-                    </p>
-                    <p className="text-[12px] text-[#70675F] mt-0.5">
-                      Verify registration records for {normalizedPlate || "vehicle"}.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleVerifyRegistration}
-                    disabled={!normalizedPlate || isVerifying || (formatValidation !== null && !formatValidation.isValid)}
-                    className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[12.5px] transition-colors cursor-pointer disabled:opacity-40 shadow-xs"
-                  >
-                    Verify Registration
-                  </button>
-                </div>
-              )}
-
-              {verificationData.status === "CHECKING" && (
-                <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-5 flex items-center justify-center gap-3 text-[#70675F]">
-                  <RefreshCw className="w-5 h-5 text-[#3569A8] animate-spin" />
-                  <span className="text-[13px] font-semibold text-[#241F1B]">Connecting to vehicle verification gateway...</span>
-                </div>
-              )}
-
-              {verificationData.status === "VERIFIED" && (
-                <div className="flex flex-col gap-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[12px]">
-                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                      <span className="text-[#70675F] block text-[10.5px]">Make &amp; Model</span>
-                      <span className="font-bold text-[#241F1B]">
-                        {verificationData.make || "N/A"} {verificationData.model || ""}
-                      </span>
-                    </div>
-                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                      <span className="text-[#70675F] block text-[10.5px]">Colour</span>
-                      <span className="font-bold text-[#241F1B]">{verificationData.colour || "Standard"}</span>
-                    </div>
-                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                      <span className="text-[#70675F] block text-[10.5px]">Vehicle Class</span>
-                      <span className="font-bold text-[#241F1B]">{verificationData.vehicleClass || "Motor Car (LMV)"}</span>
-                    </div>
-                    <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                      <span className="text-[#70675F] block text-[10.5px]">RC Status</span>
-                      <span className="font-bold text-[#2F7D5A]">{verificationData.registrationStatus || "ACTIVE"}</span>
-                    </div>
-                  </div>
-
-                  {/* Physical Vehicle Confirmation Checkbox */}
-                  <div
-                    onClick={() => setPhysicalMatchConfirmed(!physicalMatchConfirmed)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
-                      physicalMatchConfirmed
-                        ? "bg-[#2F7D5A]/10 border-[#2F7D5A]/40 text-[#241F1B]"
-                        : "bg-[#FAF7F2] border-[#DED3C7] text-[#241F1B] hover:border-[#CBBCAE]"
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
-                      physicalMatchConfirmed ? "bg-[#2F7D5A] text-white" : "border border-[#DED3C7] bg-white"
-                    }`}>
-                      {physicalMatchConfirmed && <CheckCircle2 className="w-4 h-4" />}
-                    </div>
-                    <span className="text-[13px] font-semibold">
-                      I confirm the physical vehicle matches the verified make, model, and colour (Optional).
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {verificationData.status === "UNAVAILABLE" && (
-                <div className="bg-[#FAF7F2] border border-[#B7791F]/30 rounded-xl p-4 flex flex-col gap-3">
-                  <div>
-                    <p className="text-[13.5px] font-bold text-[#B7791F]">
-                      Online verification is temporarily unavailable
-                    </p>
-                    <p className="text-[12px] text-[#70675F] mt-0.5">
-                      {verificationData.errorMessage || "Unable to reach verification service. Authorised operators may proceed with manual RC inspection."}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleVerifyRegistration}
-                      disabled={isVerifying}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[12px] font-bold hover:bg-[#F3EAE0] transition-colors cursor-pointer shadow-xs"
-                    >
-                      Retry Verification
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setManualModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#3569A8] hover:bg-[#25538C] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
-                    >
-                      Manual RC Verification
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {verificationData.status === "INVALID" && (
-                <div className="bg-[#FAF7F2] border border-[#C93B2F]/30 rounded-xl p-4 flex flex-col gap-3">
-                  <div>
-                    <p className="text-[13.5px] font-bold text-[#C93B2F]">
-                      Registration Record Not Found
-                    </p>
-                    <p className="text-[12px] text-[#70675F] mt-0.5">
-                      {verificationData.errorMessage || "Vehicle not found in official registry. If this is a newly registered vehicle, use manual verification."}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setManualModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#3569A8] hover:bg-[#25538C] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
-                    >
-                      Manual RC Verification
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {verificationData.status === "MANUAL_VERIFIED" && (
-                <div className="bg-[#3569A8]/10 border border-[#3569A8]/30 rounded-xl p-3.5 flex flex-col gap-1 text-[12px]">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#3569A8] flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4" />
-                      Manually Verified by Operator (Station 01)
-                    </span>
-                    <span className="text-[#70675F] text-[11px]">
-                      {new Date(verificationData.verifiedAt || "").toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-[#241F1B]">
-                    Reason: <span className="font-semibold">{verificationData.manualReason}</span>
-                  </p>
-                </div>
-              )}
-            </div>
-
             {/* Step 2: Contact Verification */}
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
               <div className="flex items-center justify-between pb-2 border-b border-[#DED3C7]">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4.5 h-4.5 text-[#2F7D5A]" />
                   <span className="text-[14.5px] font-bold text-[#241F1B]">
-                    Step 2: Contact Verification &amp; Pass Delivery
+                    Step 2: Customer Contact &amp; Pass Delivery
                   </span>
                 </div>
                 <span className="text-[11px] text-[#70675F] font-bold">Digital Delivery</span>
@@ -1002,7 +624,7 @@ function NewEntryContent() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isProcessingEntry || !canProceedToAssign}
+                disabled={isProcessingEntry || Boolean(activeBooking)}
                 className="w-full h-12 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] disabled:opacity-40 text-white font-bold text-[14px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(201,59,47,0.25)] transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 {isProcessingEntry ? (
@@ -1165,112 +787,12 @@ function NewEntryContent() {
                 setValue("vehicleNumber", "");
                 setValue("phoneNumber", "");
                 setValue("email", "");
-                setVerificationData({ status: "NOT_CHECKED", normalizedRegistrationNumber: "" });
-                setPhysicalMatchConfirmed(false);
               }}
               className="flex-1 h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[13px] flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
             >
               <CarFront className="w-4 h-4" />
               <span>Process Next Vehicle</span>
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── MANUAL VERIFICATION MODAL ── */}
-      {manualModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10.5px] font-extrabold uppercase tracking-widest text-[#3569A8] bg-[#3569A8]/10 px-2 py-0.5 rounded border border-[#3569A8]/20">
-                  AUTHORISED OVERRIDE
-                </span>
-                <span className="text-[12px] text-[#70675F]">· Operator Station 01</span>
-              </div>
-              <h3 className="text-[18px] font-bold text-[#241F1B]">Manual Vehicle RC Verification</h3>
-              <p className="text-[12.5px] text-[#70675F] mt-0.5">
-                Record physical inspection of vehicle registration smart card / documents. This action is permanently logged in the security audit trail.
-              </p>
-            </div>
-
-            <form onSubmit={handleManualVerificationSubmit} className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-[11.5px] font-bold text-[#241F1B] mb-1">
-                  Registration Number
-                </label>
-                <input
-                  type="text"
-                  value={normalizedPlate}
-                  readOnly
-                  className="w-full bg-[#FAF7F2] border border-[#DED3C7] rounded-xl px-3.5 py-2 text-[13.5px] font-mono font-bold text-[#241F1B]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11.5px] font-bold text-[#241F1B] mb-1">
-                  Mandatory Justification / Reason <span className="text-[#C93B2F]">*</span>
-                </label>
-                <textarea
-                  value={manualReason}
-                  onChange={(e) => setManualReason(e.target.value)}
-                  placeholder="e.g., Physical RC Smart Card inspected at gate; Online service offline"
-                  required
-                  rows={2}
-                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl p-3 text-[13px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F] resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Make</label>
-                  <input
-                    type="text"
-                    value={manualPhysicalMake}
-                    onChange={(e) => setManualPhysicalMake(e.target.value)}
-                    placeholder="e.g., Hyundai"
-                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Model</label>
-                  <input
-                    type="text"
-                    value={manualPhysicalModel}
-                    onChange={(e) => setManualPhysicalModel(e.target.value)}
-                    placeholder="e.g., Creta"
-                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-[#70675F] mb-1">Physical Colour</label>
-                  <input
-                    type="text"
-                    value={manualPhysicalColour}
-                    onChange={(e) => setManualPhysicalColour(e.target.value)}
-                    placeholder="e.g., White"
-                    className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-lg px-2.5 py-1.5 text-[12.5px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DED3C7]">
-                <button
-                  type="button"
-                  onClick={() => setManualModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] text-[#241F1B] text-[12.5px] font-bold hover:bg-[#F3EAE0] transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={manualSubmitting || !manualReason.trim() || manualReason.trim().length < 4}
-                  className="px-4 py-2 rounded-xl bg-[#3569A8] hover:bg-[#25538C] text-white text-[12.5px] font-bold transition-colors cursor-pointer disabled:opacity-40"
-                >
-                  {manualSubmitting ? "Recording..." : "Confirm Manual Verification"}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

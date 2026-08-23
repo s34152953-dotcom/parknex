@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -23,15 +23,7 @@ import {
   Navigation,
   HelpCircle,
   Loader2,
-  Plus,
   ChevronLeft,
-  KeyRound,
-  Pencil,
-  X,
-  Phone,
-  Palette,
-  SlidersHorizontal,
-  Check,
 } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 import CustomerAssistanceModal from "@/components/customer/CustomerAssistanceModal";
@@ -74,78 +66,14 @@ export default function CustomerDashboard() {
   const [selectedLandmarkId, setSelectedLandmarkId] = useState<string>("mall_entrance");
   const [mapMode, setMapMode] = useState<"3D" | "2D">("3D");
   const [isAssistanceOpen, setIsAssistanceOpen] = useState(false);
-  const [vehicleInput, setVehicleInput] = useState("");
-  const [savingVehicle, setSavingVehicle] = useState(false);
-  const [vehicleSavedMsg, setVehicleSavedMsg] = useState(false);
   const [historyPage, setHistoryPage] = useState(1);
   const [liveDuration, setLiveDuration] = useState("0m");
   const [refreshing, setRefreshing] = useState(false);
 
   const userEmail = session?.user?.email || "";
   const user = useQuery(api.users.getUser, userEmail ? { email: userEmail } : "skip");
-  const upsertUser = useMutation(api.users.upsertUser);
-  const updateVehicleMutation = useMutation(api.users.updateVehicleDetails);
 
   const vehicleNumber = user?.vehicleNumber || "";
-
-  // Edit Vehicle Modal State
-  const [isEditVehicleOpen, setIsEditVehicleOpen] = useState(false);
-  const [editPlate, setEditPlate] = useState("");
-  const [editType, setEditType] = useState<"sedan" | "suv" | "hatchback" | "ev" | "motorcycle">("sedan");
-  const [editMake, setEditMake] = useState("");
-  const [editModel, setEditModel] = useState("");
-  const [editColour, setEditColour] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [isUpdatingVehicle, setIsUpdatingVehicle] = useState(false);
-  const [editVehicleError, setEditVehicleError] = useState("");
-  const [editVehicleSuccess, setEditVehicleSuccess] = useState(false);
-
-  const openEditModal = () => {
-    setEditPlate(user?.vehicleNumber || "");
-    setEditType((user as any)?.vehicleType || "sedan");
-    setEditMake((user as any)?.vehicleMake || "");
-    setEditModel((user as any)?.vehicleModel || "");
-    setEditColour((user as any)?.vehicleColour || "");
-    setEditPhone((user as any)?.phoneNumber || "");
-    setEditVehicleError("");
-    setEditVehicleSuccess(false);
-    setIsEditVehicleOpen(true);
-  };
-
-  const handleUpdateVehicle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanPlate = editPlate.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim();
-    if (!cleanPlate) {
-      setEditVehicleError("Please provide a valid vehicle license plate number.");
-      return;
-    }
-    if (!userEmail) return;
-
-    setIsUpdatingVehicle(true);
-    setEditVehicleError("");
-    setEditVehicleSuccess(false);
-
-    try {
-      await updateVehicleMutation({
-        email: userEmail,
-        vehicleNumber: cleanPlate,
-        vehicleType: editType,
-        vehicleMake: editMake.trim() || undefined,
-        vehicleModel: editModel.trim() || undefined,
-        vehicleColour: editColour.trim() || undefined,
-        phoneNumber: editPhone.trim() || undefined,
-      });
-      setEditVehicleSuccess(true);
-      setTimeout(() => {
-        setIsEditVehicleOpen(false);
-        setEditVehicleSuccess(false);
-      }, 1000);
-    } catch (err: any) {
-      setEditVehicleError(err.message || "Failed to update vehicle details.");
-    } finally {
-      setIsUpdatingVehicle(false);
-    }
-  };
 
   const activeBooking = useQuery(
     api.bookings.getActiveBookingByVehicle,
@@ -179,27 +107,6 @@ export default function CustomerDashboard() {
   }, [activeBooking?.entryTime]);
 
   const hasActiveSession = Boolean(activeBooking && activeBooking.status === "ACTIVE");
-
-  const handleSaveVehicle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vehicleInput.trim() || !userEmail) return;
-    setSavingVehicle(true);
-    setVehicleSavedMsg(false);
-
-    try {
-      await upsertUser({
-        email: userEmail,
-        name: session?.user?.name || "Customer",
-        vehicleNumber: vehicleInput.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim(),
-      });
-      setVehicleSavedMsg(true);
-      setVehicleInput("");
-    } catch (err: any) {
-      alert("Failed to save vehicle: " + err.message);
-    } finally {
-      setSavingVehicle(false);
-    }
-  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -250,16 +157,10 @@ export default function CustomerDashboard() {
             </span>
 
             {vehicleNumber && (
-              <button
-                type="button"
-                onClick={openEditModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3EAE0] hover:bg-[#EDE1D4] border border-[#DED3C7] shrink-0 font-mono text-[12px] font-bold text-[#241F1B] transition-colors cursor-pointer"
-                title="Edit Vehicle Details"
-              >
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3EAE0] border border-[#DED3C7] shrink-0 font-mono text-[12px] font-bold text-[#241F1B]">
                 <Car className="w-3.5 h-3.5 text-[#C93B2F]" />
                 <span>{vehicleNumber}</span>
-                <Pencil className="w-3 h-3 text-[#70675F] ml-0.5" />
-              </button>
+              </div>
             )}
 
             <button
@@ -301,95 +202,6 @@ export default function CustomerDashboard() {
             </button>
           </div>
         </div>
-
-        {/* Vehicle Registration Banner if user has no vehicle assigned */}
-        {user !== undefined && !vehicleNumber && (
-          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
-                <Car className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-[15px] sm:text-[16px] font-bold text-[#241F1B]">Register Vehicle License Plate</h3>
-                <p className="text-[13px] text-[#70675F] mt-0.5">
-                  Link your license plate to automatically sync incoming parking assignments.
-                </p>
-              </div>
-            </div>
-            <form onSubmit={handleSaveVehicle} className="flex items-center gap-2 w-full sm:w-auto">
-              <input
-                type="text"
-                value={vehicleInput}
-                onChange={(e) => setVehicleInput(e.target.value.toUpperCase())}
-                placeholder="e.g. MH02AB1234"
-                className="h-11 px-3 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[13.5px] font-bold uppercase focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE] w-full sm:w-[200px]"
-              />
-              <button
-                type="submit"
-                disabled={savingVehicle || !vehicleInput.trim()}
-                className="h-11 px-4 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] disabled:opacity-50 text-white font-bold text-[13.5px] flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
-              >
-                {savingVehicle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                <span>Save</span>
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Registered Vehicle Profile Bar if user has vehicle assigned */}
-        {user !== undefined && vehicleNumber && (
-          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.05)]">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
-                <Car className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[16px] sm:text-[17px] font-black text-[#241F1B] tracking-wide">
-                    {vehicleNumber}
-                  </span>
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F3EAE0] text-[#70675F] border border-[#DED3C7]">
-                    {(user as any)?.vehicleType || "sedan"}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#70675F] mt-0.5">
-                  {((user as any)?.vehicleMake || (user as any)?.vehicleModel) && (
-                    <span>
-                      {[(user as any)?.vehicleMake, (user as any)?.vehicleModel].filter(Boolean).join(" ")}
-                    </span>
-                  )}
-                  {(user as any)?.vehicleColour && (
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full border border-[#DED3C7] bg-[#70675F]" />
-                      {(user as any).vehicleColour}
-                    </span>
-                  )}
-                  {(user as any)?.phoneNumber && (
-                    <span className="flex items-center gap-1 font-mono text-[11.5px]">
-                      <Phone className="w-3 h-3 text-[#70675F]" />
-                      {(user as any).phoneNumber}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={openEditModal}
-              className="h-10 px-4 rounded-xl bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[13px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
-            >
-              <Pencil className="w-3.5 h-3.5 text-[#C93B2F]" />
-              <span>Edit Vehicle Details</span>
-            </button>
-          </div>
-        )}
-        {vehicleSavedMsg && (
-          <div className="bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[13px] font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Vehicle plate registered successfully! Active bookings will link automatically.</span>
-          </div>
-        )}
 
         {/* ── 3. ACTIVE-PARKING SUMMARY / NO-ACTIVE-SESSION ── */}
         {hasActiveSession && activeBooking ? (
@@ -504,7 +316,7 @@ export default function CustomerDashboard() {
             </div>
           </div>
         ) : (
-          /* ── 5. NO ACTIVE SESSION COMPACT EMPTY STATE ── */
+          /* ── 5. NO ACTIVE SESSION CLEAN EMPTY STATE ── */
           <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-center gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
             <div className="w-14 h-14 rounded-2xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
               <Car className="w-7 h-7" />
@@ -512,11 +324,7 @@ export default function CustomerDashboard() {
             <div className="max-w-[480px]">
               <h3 className="text-[20px] font-bold text-[#241F1B]">No active parking session</h3>
               <p className="text-[14px] text-[#70675F] mt-1 leading-relaxed">
-                Your parking tools will activate when an operator assigns a space to your vehicle{" "}
-                {vehicleNumber && (
-                  <span className="font-mono text-[#241F1B] font-bold">({vehicleNumber})</span>
-                )}
-                .
+                Your parking space, indoor navigation, and digital exit pass will appear here automatically when assigned by the mall entrance operator.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -527,7 +335,7 @@ export default function CustomerDashboard() {
                 className="h-11 px-5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                <span>Refresh Assignment</span>
+                <span>Refresh Status</span>
               </button>
             </div>
           </div>
@@ -794,227 +602,156 @@ export default function CustomerDashboard() {
             </div>
           )}
 
-          {/* TAB 3: HISTORY (Always Available) */}
+          {/* TAB 2: HISTORY (Always Available) */}
           {activeTab === "history" && (
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-7 flex flex-col gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#DED3C7]">
                 <div>
-                  <h3 className="text-[18px] font-bold text-[#241F1B] flex items-center gap-2.5">
-                    <HistoryIcon className="w-5 h-5 text-[#C93B2F]" />
-                    <span>Customer Parking History</span>
-                  </h3>
-                  <p className="text-[13.5px] text-[#70675F] mt-0.5">
-                    Verified log of previous parking stays for vehicle{" "}
-                    <span className="font-mono text-[#241F1B] font-bold">{vehicleNumber || "your account"}</span>
+                  <h3 className="text-[18px] font-bold text-[#241F1B]">Parking History</h3>
+                  <p className="text-[13px] text-[#70675F] mt-0.5">
+                    Past parking visits, durations and assigned spaces.
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="h-10 px-4 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[13px] font-bold text-[#241F1B] hover:bg-[#F3EAE0] flex items-center gap-2 self-start sm:self-auto cursor-pointer shadow-xs"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 text-[#C93B2F] ${refreshing ? "animate-spin" : ""}`} />
-                  <span>Refresh</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] text-[#70675F] font-medium">
+                    Total: {historyRecords?.length || 0} visits
+                  </span>
+                </div>
               </div>
 
-              {historyRecords === undefined ? (
-                /* Loading Skeleton */
-                <div className="flex flex-col gap-3 animate-pulse">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-[#F3EAE0] rounded-xl border border-[#DED3C7]" />
-                  ))}
-                </div>
-              ) : historyRecords.length === 0 ? (
-                /* Empty State */
-                <div className="py-10 text-center flex flex-col items-center justify-center gap-2.5">
-                  <HistoryIcon className="w-8 h-8 text-[#70675F]" />
-                  <h4 className="text-[16px] font-bold text-[#241F1B]">No past parking records</h4>
-                  <p className="text-[13.5px] text-[#70675F] max-w-[360px]">
-                    When your parking visits are completed and validated at the exit gate, they will appear here.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Desktop Responsive Table */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full text-left text-[13.5px]">
-                      <thead>
-                        <tr className="border-b border-[#DED3C7] bg-[#F3EAE0] text-[11.5px] font-bold uppercase text-[#70675F]">
-                          <th className="py-3 px-3 rounded-l-lg">Date</th>
-                          <th className="py-3 px-3">Location</th>
-                          <th className="py-3 px-3">Space</th>
-                          <th className="py-3 px-3">Entry</th>
-                          <th className="py-3 px-3">Exit</th>
-                          <th className="py-3 px-3 rounded-r-lg">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#DED3C7]">
-                        {paginatedHistory.map((rec: any) => (
-                          <tr key={rec._id} className="hover:bg-[#FAF7F2] transition-colors">
-                            <td className="py-3.5 px-3 text-[#241F1B] font-semibold">
-                              {new Date(rec.entryTime).toLocaleDateString("en-IN", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </td>
-                            <td className="py-3.5 px-3 text-[#70675F]">
-                              {rec.mallName || "Central Mall"} · Floor {rec.floor || "B2"}
-                            </td>
-                            <td className="py-3.5 px-3 font-mono text-[#C93B2F] font-bold">
-                              {rec.slotNumber || rec.slotId} ({rec.pillar || "Pillar"})
-                            </td>
-                            <td className="py-3.5 px-3 text-[#70675F]">
-                              {new Date(rec.entryTime).toLocaleTimeString("en-IN", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </td>
-                            <td className="py-3.5 px-3 text-[#70675F]">
-                              {rec.exitTime
-                                ? new Date(rec.exitTime).toLocaleTimeString("en-IN", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "In Progress"}
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <span
-                                className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-                                  rec.status === "COMPLETED"
-                                    ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
-                                    : rec.status === "ACTIVE"
-                                    ? "bg-[#C93B2F]/10 text-[#C93B2F] border-[#C93B2F]/30"
-                                    : "bg-[#F3EAE0] text-[#70675F] border-[#DED3C7]"
-                                }`}
-                              >
-                                {rec.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile Stacked History Cards */}
-                  <div className="sm:hidden flex flex-col gap-3">
-                    {paginatedHistory.map((rec: any) => (
-                      <div
-                        key={rec._id}
-                        className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-3.5 flex flex-col gap-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-bold text-[#241F1B]">
-                            {new Date(rec.entryTime).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                            })}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              rec.status === "COMPLETED"
-                                ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
-                                : "bg-[#C93B2F]/10 text-[#C93B2F] border-[#C93B2F]/30"
-                            }`}
-                          >
-                            {rec.status}
-                          </span>
+              {paginatedHistory && paginatedHistory.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {paginatedHistory.map((rec: any) => (
+                    <div
+                      key={rec._id}
+                      className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#F3EAE0] transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center shrink-0">
+                          <Car className="w-5 h-5" />
                         </div>
-                        <div className="flex items-center justify-between text-[13px]">
-                          <span className="font-mono text-[#C93B2F] font-bold">
-                            Space {rec.slotNumber || rec.slotId}
-                          </span>
-                          <span className="text-[#70675F]">
-                            {new Date(rec.entryTime).toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[14.5px] font-bold text-[#241F1B]">
+                              {rec.mallName || "Central Mall Grand"}
+                            </span>
+                            <span
+                              className={`text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
+                                rec.status === "ACTIVE"
+                                  ? "bg-[#2F7D5A]/10 text-[#2F7D5A] border-[#2F7D5A]/30"
+                                  : "bg-[#70675F]/10 text-[#70675F] border-[#70675F]/30"
+                              }`}
+                            >
+                              {rec.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[12.5px] text-[#70675F] mt-0.5">
+                            <span>
+                              Space {rec.slotDetails?.slotNumber || rec.slotId} · Floor {rec.slotDetails?.floor || "B2"}
+                            </span>
+                            <span>·</span>
+                            <span>{new Date(rec.entryTime).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}</span>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="flex items-center gap-4 text-right self-end sm:self-auto">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-[#70675F] uppercase">Entry Time</span>
+                          <span className="text-[13px] font-mono font-bold text-[#241F1B]">
+                            {new Date(rec.entryTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        {rec.exitTime && (
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-bold text-[#70675F] uppercase">Exit Time</span>
+                            <span className="text-[13px] font-mono font-bold text-[#241F1B]">
+                              {new Date(rec.exitTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
 
                   {/* Pagination Controls */}
                   {totalHistoryPages > 1 && (
-                    <div className="flex items-center justify-between pt-4 border-t border-[#DED3C7]">
-                      <span className="text-[12px] text-[#70675F]">
+                    <div className="flex items-center justify-between pt-3 border-t border-[#DED3C7]">
+                      <button
+                        type="button"
+                        onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                        disabled={historyPage <= 1}
+                        className="px-3.5 py-1.5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[12.5px] font-bold disabled:opacity-40 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Previous</span>
+                      </button>
+                      <span className="text-[12.5px] text-[#70675F] font-bold">
                         Page {historyPage} of {totalHistoryPages}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={historyPage <= 1}
-                          onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                          className="px-3 py-1.5 rounded-lg border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] disabled:opacity-40 text-[12.5px] font-bold transition-all cursor-pointer"
-                        >
-                          Previous
-                        </button>
-                        <button
-                          type="button"
-                          disabled={historyPage >= totalHistoryPages}
-                          onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
-                          className="px-3 py-1.5 rounded-lg border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] disabled:opacity-40 text-[12.5px] font-bold transition-all cursor-pointer"
-                        >
-                          Next
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
+                        disabled={historyPage >= totalHistoryPages}
+                        className="px-3.5 py-1.5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[12.5px] font-bold disabled:opacity-40 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
-                </>
+                </div>
+              ) : (
+                <div className="py-12 text-center text-[#70675F]">
+                  <p className="text-[14px] font-bold text-[#241F1B]">No parking history found</p>
+                  <p className="text-[12.5px] text-[#70675F] mt-1">
+                    Your previous parking sessions will appear here after completion.
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* TAB 4: EXIT PASS */}
+          {/* TAB 3: EXIT PASS */}
           {activeTab === "exit-pass" && hasActiveSession && activeBooking && (
-            <div className="max-w-[560px] mx-auto w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center gap-6 shadow-[0_8px_24px_rgba(70,48,35,0.08)]">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[11px] font-bold uppercase tracking-wider mb-2">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  AUTHENTICATED DIGITAL PASS
-                </div>
-                <h3 className="text-[22px] font-black text-[#241F1B]">Exit Barrier Clearance Pass</h3>
-                <p className="text-[13.5px] text-[#70675F] mt-1">
-                  Scan this pass at the exit gate camera for automated gate lift.
-                </p>
+            <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center gap-6 shadow-[0_8px_24px_rgba(70,48,35,0.07)] max-w-[640px] mx-auto w-full">
+              <div className="flex items-center gap-2.5 text-[#C93B2F]">
+                <ShieldCheck className="w-7 h-7" />
+                <h3 className="text-[22px] font-black text-[#241F1B]">Digital Exit Barrier Pass</h3>
               </div>
+              <p className="text-[14px] text-[#70675F] max-w-[420px] leading-relaxed">
+                Scan this QR code at the automated barrier gate scanner when exiting {activeBooking.mallName}.
+              </p>
 
-              {/* QR Container */}
-              <div className="p-4 bg-[#FAF7F2] border border-[#DED3C7] rounded-2xl shadow-xs">
+              <div className="p-5 bg-[#FAF7F2] border border-[#DED3C7] rounded-3xl shadow-xs">
                 <QRCodeSVG
-                  value={activeBooking.exitPassToken || activeBooking.customerAccessToken}
-                  size={200}
-                  level="H"
+                  value={activeBooking.exitPassToken || activeBooking.customerAccessToken || activeBooking.fallbackCode || "PNX-PASS"}
+                  size={210}
                 />
               </div>
 
-              {/* Fallback Code Box */}
-              <div className="w-full bg-[#F3EAE0] border border-[#DED3C7] rounded-xl p-4 flex flex-col items-center gap-1">
-                <span className="text-[11px] font-bold uppercase text-[#70675F]">
-                  Manual Fallback Code
-                </span>
-                <span className="text-[22px] font-mono font-black text-[#C93B2F] tracking-widest">
-                  {activeBooking.fallbackCode || "N/A"}
-                </span>
-                <span className="text-[11px] text-[#70675F] mt-0.5">
-                  Provide this code to the operator if QR scan is unavailable
-                </span>
-              </div>
+              {activeBooking.fallbackCode && (
+                <div className="flex flex-col gap-1 bg-[#FAF7F2] border border-[#DED3C7] px-6 py-3 rounded-2xl w-full max-w-[320px]">
+                  <span className="text-[11px] font-mono text-[#70675F] uppercase font-bold">
+                    Offline Exit Backup Code
+                  </span>
+                  <span className="text-[24px] font-mono font-black text-[#C93B2F] tracking-widest">
+                    {activeBooking.fallbackCode}
+                  </span>
+                </div>
+              )}
 
-              <div className="w-full grid grid-cols-2 gap-2 text-left text-[12.5px] pt-3 border-t border-[#DED3C7]">
+              <div className="w-full grid grid-cols-2 gap-2.5 text-left text-[12.5px] pt-3 border-t border-[#DED3C7]">
                 <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                  <span className="text-[#70675F] block text-[11px]">Vehicle</span>
-                  <span className="font-mono font-bold text-[#241F1B]">{activeBooking.vehicleNumber}</span>
+                  <span className="text-[#70675F] block text-[11px]">Vehicle Plate</span>
+                  <span className="font-mono font-bold text-[#241F1B] text-[13.5px]">
+                    {activeBooking.vehicleNumber}
+                  </span>
                 </div>
                 <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#DED3C7]">
-                  <span className="text-[#70675F] block text-[11px]">Space</span>
-                  <span className="font-bold text-[#241F1B]">
-                    Slot {activeBooking.slotDetails?.slotNumber || activeBooking.slotId}
+                  <span className="text-[#70675F] block text-[11px]">Assigned Space</span>
+                  <span className="font-bold text-[#241F1B] text-[13.5px]">
+                    Slot {activeBooking.slotDetails?.slotNumber || activeBooking.slotId} (Floor {activeBooking.slotDetails?.floor || "B2"})
                   </span>
                 </div>
               </div>
@@ -1024,168 +761,16 @@ export default function CustomerDashboard() {
       </main>
 
       {/* Customer Assistance Modal */}
-      <CustomerAssistanceModal
-        isOpen={isAssistanceOpen}
-        onClose={() => setIsAssistanceOpen(false)}
-        bookingId={activeBooking?._id}
-        vehicleNumber={vehicleNumber}
-        mallName={activeBooking?.mallName}
-        slotNumber={activeBooking?.slotDetails?.slotNumber}
-        floor={activeBooking?.slotDetails?.floor}
-        pillar={activeBooking?.slotDetails?.pillar}
-      />
-
-      {/* ── EDIT VEHICLE PROFILE MODAL ── */}
-      {isEditVehicleOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#DED3C7]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
-                  <Car className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-[17px] font-black text-[#241F1B]">Edit Vehicle Profile</h3>
-                  <p className="text-[12px] text-[#70675F]">Update your vehicle details and preferences</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditVehicleOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#70675F] hover:text-[#241F1B] hover:bg-[#F3EAE0] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Error / Success feedback */}
-            {editVehicleError && (
-              <div className="p-3 rounded-xl bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[12.5px] font-semibold flex items-center gap-2">
-                <X className="w-4 h-4 shrink-0" />
-                <span>{editVehicleError}</span>
-              </div>
-            )}
-            {editVehicleSuccess && (
-              <div className="p-3 rounded-xl bg-[#2F7D5A]/10 border border-[#2F7D5A]/30 text-[#2F7D5A] text-[12.5px] font-semibold flex items-center gap-2">
-                <Check className="w-4 h-4 shrink-0" />
-                <span>Vehicle profile updated successfully!</span>
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateVehicle} className="flex flex-col gap-4">
-              {/* License Plate */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-bold text-[#241F1B]">
-                  License Plate Number <span className="text-[#C93B2F]">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editPlate}
-                  onChange={(e) => setEditPlate(e.target.value.toUpperCase())}
-                  placeholder="e.g. MH02AB1234"
-                  required
-                  className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[14px] font-bold uppercase focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                />
-                <span className="text-[11px] text-[#70675F]">
-                  Active and upcoming parking assignments link to this plate number.
-                </span>
-              </div>
-
-              {/* Vehicle Type */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-bold text-[#241F1B]">Vehicle Class / Type</label>
-                <select
-                  value={editType}
-                  onChange={(e) => setEditType(e.target.value as any)}
-                  className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] font-medium focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                >
-                  <option value="sedan">Sedan</option>
-                  <option value="suv">SUV</option>
-                  <option value="hatchback">Hatchback</option>
-                  <option value="ev">Electric Vehicle (EV)</option>
-                  <option value="motorcycle">Motorcycle / Two-Wheeler</option>
-                </select>
-              </div>
-
-              {/* Make & Model in 2 columns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#241F1B]">Make / Brand</label>
-                  <input
-                    type="text"
-                    value={editMake}
-                    onChange={(e) => setEditMake(e.target.value)}
-                    placeholder="e.g. Tata, Hyundai, Honda"
-                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#241F1B]">Model</label>
-                  <input
-                    type="text"
-                    value={editModel}
-                    onChange={(e) => setEditModel(e.target.value)}
-                    placeholder="e.g. Nexon EV, Creta, City"
-                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                  />
-                </div>
-              </div>
-
-              {/* Colour & Phone in 2 columns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#241F1B]">Vehicle Colour</label>
-                  <input
-                    type="text"
-                    value={editColour}
-                    onChange={(e) => setEditColour(e.target.value)}
-                    placeholder="e.g. White, Silver, Black"
-                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#241F1B]">Contact Phone Number</label>
-                  <input
-                    type="tel"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    placeholder="e.g. 9876543210"
-                    className="h-11 px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] font-mono text-[13.5px] focus:outline-none focus:border-[#C93B2F] focus:ring-3 focus:ring-[#F9E3DE]"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#DED3C7]">
-                <button
-                  type="button"
-                  onClick={() => setIsEditVehicleOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-bold transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdatingVehicle || !editPlate.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isUpdatingVehicle ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>Save Vehicle Profile</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {isAssistanceOpen && (
+        <CustomerAssistanceModal
+          isOpen={isAssistanceOpen}
+          onClose={() => setIsAssistanceOpen(false)}
+          bookingId={activeBooking?._id}
+          vehicleNumber={activeBooking?.vehicleNumber || vehicleNumber || "GUEST"}
+          mallName={activeBooking?.mallName || "Central Mall Grand"}
+          slotNumber={activeBooking?.slotDetails?.slotNumber || activeBooking?.slotId}
+          floor={activeBooking?.slotDetails?.floor}
+        />
       )}
     </div>
   );
