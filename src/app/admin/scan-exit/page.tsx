@@ -12,7 +12,6 @@ import {
   ArrowRight,
   RefreshCw,
   KeyRound,
-  Zap,
 } from "lucide-react";
 
 export default function AdminScanExitPage() {
@@ -46,7 +45,7 @@ export default function AdminScanExitPage() {
   const startCamera = async () => {
     try {
       setErrorMessage("");
-      setCameraStatusMsg("Initializing ultra-fast optical scanner...");
+      setCameraStatusMsg("Initializing camera stream...");
 
       // Request optimized high-fps video stream
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -77,7 +76,7 @@ export default function AdminScanExitPage() {
       }
 
       setCameraActive(true);
-      setCameraStatusMsg("High-Speed Optical Scanner Active (Hardware Accelerated)");
+      setCameraStatusMsg("Camera active. Align customer exit pass QR code.");
     } catch (err: any) {
       console.warn("Camera failed to start:", err);
       setCameraActive(false);
@@ -194,21 +193,16 @@ export default function AdminScanExitPage() {
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4.5 h-4.5 text-[#C93B2F]" />
                   <span className="text-[14.5px] font-bold text-[#241F1B]">
-                    Instant Optical Pass Scanner
-                  </span>
-                  <span className="text-[10px] font-extrabold text-[#2F7D5A] bg-[#2F7D5A]/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Zap className="w-3 h-3" />
-                    Ultra-Fast (~15ms)
+                    Optical Pass Scanner
                   </span>
                 </div>
                 {!cameraActive ? (
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="px-3.5 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
                   >
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>Activate Scanner</span>
+                    <span>Activate Camera</span>
                   </button>
                 ) : (
                   <button
