@@ -1,3 +1,5 @@
+import path from "path";
+import { RocketRideClient } from "rocketride";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../convex/_generated/api";
 import {
@@ -28,6 +30,80 @@ export function isRocketRideConfigured(): boolean {
 
 export function getConfidenceThreshold(): number {
   return AI_REVIEW_CONFIDENCE_THRESHOLD;
+}
+
+// ── ROCKETRIDE SDK PIPELINE RUNNER ──
+export async function executeRocketRidePipeSdk(
+  pipeFileName: string,
+  payload: any,
+  timeoutMs: number = 6000
+): Promise<{ success: boolean; data?: any; error?: string; durationMs: number }> {
+  const startTime = performance.now();
+  if (!isRocketRideConfigured()) {
+    return {
+      success: false,
+      error: "RocketRide server not configured (missing ROCKETRIDE_URI or ROCKETRIDE_APIKEY)",
+      durationMs: Math.round(performance.now() - startTime),
+    };
+  }
+
+  const client = new RocketRideClient({
+    uri: ROCKETRIDE_URI,
+    auth: ROCKETRIDE_APIKEY,
+  });
+
+  let taskToken: string | null = null;
+  try {
+    // 1. Connect to RocketRide server / DAP protocol
+    await client.connect();
+
+    // 2. Load .pipe definition
+    const pipePath = path.resolve(process.cwd(), "rocketride", pipeFileName);
+    const useResult = await client.use({ filepath: pipePath });
+    taskToken = useResult?.token || null;
+
+    if (!taskToken) {
+      throw new Error(`Failed to initialize pipeline ${pipeFileName}: no task token returned`);
+    }
+
+    // 3. Send event payload to pipeline
+    await client.send(
+      taskToken,
+      typeof payload === "string" ? payload : JSON.stringify(payload)
+    );
+
+    // 4. Retrieve execution status
+    const status = await client.getTaskStatus(taskToken);
+    const durationMs = Math.round(performance.now() - startTime);
+
+    return {
+      success: true,
+      data: status,
+      durationMs,
+    };
+  } catch (err: any) {
+    const durationMs = Math.round(performance.now() - startTime);
+    console.warn(`[RocketRide SDK] Pipeline ${pipeFileName} notice:`, err.message);
+    return {
+      success: false,
+      error: err.message,
+      durationMs,
+    };
+  } finally {
+    // 5. Always terminate task token and disconnect cleanly
+    if (taskToken) {
+      try {
+        await client.terminate(taskToken);
+      } catch {
+        // Safe ignore
+      }
+    }
+    try {
+      await client.disconnect();
+    } catch {
+      // Safe ignore
+    }
+  }
 }
 
 // ── PERSISTENT RUN LOGGER HELPER ──
@@ -72,6 +148,8 @@ export async function executeParkingVerification(
   const startTime = performance.now();
 
   try {
+    // Invoke RocketRide SDK if configured
+    const sdkResult = await executeRocketRidePipeSdk("parking-verification.pipe", input);
     const cleanPlate = input.vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     const plateRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$|^[0-9]{2}BH[0-9]{4}[A-Z]{1,2}$/;
     const isValidFormat = plateRegex.test(cleanPlate) || cleanPlate.length >= 4;
