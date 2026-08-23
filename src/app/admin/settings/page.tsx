@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   MapPin,
   Navigation,
@@ -19,21 +20,25 @@ import {
   Route as RouteIcon,
   Loader2,
 } from "lucide-react";
+import { MapPlace } from "@/components/maps/LiveGpsPlacesMap";
 
-interface RealPlace {
-  id: string;
-  name: string;
-  category: string;
-  address: string;
-  lat: number;
-  lng: number;
-  distanceKm: number;
-  driveTimeMin: number;
+// Dynamic import of Leaflet map to prevent SSR window issues
+const LiveGpsPlacesMap = dynamic(
+  () => import("@/components/maps/LiveGpsPlacesMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-[#FAF7F2] flex items-center justify-center text-[#70675F] gap-2">
+        <Loader2 className="w-5 h-5 animate-spin text-[#C93B2F]" />
+        <span className="text-[13px] font-bold">Loading Interactive Map...</span>
+      </div>
+    ),
+  }
+);
+
+interface RealPlace extends MapPlace {
   trafficStatus: "fast" | "moderate" | "heavy";
-  totalCapacity: number;
-  availableSpaces: number;
   evChargersAvailable: number;
-  status: "available" | "limited" | "full";
   googleMapsUrl: string;
 }
 
@@ -65,7 +70,7 @@ export default function AdminSettingsPage() {
         }
         if (data.places && data.places.length > 0) {
           setPlaces(data.places);
-          setSelectedPlaceId(data.places[0].id);
+          setSelectedPlaceId((prev) => (prev ? prev : data.places[0].id));
         }
       }
     } catch (err) {
@@ -255,34 +260,35 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* ── TWO COLUMN VIEW: MAP (7 COLS) & SELECTED PLACE DETAILS (5 COLS) ── */}
+      {/* ── TWO COLUMN VIEW: INTERACTIVE MAP (7 COLS) & SELECTED PLACE DETAILS (5 COLS) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Live Map Viewport (7 Cols) */}
+        {/* Left Column: Interactive Map Viewport with Markers (7 Cols) */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4.5 h-4.5 text-[#C93B2F]" />
                 <span className="text-[14.5px] font-bold text-[#241F1B]">
-                  Live Location Map
+                  Live Interactive Places Map
                 </span>
               </div>
               <span className="text-[12px] font-bold text-[#70675F]">
-                {userAreaName}
+                Click pins to select mall
               </span>
             </div>
 
-            {/* Clean Map Viewport without external link clutter */}
-            <div className="relative w-full h-[400px] sm:h-[440px] bg-[#E8E2D9] rounded-xl border border-[#DED3C7] overflow-hidden">
-              <iframe
-                title="Live Map"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${userCoords.lng - 0.035}%2C${userCoords.lat - 0.025}%2C${userCoords.lng + 0.035}%2C${userCoords.lat + 0.025}&layer=mapnik&marker=${userCoords.lat}%2C${userCoords.lng}`}
-                className="w-full h-[calc(100%+32px)] -mb-8 border-0"
-                loading="lazy"
+            {/* Interactive Leaflet Map with All Surrounding Place Pins */}
+            <div className="relative w-full h-[400px] sm:h-[460px] bg-[#FAF7F2] rounded-xl border border-[#DED3C7] overflow-hidden">
+              <LiveGpsPlacesMap
+                userCoords={userCoords}
+                userAreaName={userAreaName}
+                places={filteredPlaces}
+                selectedPlaceId={selectedPlaceId}
+                onSelectPlace={(id) => setSelectedPlaceId(id)}
               />
 
               {/* Your Location Pill Overlay */}
-              <div className="absolute top-3 left-3 bg-[#FFFFFF]/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#DED3C7] shadow-md flex items-center gap-2 text-[11.5px] font-bold text-[#241F1B] pointer-events-none">
+              <div className="absolute top-3 left-3 bg-[#FFFFFF]/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#DED3C7] shadow-md flex items-center gap-2 text-[11.5px] font-bold text-[#241F1B] pointer-events-none z-[1000]">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#3569A8] animate-pulse" />
                 <span>Your Location: {userAreaName}</span>
               </div>
@@ -292,7 +298,7 @@ export default function AdminSettingsPage() {
                 href={`https://www.google.com/maps/search/mall+or+parking/@${userCoords.lat},${userCoords.lng},14z`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-3 right-3 bg-[#FFFFFF] hover:bg-[#F3EAE0] px-3.5 py-1.5 rounded-xl border border-[#DED3C7] shadow-md flex items-center gap-1.5 text-[11.5px] font-bold text-[#C93B2F] transition-all cursor-pointer"
+                className="absolute bottom-3 right-3 bg-[#FFFFFF] hover:bg-[#F3EAE0] px-3.5 py-1.5 rounded-xl border border-[#DED3C7] shadow-md flex items-center gap-1.5 text-[11.5px] font-bold text-[#C93B2F] transition-all cursor-pointer z-[1000]"
               >
                 <span>Open in Google Maps</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
