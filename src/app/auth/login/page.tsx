@@ -10,7 +10,7 @@ import ParknexLogo from "@/components/ui/ParknexLogo";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams?.get("redirect") || "/admin";
+  const redirectPath = searchParams?.get("redirect") || "/admin/booking";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +31,7 @@ function LoginForm() {
       if (result?.error) {
         setErrorMsg(result.error);
       } else if (result?.ok) {
-        window.location.href = redirectPath;
+        router.push(redirectPath);
       }
     } catch (err: any) {
       setErrorMsg("An unexpected error occurred during login.");

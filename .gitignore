@@ -30,15 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (exclude real secrets, allow examples)
+# env files (can opt-in for committing if needed)
 .env*
-!.env.example
-!.env.local.example
-
-# rocketride pipelines must always be tracked
-!*.pipe
-!/rocketride/
-!/rocketride/*.pipe
 
 # vercel
 .vercel

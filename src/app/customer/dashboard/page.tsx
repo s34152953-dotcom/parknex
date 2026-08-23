@@ -32,13 +32,10 @@ import {
   Palette,
   SlidersHorizontal,
   Check,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 import CustomerAssistanceModal from "@/components/customer/CustomerAssistanceModal";
 import CustomerFloorPlan2D from "@/components/customer/CustomerFloorPlan2D";
-import ParknexAssistantModal from "@/components/ui/ParknexAssistantModal";
 import {
   LANDMARKS,
   calculateDijkstraRoute,
@@ -113,62 +110,6 @@ export default function CustomerDashboard() {
     setEditVehicleError("");
     setEditVehicleSuccess(false);
     setIsEditVehicleOpen(true);
-  };
-
-  // ParkNex AI & Recommendation States
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
-  const [recommendationDestination, setRecommendationDestination] = useState("Food Court");
-  const [recommendationResults, setRecommendationResults] = useState<any[] | null>(null);
-  const [isFetchingRecommendation, setIsFetchingRecommendation] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutSuccessMsg, setCheckoutSuccessMsg] = useState("");
-
-  const customerCheckoutMutation = useMutation(api.bookings.customerCheckout);
-  const slotsData = useQuery(api.slots.getSlots, {});
-
-  const handleFetchRecommendation = async () => {
-    setIsFetchingRecommendation(true);
-    try {
-      const available = slotsData?.slots?.filter((s) => s.status === "available") || [];
-      const res = await fetch("/api/rocketride/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          facilityId: "cm-grand",
-          destination: recommendationDestination,
-          availableSlots: available,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setRecommendationResults(data.data.recommendedSlots || []);
-      }
-    } catch (err: any) {
-      console.warn("[Recommendation Error]:", err.message);
-    } finally {
-      setIsFetchingRecommendation(false);
-    }
-  };
-
-  const handleExpressCheckout = async () => {
-    if (!activeBooking) return;
-    if (!confirm("Are you sure you want to complete your parking checkout and release your assigned space?")) return;
-
-    setIsCheckingOut(true);
-    try {
-      await customerCheckoutMutation({
-        tokenOrId: activeBooking.customerAccessToken || activeBooking.fallbackCode || activeBooking.vehicleNumber,
-      });
-      setCheckoutSuccessMsg("Checkout completed successfully. Your parking space has been freed.");
-      setTimeout(() => {
-        setCheckoutSuccessMsg("");
-      }, 4000);
-    } catch (err: any) {
-      alert("Checkout failed: " + err.message);
-    } finally {
-      setIsCheckingOut(false);
-    }
   };
 
   const handleUpdateVehicle = async (e: React.FormEvent) => {
@@ -351,14 +292,6 @@ export default function CustomerDashboard() {
 
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
             <button
-              onClick={() => setIsAssistantOpen(true)}
-              className="h-[40px] px-3.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Ask ParkNex AI</span>
-            </button>
-
-            <button
               onClick={handleRefresh}
               disabled={refreshing}
               className="h-[40px] px-3.5 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[13px] font-bold text-[#241F1B] hover:bg-[#F3EAE0] transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-xs"
@@ -368,13 +301,6 @@ export default function CustomerDashboard() {
             </button>
           </div>
         </div>
-
-        {checkoutSuccessMsg && (
-          <div className="bg-[#EBF7F0] border border-[#2F7D5A]/40 text-[#2F7D5A] text-[13.5px] font-bold px-5 py-3 rounded-xl flex items-center gap-2.5 shadow-xs animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 text-[#2F7D5A]" />
-            <span>{checkoutSuccessMsg}</span>
-          </div>
-        )}
 
         {/* Vehicle Registration Banner if user has no vehicle assigned */}
         {user !== undefined && !vehicleNumber && (
@@ -448,16 +374,14 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={openEditModal}
-                className="h-10 px-4 rounded-xl bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[13px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs shrink-0"
-              >
-                <Pencil className="w-3.5 h-3.5 text-[#C93B2F]" />
-                <span>Edit Profile</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={openEditModal}
+              className="h-10 px-4 rounded-xl bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[13px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#C93B2F]" />
+              <span>Edit Vehicle Details</span>
+            </button>
           </div>
         )}
         {vehicleSavedMsg && (
@@ -472,45 +396,23 @@ export default function CustomerDashboard() {
           <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 sm:p-7 flex flex-col gap-5 shadow-[0_8px_24px_rgba(70,48,35,0.07)] relative overflow-hidden">
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-[#DED3C7]">
-              <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#2F7D5A] animate-pulse shrink-0" />
                 <span className="text-[12px] font-black uppercase tracking-wider text-[#2F7D5A]">
                   Active Parking Session
                 </span>
                 <span className="text-[13px] text-[#70675F]">·</span>
                 <span className="text-[13.5px] font-bold text-[#241F1B] truncate">{activeBooking.mallName}</span>
-
-                {/* AI Verification Badge */}
-                <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {activeBooking.aiConfidence ? `${(activeBooking.aiConfidence * 100).toFixed(0)}% AI Verified` : "RocketRide Verified"}
-                </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRecommendationOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#EDE1D4] border border-[#DED3C7] text-[#241F1B] text-[12.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Navigation className="w-3.5 h-3.5 text-[#C93B2F]" />
-                  <span>AI Recommendation</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleExpressCheckout}
-                  disabled={isCheckingOut}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
-                >
-                  {isCheckingOut ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <LogOut className="w-3.5 h-3.5" />
-                  )}
-                  <span>Checkout</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsAssistanceOpen(true)}
+                className="text-[12.5px] font-bold text-[#70675F] hover:text-[#C93B2F] transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4 text-[#C93B2F]" />
+                <span>Report a Problem</span>
+              </button>
             </div>
 
             {/* Space Grid Metrics */}
@@ -610,7 +512,7 @@ export default function CustomerDashboard() {
             <div className="max-w-[480px]">
               <h3 className="text-[20px] font-bold text-[#241F1B]">No active parking session</h3>
               <p className="text-[14px] text-[#70675F] mt-1 leading-relaxed">
-                You can self check-in with RocketRide AI verification, or your session will activate when an operator assigns a space to your vehicle{" "}
+                Your parking tools will activate when an operator assigns a space to your vehicle{" "}
                 {vehicleNumber && (
                   <span className="font-mono text-[#241F1B] font-bold">({vehicleNumber})</span>
                 )}
@@ -618,18 +520,11 @@ export default function CustomerDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <Link
-                href="/customer/check-in"
-                className="h-11 px-5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer shadow-xs"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Self Check-In (AI Verified)</span>
-              </Link>
               <button
                 type="button"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="h-11 px-5 rounded-xl bg-[#FAF7F2] hover:bg-[#EDE1D4] border border-[#DED3C7] text-[#241F1B] font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer"
+                className="h-11 px-5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] flex items-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
                 <span>Refresh Assignment</span>
@@ -1292,117 +1187,6 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
-
-      {/* ── AI SPACE RECOMMENDATION MODAL ── */}
-      {isRecommendationOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg bg-[#FFFFFF] rounded-2xl border border-[#DED3C7] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 text-[#241F1B]">
-            <div className="flex items-center justify-between pb-3 border-b border-[#DED3C7]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#F9E3DE] text-[#C93B2F] flex items-center justify-center">
-                  <Navigation className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-[16px] font-black text-[#241F1B]">AI Parking Recommendation</h3>
-                  <p className="text-[11.5px] text-[#70675F]">Powered by parking-recommendation.pipe</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRecommendationOpen(false);
-                  setRecommendationResults(null);
-                }}
-                className="p-2 rounded-xl bg-[#FAF7F2] border border-[#DED3C7] text-[#70675F] hover:text-[#241F1B] cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] font-bold text-[#241F1B]">Select Destination Inside Mall</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {["Food Court", "Cinema", "Main Entrance", "Retail Corridor", "Hypermarket"].map((dest) => (
-                  <button
-                    key={dest}
-                    type="button"
-                    onClick={() => setRecommendationDestination(dest)}
-                    className={`p-2.5 rounded-xl border text-[12.5px] font-bold text-center transition-all cursor-pointer ${
-                      recommendationDestination === dest
-                        ? "bg-[#C93B2F] text-white border-[#C93B2F]"
-                        : "bg-[#FAF7F2] text-[#241F1B] border-[#DED3C7] hover:bg-[#F3EAE0]"
-                    }`}
-                  >
-                    {dest}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleFetchRecommendation}
-              disabled={isFetchingRecommendation}
-              className="w-full h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              {isFetchingRecommendation ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Finding Optimal Spaces…</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Get Live AI Recommendation</span>
-                </>
-              )}
-            </button>
-
-            {recommendationResults && (
-              <div className="flex flex-col gap-2.5 pt-2 border-t border-[#DED3C7]">
-                <div className="text-[12px] font-bold uppercase text-[#70675F]">
-                  Top Recommended Bays ({recommendationResults.length})
-                </div>
-                {recommendationResults.length === 0 ? (
-                  <div className="p-3 text-[13px] text-center text-[#70675F] bg-[#FAF7F2] rounded-xl border border-[#DED3C7]">
-                    No vacant bays found matching this criteria.
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {recommendationResults.map((r, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-xl bg-[#FAF7F2] border border-[#DED3C7] flex flex-col gap-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-black text-[14.5px] text-[#241F1B]">
-                            Slot {r.slotNumber || r.slotId} ({r.pillar})
-                          </span>
-                          <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/20">
-                            {(r.confidence * 100).toFixed(0)}% Match
-                          </span>
-                        </div>
-                        <p className="text-[12px] text-[#241F1B]">{r.reason}</p>
-                        <span className="text-[11px] text-[#70675F]">{r.relativeConvenience}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── PARKNEX GLOBAL AI ASSISTANT MODAL ── */}
-      <ParknexAssistantModal
-        isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
-        userRole="CUSTOMER"
-        activeBooking={activeBooking}
-        availableSlots={slotsData?.slots?.filter((s) => s.status === "available")}
-        userEmail={userEmail}
-      />
     </div>
   );
 }
