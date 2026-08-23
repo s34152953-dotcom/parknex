@@ -3,18 +3,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { FastCameraScanner, ScanResult } from "@/lib/scanner/fastScanner";
 import {
   QrCode,
-  Camera,
   CheckCircle2,
   AlertCircle,
   ShieldAlert,
-  CarFront,
   ArrowRight,
   RefreshCw,
-  Clock,
   KeyRound,
+  Zap,
 } from "lucide-react";
 
 export default function AdminScanExitPage() {
@@ -25,6 +23,7 @@ export default function AdminScanExitPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [completedExit, setCompletedExit] = useState<any | null>(null);
+  const [scannedFlash, setScannedFlash] = useState(false);
 
   // Operator Override Modal State
   const [overrideModalOpen, setOverrideModalOpen] = useState(false);
@@ -32,15 +31,13 @@ export default function AdminScanExitPage() {
   const [mismatchData, setMismatchData] = useState<any | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const scannerRef = useRef<FastCameraScanner | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const isProcessingRef = useRef<boolean>(false);
 
   const completeExitMutation = useMutation(api.bookings.completeExitWithVerification);
 
-  // Initialize ZXing code reader
   useEffect(() => {
-    codeReaderRef.current = new BrowserMultiFormatReader();
     return () => {
       stopCamera();
     };
@@ -49,45 +46,49 @@ export default function AdminScanExitPage() {
   const startCamera = async () => {
     try {
       setErrorMessage("");
-      setCameraStatusMsg("Requesting camera access...");
+      setCameraStatusMsg("Initializing ultra-fast optical scanner...");
+
+      // Request optimized high-fps video stream
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          frameRate: { ideal: 60, min: 30 },
+        },
         audio: false,
       });
+
       streamRef.current = stream;
 
-      if (videoRef.current && codeReaderRef.current) {
+      if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        await videoRef.current.play();
 
-        codeReaderRef.current.decodeFromVideoDevice(
-          undefined,
-          videoRef.current,
-          (result, err) => {
-            if (result && !isProcessingRef.current) {
-              const text = result.getText();
-              if (text && text.trim()) {
-                isProcessingRef.current = true;
-                handleProcessPass(text);
-              }
-            }
+        // Initialize Fast Multi-Tier Camera Scanner
+        scannerRef.current = new FastCameraScanner(videoRef.current);
+        scannerRef.current.start((result: ScanResult) => {
+          if (!isProcessingRef.current) {
+            setScannedFlash(true);
+            setTimeout(() => setScannedFlash(false), 600);
+            handleProcessPass(result.text);
           }
-        );
+        });
       }
+
       setCameraActive(true);
-      setCameraStatusMsg("Camera active. Align customer exit pass QR code.");
+      setCameraStatusMsg("High-Speed Optical Scanner Active (Hardware Accelerated)");
     } catch (err: any) {
-      console.warn("Camera failed:", err);
+      console.warn("Camera failed to start:", err);
       setCameraActive(false);
       setCameraStatusMsg("Camera unavailable — manual parking slot entry required.");
     }
   };
 
   const stopCamera = () => {
-    if (codeReaderRef.current) {
-      try {
-        (codeReaderRef.current as any).reset?.();
-      } catch {}
+    if (scannerRef.current) {
+      scannerRef.current.stop();
+      scannerRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -172,7 +173,7 @@ export default function AdminScanExitPage() {
             Gate Scanner &amp; Barrier Control
           </h1>
           <p className="text-[13.5px] text-[#70675F] mt-0.5">
-            Scan digital exit passes, validate plate tokens, and lift exit barrier gates.
+            Instant QR exit pass recognition, plate token validation, and automated barrier lifting.
           </p>
         </div>
 
@@ -186,23 +187,28 @@ export default function AdminScanExitPage() {
 
       {!completedExit ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: QR Scanner Viewport (7 Cols) */}
+          {/* Left Column: Instant QR Scanner Viewport (7 Cols) */}
           <div className="lg:col-span-7 flex flex-col gap-5">
             <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-5 flex flex-col gap-4 shadow-[0_8px_24px_rgba(70,48,35,0.06)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4.5 h-4.5 text-[#C93B2F]" />
                   <span className="text-[14.5px] font-bold text-[#241F1B]">
-                    Optical Pass Scanner
+                    Instant Optical Pass Scanner
+                  </span>
+                  <span className="text-[10px] font-extrabold text-[#2F7D5A] bg-[#2F7D5A]/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    Ultra-Fast (~15ms)
                   </span>
                 </div>
                 {!cameraActive ? (
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="px-3.5 py-1.5 rounded-lg bg-[#FFFFFF] hover:bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
+                    className="px-3.5 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
                   >
-                    Activate Camera
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>Activate Scanner</span>
                   </button>
                 ) : (
                   <button
@@ -215,13 +221,14 @@ export default function AdminScanExitPage() {
                 )}
               </div>
 
-              {/* Viewport */}
-              <div className="relative w-full h-[280px] bg-[#FAF7F2] rounded-xl border border-[#DED3C7] overflow-hidden flex items-center justify-center">
+              {/* High-Speed Scanner Viewport */}
+              <div className="relative w-full h-[280px] sm:h-[320px] bg-[#FAF7F2] rounded-xl border border-[#DED3C7] overflow-hidden flex items-center justify-center">
                 <video
                   ref={videoRef}
                   className={`w-full h-full object-cover ${cameraActive ? "block" : "hidden"}`}
                   playsInline
                   muted
+                  autoPlay
                 />
 
                 {!cameraActive && (
@@ -229,18 +236,36 @@ export default function AdminScanExitPage() {
                     <QrCode className="w-10 h-10 text-[#938980] mb-2" />
                     <p className="text-[14px] font-bold text-[#241F1B]">Scanner Standby</p>
                     <p className="text-[12px] text-[#70675F] max-w-[280px] mt-0.5">
-                      Click &ldquo;Activate Camera&rdquo; or enter parking slot name (e.g. B12) manually.
+                      Click &ldquo;Activate Scanner&rdquo; or enter parking slot / vehicle plate manually.
                     </p>
                   </div>
                 )}
 
-                {/* Reticle Target */}
+                {/* Laser Scanning Reticle */}
                 {cameraActive && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
-                    <div className="w-[65%] h-[75%] border-2 border-[#C93B2F] rounded-xl flex items-center justify-center bg-[#C93B2F]/[0.03]">
-                      <span className="text-[10px] font-mono text-white font-bold bg-[#241F1B]/80 px-2 py-0.5 rounded">
-                        SCAN PASS QR
-                      </span>
+                    <div
+                      className={`relative w-[70%] sm:w-[55%] h-[75%] border-2 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                        scannedFlash
+                          ? "border-[#2F7D5A] bg-[#2F7D5A]/20 scale-105"
+                          : "border-[#C93B2F] bg-[#C93B2F]/[0.02]"
+                      }`}
+                    >
+                      {/* Laser Bar Animation */}
+                      {!scannedFlash && (
+                        <div className="absolute inset-x-2 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#C93B2F] to-transparent animate-pulse shadow-[0_0_12px_#C93B2F]" />
+                      )}
+
+                      {scannedFlash ? (
+                        <div className="bg-[#2F7D5A] text-white px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5 shadow-lg">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>PASS DETECTED</span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-mono text-white font-bold bg-[#241F1B]/80 px-2 py-0.5 rounded">
+                          ALIGN PASS QR
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -276,13 +301,13 @@ export default function AdminScanExitPage() {
               <form onSubmit={handleManualSubmit} className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11.5px] font-bold text-[#241F1B]">
-                    Parking Slot Name / Space Identifier
+                    Parking Slot Name / Space Identifier / Offline Code
                   </label>
                   <input
                     type="text"
                     value={manualCodeInput}
                     onChange={(e) => setManualCodeInput(e.target.value)}
-                    placeholder="e.g. B12, B-12, A-01 or Vehicle Plate"
+                    placeholder="e.g. B12, B-12, PNX-782910, or Plate"
                     className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl px-3.5 py-2.5 text-[14px] font-mono text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                   />
                 </div>
