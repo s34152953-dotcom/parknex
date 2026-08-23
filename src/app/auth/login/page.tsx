@@ -31,7 +31,7 @@ function LoginForm() {
       if (result?.error) {
         setErrorMsg(result.error);
       } else if (result?.ok) {
-        router.push(redirectPath);
+        window.location.href = redirectPath;
       }
     } catch (err: any) {
       setErrorMsg("An unexpected error occurred during login.");

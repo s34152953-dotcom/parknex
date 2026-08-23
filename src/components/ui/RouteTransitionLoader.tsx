@@ -13,16 +13,20 @@ export default function RouteTransitionLoader() {
   // Intercept standard internal link clicks to detect route transitions
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest("a");
-      if (!target || !target.href) return;
+      try {
+        const target = (e.target as HTMLElement).closest("a");
+        if (!target || !target.href) return;
 
-      const url = new URL(target.href, window.location.href);
-      const isInternal = url.origin === window.location.origin;
-      const isDifferentPath = url.pathname !== window.location.pathname || url.search !== window.location.search;
-      const isTargetBlank = target.getAttribute("target") === "_blank";
+        const url = new URL(target.href, window.location.href);
+        const isInternal = url.origin === window.location.origin;
+        const isDifferentPath = url.pathname !== window.location.pathname || url.search !== window.location.search;
+        const isTargetBlank = target.getAttribute("target") === "_blank";
 
-      if (isInternal && isDifferentPath && !isTargetBlank && !e.ctrlKey && !e.metaKey) {
-        setIsNavigating(true);
+        if (isInternal && isDifferentPath && !isTargetBlank && !e.ctrlKey && !e.metaKey) {
+          setIsNavigating(true);
+        }
+      } catch (err) {
+        // Ignore malformed hrefs
       }
     };
 
