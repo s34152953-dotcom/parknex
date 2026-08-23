@@ -4,12 +4,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Car, ShieldCheck, Navigation, QrCode } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
-import LoadingFallback from "@/components/landing/LoadingFallback";
 
 // Dynamic import of ParkingHero to prevent SSR canvas issues and ensure fast load
 const ParkingHero = dynamic(() => import("@/components/landing/ParkingHero"), {
   ssr: false,
-  loading: () => <LoadingFallback isReady={false} />,
 });
 
 export default function HomePage() {

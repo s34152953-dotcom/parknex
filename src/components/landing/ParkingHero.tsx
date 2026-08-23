@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Car, ShieldCheck } from "lucide-react";
 import ParkingScene from "./ParkingScene";
-import LoadingFallback from "./LoadingFallback";
 
 /**
  * WebGL availability check
@@ -24,7 +23,6 @@ function checkWebGL(): boolean {
 
 export default function ParkingHero() {
   const [canRender3D, setCanRender3D] = useState(false);
-  const [isSceneReady, setIsSceneReady] = useState(false);
 
   useEffect(() => {
     const isSmallDevice = window.innerWidth < 768;
@@ -36,16 +34,13 @@ export default function ParkingHero() {
   }, []);
 
   return (
-    <section className="relative min-h-[max(calc(100dvh-72px),640px)] w-full flex flex-col justify-center py-12 lg:py-20 overflow-hidden select-none">
+    <section className="relative min-h-[max(calc(100dvh-72px),640px)] w-full flex flex-col justify-center py-12 lg:py-20 overflow-hidden select-none bg-[#FAF7F2]">
       {/* ── 3D WebGL Underground Garage Background ── */}
       {canRender3D && (
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <ParkingScene onReady={() => setIsSceneReady(true)} />
+          <ParkingScene />
         </div>
       )}
-
-      {/* ── Smooth Cross-Fade Loading / Fallback Layer ── */}
-      <LoadingFallback isReady={canRender3D && isSceneReady} />
 
       {/* ── Editorial Gradient Overlay: Crisp Text on Left, 100% Crystal-Clear 3D Garage on Right ── */}
       <div
@@ -55,9 +50,9 @@ export default function ParkingHero() {
             linear-gradient(
               to right,
               #FAF7F2 0%,
-              rgba(250, 247, 242, 0.92) 28%,
-              rgba(250, 247, 242, 0.5) 46%,
-              rgba(250, 247, 242, 0.05) 70%,
+              rgba(250, 247, 242, 0.94) 30%,
+              rgba(250, 247, 242, 0.6) 48%,
+              rgba(250, 247, 242, 0.1) 70%,
               transparent 100%
             )
           `,
