@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { FastCameraScanner, ScanResult } from "@/lib/scanner/fastScanner";
@@ -12,10 +12,13 @@ import {
   ArrowRight,
   RefreshCw,
   KeyRound,
+  Camera,
+  Loader2,
 } from "lucide-react";
 
 export default function AdminScanExitPage() {
   const [cameraActive, setCameraActive] = useState(false);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [cameraStatusMsg, setCameraStatusMsg] = useState("");
   const [manualCodeInput, setManualCodeInput] = useState("");
   const [exitDetectedPlate, setExitDetectedPlate] = useState("");
@@ -36,55 +39,7 @@ export default function AdminScanExitPage() {
 
   const completeExitMutation = useMutation(api.bookings.completeExitWithVerification);
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, []);
-
-  const startCamera = async () => {
-    try {
-      setErrorMessage("");
-      setCameraStatusMsg("Initializing camera stream...");
-
-      // Request optimized high-fps video stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          frameRate: { ideal: 60, min: 30 },
-        },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-
-        // Initialize Fast Multi-Tier Camera Scanner
-        scannerRef.current = new FastCameraScanner(videoRef.current);
-        scannerRef.current.start((result: ScanResult) => {
-          if (!isProcessingRef.current) {
-            setScannedFlash(true);
-            setTimeout(() => setScannedFlash(false), 600);
-            handleProcessPass(result.text);
-          }
-        });
-      }
-
-      setCameraActive(true);
-      setCameraStatusMsg("Camera active. Align customer exit pass QR code.");
-    } catch (err: any) {
-      console.warn("Camera failed to start:", err);
-      setCameraActive(false);
-      setCameraStatusMsg("Camera unavailable — manual parking slot entry required.");
-    }
-  };
-
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (scannerRef.current) {
       scannerRef.current.stop();
       scannerRef.current = null;
@@ -93,8 +48,18 @@ export default function AdminScanExitPage() {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraActive(false);
-  };
+    setIsStartingCamera(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
 
   const handleProcessPass = async (tokenOrCode: string, overrideReasonText?: string) => {
     const rawInput = (tokenOrCode || "").trim();
@@ -102,9 +67,15 @@ export default function AdminScanExitPage() {
       isProcessingRef.current = false;
       return;
     }
+
     isProcessingRef.current = true;
     setIsVerifying(true);
     setErrorMessage("");
+
+    // Pause frame processing during backend verification
+    if (scannerRef.current) {
+      scannerRef.current.pause();
+    }
 
     try {
       const result = await completeExitMutation({
@@ -125,6 +96,10 @@ export default function AdminScanExitPage() {
           setOverrideModalOpen(true);
         } else {
           setErrorMessage(result.error || "Failed to validate exit pass.");
+          // Resume scanning on error
+          if (scannerRef.current) {
+            scannerRef.current.resume();
+          }
         }
       } else {
         stopCamera();
@@ -137,11 +112,103 @@ export default function AdminScanExitPage() {
       let msg = err.message || "Failed to process exit";
       msg = msg.replace(/^\[CONVEX\s+[A-Z]\([^)]+\)\]\s*(?:\[Request ID:[^\]]+\]\s*)?/i, "");
       setErrorMessage(msg);
+      if (scannerRef.current) {
+        scannerRef.current.resume();
+      }
     } finally {
       setIsVerifying(false);
       setTimeout(() => {
         isProcessingRef.current = false;
-      }, 1000);
+      }, 800);
+    }
+  };
+
+  const startCamera = async () => {
+    if (isStartingCamera || cameraActive) return;
+
+    try {
+      setIsStartingCamera(true);
+      setErrorMessage("");
+      setCameraStatusMsg("Requesting camera access...");
+
+      // Stop any prior dangling stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+
+      // Try prioritized constraint list with graceful fallbacks
+      let stream: MediaStream | null = null;
+      const constraintList: MediaStreamConstraints[] = [
+        {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        },
+        {
+          video: {
+            facingMode: "environment",
+          },
+          audio: false,
+        },
+        {
+          video: true,
+          audio: false,
+        },
+      ];
+
+      for (const constraints of constraintList) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch {
+          // Fall through to next constraint
+        }
+      }
+
+      if (!stream) {
+        throw new Error("Unable to access video camera on this device.");
+      }
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
+        videoRef.current.setAttribute("autoplay", "true");
+        videoRef.current.muted = true;
+
+        try {
+          await videoRef.current.play();
+        } catch (playErr) {
+          console.warn("Video play notice:", playErr);
+        }
+
+        // Initialize high-speed scanner
+        if (!scannerRef.current) {
+          scannerRef.current = new FastCameraScanner(videoRef.current);
+        }
+        scannerRef.current.start((result: ScanResult) => {
+          if (!isProcessingRef.current) {
+            setScannedFlash(true);
+            setTimeout(() => setScannedFlash(false), 500);
+            handleProcessPass(result.text);
+          }
+        });
+      }
+
+      setCameraActive(true);
+      setCameraStatusMsg("Camera active. Align customer exit pass QR code.");
+    } catch (err: any) {
+      console.warn("Camera activation error:", err);
+      setCameraActive(false);
+      setCameraStatusMsg("Camera unavailable — manual slot/code entry ready.");
+      setErrorMessage(err.message || "Failed to start camera.");
+    } finally {
+      setIsStartingCamera(false);
     }
   };
 
@@ -200,15 +267,26 @@ export default function AdminScanExitPage() {
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="px-3.5 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-colors cursor-pointer shadow-xs"
+                    disabled={isStartingCamera}
+                    className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12.5px] font-bold transition-all cursor-pointer shadow-xs flex items-center gap-2 disabled:opacity-50"
                   >
-                    <span>Activate Camera</span>
+                    {isStartingCamera ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Starting Camera...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4" />
+                        <span>Activate Camera</span>
+                      </>
+                    )}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={stopCamera}
-                    className="px-3.5 py-1.5 rounded-lg bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[12px] font-bold transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[12px] font-bold transition-colors cursor-pointer hover:bg-[#C93B2F]/20"
                   >
                     Deactivate
                   </button>
@@ -230,7 +308,7 @@ export default function AdminScanExitPage() {
                     <QrCode className="w-10 h-10 text-[#938980] mb-2" />
                     <p className="text-[14px] font-bold text-[#241F1B]">Scanner Standby</p>
                     <p className="text-[12px] text-[#70675F] max-w-[280px] mt-0.5">
-                      Click &ldquo;Activate Scanner&rdquo; or enter parking slot / vehicle plate manually.
+                      Click &ldquo;Activate Camera&rdquo; or enter parking slot / vehicle plate manually.
                     </p>
                   </div>
                 )}
@@ -348,25 +426,29 @@ export default function AdminScanExitPage() {
           </div>
 
           <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#2F7D5A] bg-[#2F7D5A]/10 px-2.5 py-1 rounded-full border border-[#2F7D5A]/30">
-              EXIT CONFIRMED &amp; BARRIER OPENED
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#2F7D5A] bg-[#2F7D5A]/10 px-2.5 py-1 rounded-full border border-[#2F7D5A]/25">
+              BARRIER LIFTED · VEHICLE CLEARED
             </span>
-            <h2 className="text-[22px] font-black text-[#241F1B] mt-2">
-              Vehicle {completedExit.vehicleNumber} Exited
+            <h2 className="text-[22px] sm:text-[26px] font-black text-[#241F1B] mt-2">
+              Exit Completed Successfully
             </h2>
-            <p className="text-[13.5px] text-[#70675F] mt-1">
-              Space <strong>Slot {completedExit.slotNumber}</strong> has been released and is now Available.
+            <p className="text-[13px] text-[#70675F] mt-1">
+              Vehicle plate <strong className="text-[#241F1B]">{completedExit.booking?.licensePlate}</strong> has checked out. Parking space <strong className="text-[#241F1B]">{completedExit.releasedSlot?.name}</strong> is now released and available.
             </p>
           </div>
 
-          <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-4 w-full text-left text-[12.5px] flex flex-col gap-2">
-            <div className="flex justify-between">
-              <span className="text-[#70675F]">Exit Time:</span>
-              <span className="font-mono text-[#241F1B] font-bold">{new Date(completedExit.exitTime).toLocaleTimeString()}</span>
+          <div className="w-full bg-[#FAF7F2] rounded-xl p-4 border border-[#DED3C7] flex flex-col gap-2 text-[13px] text-left">
+            <div className="flex justify-between py-1 border-b border-[#DED3C7]">
+              <span className="text-[#70675F]">Released Space:</span>
+              <span className="font-bold text-[#241F1B]">{completedExit.releasedSlot?.name}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#70675F]">Single-Use Token Status:</span>
-              <span className="font-bold text-[#2F7D5A]">CONSUMED (Single-Use Locked)</span>
+            <div className="flex justify-between py-1 border-b border-[#DED3C7]">
+              <span className="text-[#70675F]">Duration:</span>
+              <span className="font-bold text-[#241F1B]">{completedExit.durationHours} hrs</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-[#70675F]">Total Fee Collected:</span>
+              <span className="font-bold text-[#2F7D5A]">₹{completedExit.totalFee}</span>
             </div>
           </div>
 
@@ -377,67 +459,76 @@ export default function AdminScanExitPage() {
               setManualCodeInput("");
               setExitDetectedPlate("");
             }}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[13px] transition-colors cursor-pointer shadow-xs"
+            className="w-full h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white font-bold text-[14px] shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            <span>Scan Next Vehicle Exit</span>
+            <span>Process Next Vehicle Exit</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Plate Mismatch & Operator Override Modal */}
+      {/* Operator Override Modal */}
       {overrideModalOpen && mismatchData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-[#FFFFFF] border border-[#C93B2F]/40 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-2.5 text-[#C93B2F] mb-3">
-              <ShieldAlert className="w-6 h-6" />
-              <h3 className="text-[17px] font-black text-[#241F1B]">License Plate Mismatch Detected</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl max-w-lg w-full p-6 flex flex-col gap-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#C93B2F]/10 text-[#C93B2F] flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-[#241F1B]">Plate Mismatch Warning</h3>
+                <p className="text-[12.5px] text-[#70675F]">
+                  The scanned exit pass belongs to a different vehicle plate.
+                </p>
+              </div>
             </div>
 
-            <div className="bg-[#FAF7F2] border border-[#DED3C7] rounded-xl p-3.5 text-[12.5px] flex flex-col gap-1.5 mb-4">
-              <div className="flex justify-between">
-                <span className="text-[#70675F]">Expected Pass Plate:</span>
+            <div className="bg-[#FAF7F2] p-4 rounded-xl border border-[#DED3C7] flex flex-col gap-2 text-[13px]">
+              <div className="flex justify-between py-1 border-b border-[#DED3C7]">
+                <span className="text-[#70675F]">Assigned Booking Plate:</span>
                 <span className="font-mono font-bold text-[#241F1B]">{mismatchData.expectedPlate}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#70675F]">Camera Detected Plate:</span>
+              <div className="flex justify-between py-1">
+                <span className="text-[#70675F]">Exit Camera Detected Plate:</span>
                 <span className="font-mono font-bold text-[#C93B2F]">{mismatchData.detectedPlate}</span>
               </div>
             </div>
 
-            <p className="text-[12.5px] text-[#70675F] mb-4">
-              To allow this vehicle to exit, enter a mandatory override justification. This action is permanently logged to the audit trail.
-            </p>
-
-            <form onSubmit={handleConfirmOverride} className="flex flex-col gap-3">
-              <div>
-                <label className="block text-[11.5px] font-bold text-[#241F1B] mb-1">
-                  Mandatory Override Reason
+            <form onSubmit={handleConfirmOverride} className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#241F1B]">
+                  Operator Override Justification Reason (Required)
                 </label>
                 <textarea
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="e.g. Verified physical vehicle registration documents with driver."
-                  required
+                  placeholder="e.g. Temporary replacement vehicle / Verified driver ID & physical ticket"
                   rows={3}
-                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl p-3 text-[13px] text-[#241F1B] focus:outline-none focus:border-[#C93B2F] resize-none"
+                  className="w-full bg-[#FFFFFF] border border-[#DED3C7] rounded-xl p-3 text-[13.5px] text-[#241F1B] placeholder:text-[#938980] focus:outline-none focus:border-[#C93B2F]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   type="button"
-                  onClick={() => setOverrideModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[#DED3C7] bg-[#FFFFFF] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-semibold cursor-pointer"
+                  onClick={() => {
+                    setOverrideModalOpen(false);
+                    setOverrideReason("");
+                    setMismatchData(null);
+                    if (scannerRef.current) {
+                      scannerRef.current.resume();
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl border border-[#DED3C7] bg-[#FAF7F2] hover:bg-[#F3EAE0] text-[#241F1B] text-[13px] font-bold transition-colors cursor-pointer"
                 >
-                  Reject Exit
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={!overrideReason.trim()}
-                  className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold cursor-pointer disabled:opacity-50"
+                  disabled={!overrideReason.trim() || isVerifying}
+                  className="px-4 py-2 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13px] font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                 >
-                  Approve Override &amp; Open
+                  {isVerifying ? "Overriding & Clearing..." : "Confirm Override & Release"}
                 </button>
               </div>
             </form>

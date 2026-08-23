@@ -6,14 +6,24 @@ export interface ScanResult {
   source: "barcode-detector" | "jsqr";
 }
 
+let sharedAudioCtx: AudioContext | null = null;
+
 /**
- * Play short, clean confirmation audio chime via Web Audio API (no external audio assets required)
+ * Play short, clean confirmation audio chime via Web Audio API
  */
 export function playScanChime() {
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+
+    if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+
+    const ctx = sharedAudioCtx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -21,7 +31,7 @@ export function playScanChime() {
     osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
     osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08); // E6
 
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
 
     osc.connect(gain);
@@ -30,18 +40,16 @@ export function playScanChime() {
     osc.start();
     osc.stop(ctx.currentTime + 0.12);
 
-    // Haptic vibration feedback for mobile devices
+    // Mobile haptic vibration feedback
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([40, 30, 40]);
+      navigator.vibrate([40, 20, 40]);
     }
   } catch {}
 }
 
 /**
- * Ultra-Fast High Performance Multi-Tier QR Decoder
- *
- * Tier 1: Hardware-accelerated native BarcodeDetector API (~5-10ms)
- * Tier 2: Downsampled high-contrast Canvas + jsQR with both regular & inverted attempts (~8-15ms)
+ * Ultra-Fast High Performance Camera Pass Scanner
+ * Resilient, non-blocking, multi-tier decoding with native BarcodeDetector + jsQR fallback.
  */
 export class FastCameraScanner {
   private video: HTMLVideoElement;
@@ -50,12 +58,14 @@ export class FastCameraScanner {
   private barcodeDetector: any = null;
   private animationFrameId: number | null = null;
   private isScanning = false;
+  private isPaused = false;
   private isProcessingFrame = false;
   private onScanCallback: ((result: ScanResult) => void) | null = null;
-  private targetWidth = 640;
-  private targetHeight = 480;
   private lastScanTime = 0;
-  private scanIntervalMs = 35; // ~28-30 frame checks per second for instant capture
+  private lastDetectedText = "";
+  private lastDetectedTime = 0;
+  private scanIntervalMs = 40; // ~25 FPS check rate for instant capture without CPU choke
+  private debounceCooldownMs = 1500; // Prevent duplicate scan spam of the exact same code
 
   constructor(videoElement: HTMLVideoElement) {
     this.video = videoElement;
@@ -77,13 +87,26 @@ export class FastCameraScanner {
   public start(onScan: (result: ScanResult) => void) {
     this.onScanCallback = onScan;
     this.isScanning = true;
+    this.isPaused = false;
     this.isProcessingFrame = false;
     this.lastScanTime = 0;
+    this.lastDetectedText = "";
+    this.lastDetectedTime = 0;
     this.loop();
+  }
+
+  public pause() {
+    this.isPaused = true;
+  }
+
+  public resume() {
+    this.isPaused = false;
+    this.lastDetectedText = "";
   }
 
   public stop() {
     this.isScanning = false;
+    this.isPaused = false;
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -94,24 +117,31 @@ export class FastCameraScanner {
     if (!this.isScanning) return;
 
     const now = performance.now();
+
     if (
+      !this.isPaused &&
       !this.isProcessingFrame &&
       now - this.lastScanTime >= this.scanIntervalMs &&
-      this.video.readyState === this.video.HAVE_ENOUGH_DATA
+      this.video.readyState >= 2 // HAVE_CURRENT_DATA or HAVE_ENOUGH_DATA
     ) {
       this.isProcessingFrame = true;
       this.lastScanTime = now;
 
       try {
         const result = await this.scanCurrentFrame();
-        if (result && this.onScanCallback && this.isScanning) {
-          playScanChime();
-          this.onScanCallback(result);
-          this.isProcessingFrame = false;
-          return;
+        if (result && this.onScanCallback && this.isScanning && !this.isPaused) {
+          const isSameCode = result.text === this.lastDetectedText;
+          const timeSinceLastDetect = now - this.lastDetectedTime;
+
+          if (!isSameCode || timeSinceLastDetect > this.debounceCooldownMs) {
+            this.lastDetectedText = result.text;
+            this.lastDetectedTime = now;
+            playScanChime();
+            this.onScanCallback(result);
+          }
         }
       } catch (err) {
-        // Continue scanning silently
+        // Continue scanning smoothly
       } finally {
         this.isProcessingFrame = false;
       }
@@ -128,7 +158,7 @@ export class FastCameraScanner {
       return null;
     }
 
-    // ── Tier 1: Hardware-Accelerated BarcodeDetector ──
+    // ── Tier 1: Hardware-Accelerated BarcodeDetector (~2-8ms) ──
     if (this.barcodeDetector) {
       try {
         const barcodes = await this.barcodeDetector.detect(video);
@@ -147,16 +177,17 @@ export class FastCameraScanner {
       }
     }
 
-    // ── Tier 2: Downsampled jsQR (<15ms per frame) ──
+    // ── Tier 2: Downsampled jsQR (~8-15ms) ──
     if (!this.ctx) return null;
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
 
-    // Calculate downsample ratio to keep canvas around 640px max for maximum speed
-    const scale = Math.min(1, this.targetWidth / Math.max(vw, 1));
-    const cw = Math.max(320, Math.floor(vw * scale));
-    const ch = Math.max(240, Math.floor(vh * scale));
+    // Scale canvas to max 480x360 for high-speed instant CPU decoding
+    const maxDimension = 480;
+    const scale = Math.min(1, maxDimension / Math.max(vw, vh, 1));
+    const cw = Math.max(240, Math.floor(vw * scale));
+    const ch = Math.max(180, Math.floor(vh * scale));
 
     if (this.canvas.width !== cw || this.canvas.height !== ch) {
       this.canvas.width = cw;
@@ -166,8 +197,9 @@ export class FastCameraScanner {
     this.ctx.drawImage(video, 0, 0, cw, ch);
     const imageData = this.ctx.getImageData(0, 0, cw, ch);
 
+    // Regular scan
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: "attemptBoth", // Handles dark-mode and glossy phone screens
+      inversionAttempts: "attemptBoth",
     });
 
     if (code && code.data && code.data.trim()) {
