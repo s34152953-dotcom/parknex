@@ -345,15 +345,13 @@ function NewEntryContent() {
   // Gate Check: Can proceed to space assignment?
   const canProceedToAssign = useMemo(() => {
     if (activeBooking) return false;
-    if (verificationData.status === "MANUAL_VERIFIED") return true;
-    if (verificationData.status === "VERIFIED" && physicalMatchConfirmed) return true;
-    return false;
-  }, [activeBooking, verificationData.status, physicalMatchConfirmed]);
+    return true; // Vehicle verification & physical match are optional
+  }, [activeBooking]);
 
   // Form Submission
   const onSubmit = async (data: EntryFormData) => {
-    if (!canProceedToAssign) {
-      alert("Vehicle must be verified and confirmed by operator before space assignment.");
+    if (activeBooking) {
+      alert("Vehicle already has an active parking session. Duplicate passes cannot be issued.");
       return;
     }
 
@@ -649,6 +647,7 @@ function NewEntryContent() {
                   <FileCheck className="w-5 h-5 text-[#C93B2F]" />
                   <h3 className="text-[15px] font-bold text-[#241F1B]">
                     Vehicle Registration Verification
+                    <span className="ml-2 text-[12px] font-normal text-[#70675F]">(Optional)</span>
                   </h3>
                 </div>
 
@@ -759,7 +758,7 @@ function NewEntryContent() {
                       {physicalMatchConfirmed && <CheckCircle2 className="w-4 h-4" />}
                     </div>
                     <span className="text-[13px] font-semibold">
-                      I confirm the physical vehicle matches the verified make, model, and colour.
+                      I confirm the physical vehicle matches the verified make, model, and colour (Optional).
                     </span>
                   </div>
                 </div>
@@ -968,14 +967,12 @@ function NewEntryContent() {
                 )}
               </div>
 
-              {/* Verification Gate Notice before submit */}
-              {!canProceedToAssign && (
+              {/* Active Booking Notice before submit */}
+              {activeBooking && (
                 <div className="p-3 rounded-xl bg-[#F3EAE0] border border-[#DED3C7] text-[12px] text-[#70675F] flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#B7791F] shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-[#C93B2F] shrink-0" />
                   <span>
-                    {activeBooking
-                      ? "Vehicle already has an active session. Cannot issue duplicate pass."
-                      : "Complete vehicle verification and confirm physical match to issue pass."}
+                    Vehicle already has an active session. Cannot issue duplicate pass.
                   </span>
                 </div>
               )}
