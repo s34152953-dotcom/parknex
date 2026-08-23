@@ -1,39 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
   Menu,
-  X,
-  MapPin,
-  CarFront,
-  QrCode,
-  Layers,
-  History,
   AlertTriangle,
-  Settings,
   ShieldCheck,
-  Video,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
-
-const adminNavLinks = [
-  { label: "Live Parking Map", href: "/admin/booking", icon: MapPin },
-  { label: "New Entry", href: "/admin/new-entry", icon: CarFront },
-  { label: "Gate Scanner", href: "/admin/scan-exit", icon: QrCode },
-  { label: "CCTV Monitoring", href: "/admin/cctv", icon: Video },
-  { label: "Active Sessions", href: "/admin/active-sessions", icon: Layers },
-  { label: "Parking History", href: "/admin/history", icon: History },
-  { label: "Customer Issues", href: "/admin/customer-issues", icon: AlertTriangle },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-];
+import { useSidebar } from "@/context/SidebarContext";
 
 export default function AdminTopBar() {
-  const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toggleSidebar } = useSidebar();
 
   // Real-time live statistics from Convex
   const stats = useQuery(api.bookings.getLiveStats, { floor: "ALL" });
@@ -48,14 +28,15 @@ export default function AdminTopBar() {
   return (
     <header className="sticky top-0 z-30 bg-[#FFFFFF] border-b border-[#DED3C7] text-[#241F1B] select-none shadow-xs">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-[64px] sm:h-[70px] flex items-center justify-between gap-4">
-        {/* Left: Mobile Brand & Facility Name */}
+        {/* Left: Mobile Hamburger & Brand / Facility Name */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] hover:bg-[#EDE1D4] transition-colors cursor-pointer"
-            aria-label="Toggle Navigation Menu"
+            type="button"
+            onClick={toggleSidebar}
+            className="lg:hidden p-2 rounded-xl bg-[#F3EAE0] border border-[#DED3C7] text-[#241F1B] hover:bg-[#EDE1D4] active:scale-95 transition-all cursor-pointer shadow-xs"
+            aria-label="Open Navigation Sidebar"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 lg:hidden">
@@ -145,52 +126,6 @@ export default function AdminTopBar() {
           </div>
         </div>
       </div>
-
-      {/* Mobile Drawer Navigation */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#DED3C7] bg-[#FFFFFF] px-4 py-4 flex flex-col gap-2 shadow-lg">
-          {/* Mobile Stats Ribbon */}
-          <div className="grid grid-cols-4 gap-2 pb-3 mb-2 border-b border-[#DED3C7] text-center text-[11px] font-bold">
-            <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#DED3C7]">
-              <span className="text-[#2F7D5A] block text-[15px] font-mono font-black">{availableCount}</span>
-              <span className="text-[#70675F] text-[10px]">Available</span>
-            </div>
-            <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#DED3C7]">
-              <span className="text-[#3569A8] block text-[15px] font-mono font-black">{recommendedCount}</span>
-              <span className="text-[#70675F] text-[10px]">Recommended</span>
-            </div>
-            <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#DED3C7]">
-              <span className="text-[#C93B2F] block text-[15px] font-mono font-black">{occupiedCount}</span>
-              <span className="text-[#70675F] text-[10px]">Occupied</span>
-            </div>
-            <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#DED3C7]">
-              <span className="text-[#241F1B] block text-[15px] font-mono font-black">{vehiclesInside}</span>
-              <span className="text-[#70675F] text-[10px]">Inside</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            {adminNavLinks.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-bold transition-all ${
-                    isActive
-                      ? "bg-[#C93B2F] text-white"
-                      : "text-[#241F1B] hover:text-[#C93B2F] hover:bg-[#F3EAE0]"
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </header>
   );
 }
