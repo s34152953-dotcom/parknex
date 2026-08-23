@@ -78,6 +78,10 @@ export default defineSchema({
         v.literal("NOT_CONFIGURED")
       )
     ),
+    sentAt: v.optional(v.string()),
+    providerMessageId: v.optional(v.string()),
+    lastError: v.optional(v.string()),
+    retryCount: v.optional(v.number()),
     emailRecipient: v.optional(v.string()),
     emailProviderId: v.optional(v.string()),
     emailLastAttemptAt: v.optional(v.string()),

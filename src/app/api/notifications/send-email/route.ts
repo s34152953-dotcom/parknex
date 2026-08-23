@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       mallName,
       customerAccessToken,
       fallbackCode,
+      entryTime,
     } = body;
 
     if (!bookingId || !to || !vehicleNumber || !slotNumber) {
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Dispatch real email via Resend
+    // 1. Dispatch real email via Resend (Single server-side implementation)
     const result = await sendParkingPassEmail({
       bookingId,
       to,
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
       mallName: mallName || "Central Mall Grand",
       customerAccessToken,
       fallbackCode,
+      entryTime,
     });
 
     // 2. Synchronize email delivery status with Convex atomically
@@ -49,8 +51,9 @@ export async function POST(req: Request) {
         bookingId: bookingId as any,
         emailStatus: result.status,
         emailRecipient: to.trim().toLowerCase(),
-        emailProviderId: result.providerId,
-        emailFailureReason: result.error,
+        providerMessageId: result.providerId,
+        lastError: result.error,
+        sentAt: result.sentAt,
       });
     } catch (syncErr: any) {
       console.warn("Failed to sync email status to Convex:", syncErr.message);
@@ -62,6 +65,7 @@ export async function POST(req: Request) {
       providerId: result.providerId,
       maskedRecipient: maskEmail(to),
       error: result.error,
+      sentAt: result.sentAt,
     });
   } catch (err: any) {
     return NextResponse.json(

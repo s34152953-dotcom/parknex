@@ -1095,20 +1095,27 @@ function NewEntryContent() {
                 </p>
               )}
               {completedPass.emailStatus === "failed" && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <p className="text-[#C93B2F] font-semibold flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Space assigned, but email delivery failed.</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleRetryEmail}
-                    disabled={isRetryingEmail}
-                    className="px-3 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shrink-0 shadow-xs"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isRetryingEmail ? "animate-spin" : ""}`} />
-                    <span>Retry Email</span>
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p className="text-[#C93B2F] font-semibold flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Space assigned, but email delivery failed.</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleRetryEmail}
+                      disabled={isRetryingEmail}
+                      className="px-3 py-1.5 rounded-lg bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[12px] font-bold transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shrink-0 shadow-xs"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isRetryingEmail ? "animate-spin" : ""}`} />
+                      <span>Retry Email</span>
+                    </button>
+                  </div>
+                  {completedPass.emailError && (
+                    <p className="text-[11.5px] text-[#70675F] bg-white p-2 rounded-lg border border-[#DED3C7] leading-relaxed">
+                      {completedPass.emailError}
+                    </p>
+                  )}
                 </div>
               )}
               {completedPass.emailStatus === "not_requested" && (

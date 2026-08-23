@@ -895,19 +895,24 @@ export const updateEmailDeliveryStatus = mutation({
       v.literal("failed")
     ),
     emailRecipient: v.optional(v.string()),
-    emailProviderId: v.optional(v.string()),
-    emailFailureReason: v.optional(v.string()),
+    providerMessageId: v.optional(v.string()),
+    lastError: v.optional(v.string()),
+    sentAt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const booking = await ctx.db.get(args.bookingId);
     if (!booking) throw new Error("Booking not found");
 
+    const now = new Date().toISOString();
     await ctx.db.patch(args.bookingId, {
       emailStatus: args.emailStatus,
       emailRecipient: args.emailRecipient !== undefined ? args.emailRecipient : booking.emailRecipient,
-      emailProviderId: args.emailProviderId !== undefined ? args.emailProviderId : booking.emailProviderId,
-      emailFailureReason: args.emailFailureReason !== undefined ? args.emailFailureReason : booking.emailFailureReason,
-      emailLastAttemptAt: new Date().toISOString(),
+      providerMessageId: args.providerMessageId !== undefined ? args.providerMessageId : booking.providerMessageId,
+      emailProviderId: args.providerMessageId !== undefined ? args.providerMessageId : booking.emailProviderId,
+      lastError: args.lastError !== undefined ? args.lastError : booking.lastError,
+      emailFailureReason: args.lastError !== undefined ? args.lastError : booking.emailFailureReason,
+      sentAt: args.sentAt !== undefined ? args.sentAt : (args.emailStatus === "sent" ? now : booking.sentAt),
+      emailLastAttemptAt: now,
     });
 
     return { success: true, bookingId: args.bookingId, emailStatus: args.emailStatus };
@@ -924,6 +929,12 @@ export const retryEmailDelivery = mutation({
     if (!booking) throw new Error("Booking not found");
     if (booking.status !== "ACTIVE") throw new Error("Can only retry email for active parking sessions");
 
+    // Rate limiting: prevent excessive retries (max 10 retries per session)
+    const currentRetries = booking.retryCount || 0;
+    if (currentRetries >= 10) {
+      throw new Error("Maximum email retry limit reached for this parking session.");
+    }
+
     const targetEmail = args.email ? args.email.trim().toLowerCase() : (booking.email || booking.emailRecipient);
     if (!targetEmail) throw new Error("No customer email address on record for this session");
 
@@ -932,11 +943,14 @@ export const retryEmailDelivery = mutation({
       .withIndex("by_slotId", (q) => q.eq("slotId", booking.slotId))
       .first();
 
+    const now = new Date().toISOString();
     await ctx.db.patch(args.bookingId, {
       email: targetEmail,
       emailRecipient: targetEmail,
       emailStatus: "queued",
-      emailLastAttemptAt: new Date().toISOString(),
+      retryCount: currentRetries + 1,
+      emailLastAttemptAt: now,
+      lastError: undefined,
       emailFailureReason: undefined,
     });
 
@@ -951,6 +965,7 @@ export const retryEmailDelivery = mutation({
       zone: slot?.zone || "Zone A",
       pillar: slot?.pillar || "Pillar",
       fallbackCode: booking.fallbackCode,
+      retryCount: currentRetries + 1,
     };
   },
 });

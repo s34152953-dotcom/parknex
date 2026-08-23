@@ -21,6 +21,7 @@ export interface ParkingAssignedEmailProps {
   zone: string;
   slotNumber: string;
   dashboardUrl: string;
+  assignmentTime?: string;
 }
 
 export default function ParkingAssignedEmail({
@@ -30,6 +31,7 @@ export default function ParkingAssignedEmail({
   zone = "Zone A",
   slotNumber = "A-14",
   dashboardUrl = "https://parknex.vercel.app/customer/dashboard",
+  assignmentTime,
 }: ParkingAssignedEmailProps) {
   return (
     <Html lang="en">
@@ -91,7 +93,7 @@ export default function ParkingAssignedEmail({
                 </Column>
               </Row>
 
-              <Row style={detailRowLast}>
+              <Row style={assignmentTime ? detailRow : detailRowLast}>
                 <Column style={detailLabelCol}>
                   <Text style={detailLabel}>Space</Text>
                 </Column>
@@ -99,6 +101,17 @@ export default function ParkingAssignedEmail({
                   <Text style={detailValueHighlight}>{slotNumber}</Text>
                 </Column>
               </Row>
+
+              {assignmentTime && (
+                <Row style={detailRowLast}>
+                  <Column style={detailLabelCol}>
+                    <Text style={detailLabel}>Time</Text>
+                  </Column>
+                  <Column style={detailValueCol}>
+                    <Text style={detailValue}>{assignmentTime}</Text>
+                  </Column>
+                </Row>
+              )}
             </Section>
 
             {/* Action CTA */}

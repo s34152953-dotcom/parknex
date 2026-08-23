@@ -14,6 +14,7 @@ export interface SendParkingEmailParams {
   mallName: string;
   customerAccessToken: string;
   fallbackCode?: string;
+  entryTime?: string;
 }
 
 export interface EmailDeliveryResult {
@@ -23,10 +24,11 @@ export interface EmailDeliveryResult {
   error?: string;
   recipient?: string;
   maskedRecipient?: string;
+  sentAt?: string;
 }
 
 /**
- * Mask an email for secure operator/customer display: e.g. "m***@domain.com"
+ * Mask an email for secure operator/customer display: e.g. "m***n@gmail.com"
  */
 export function maskEmail(email?: string): string {
   if (!email || !email.includes("@")) return "";
@@ -38,7 +40,7 @@ export function maskEmail(email?: string): string {
 }
 
 /**
- * Validate email format without external dependencies
+ * Validate email format with standard RFC regex
  */
 export function isValidEmail(email?: string): boolean {
   if (!email) return false;
@@ -57,27 +59,30 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
     return {
       success: false,
       status: "failed",
-      error: "Invalid customer email address.",
+      error: "Invalid customer email address format.",
       recipient: cleanEmail,
       maskedRecipient: maskEmail(cleanEmail),
     };
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.PARKNEX_EMAIL_FROM || process.env.EMAIL_FROM || "ParkNex <onboarding@resend.dev>";
+  const fromEmail = process.env.PARKNEX_EMAIL_FROM || "ParkNex <onboarding@resend.dev>";
   const appUrl = (process.env.PARKNEX_APP_URL || process.env.NEXTAUTH_URL || "https://parknex.vercel.app").replace(/\/$/, "");
 
-  if (!apiKey || apiKey.includes("placeholder") || apiKey === "re_your_resend_api_key_here") {
+  if (!apiKey || apiKey.includes("placeholder") || apiKey === "re_your_server_side_key") {
     return {
       success: false,
       status: "failed",
-      error: "RESEND_API_KEY is not configured on the server.",
+      error: "RESEND_API_KEY is not configured in server environment variables.",
       recipient: cleanEmail,
       maskedRecipient: maskEmail(cleanEmail),
     };
   }
 
   const secureDashboardUrl = `${appUrl}/customer/access/${params.customerAccessToken}`;
+  const formattedTime = params.entryTime
+    ? new Date(params.entryTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   try {
     const resend = new Resend(apiKey);
@@ -91,10 +96,11 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
         zone: params.zone,
         slotNumber: params.slotNumber,
         dashboardUrl: secureDashboardUrl,
+        assignmentTime: formattedTime,
       })
     );
 
-    // Idempotency Key prevents duplicate deliveries on network retries
+    // Idempotency Key prevents duplicate deliveries on network retries or double clicks
     const idempotencyKey = `parking-assignment-${params.bookingId}`;
 
     const { data, error } = await resend.emails.send({
@@ -108,21 +114,32 @@ export async function sendParkingPassEmail(params: SendParkingEmailParams): Prom
     });
 
     if (error) {
+      let friendlyError = error.message || "Failed to send email via Resend.";
+      if (
+        friendlyError.toLowerCase().includes("only send testing emails to your own email address") ||
+        friendlyError.toLowerCase().includes("verify a domain")
+      ) {
+        friendlyError =
+          "Resend Sandbox Mode: When using onboarding@resend.dev, emails can only be delivered to your registered Resend account email. Verify a custom domain to send to any customer email.";
+      }
+
       return {
         success: false,
         status: "failed",
-        error: error.message || "Failed to send email via Resend.",
+        error: friendlyError,
         recipient: cleanEmail,
         maskedRecipient: maskEmail(cleanEmail),
       };
     }
 
+    const now = new Date().toISOString();
     return {
       success: true,
       status: "sent",
       providerId: data?.id,
       recipient: cleanEmail,
       maskedRecipient: maskEmail(cleanEmail),
+      sentAt: now,
     };
   } catch (err: any) {
     return {
