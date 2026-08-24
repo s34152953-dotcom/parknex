@@ -90,24 +90,6 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Quick Credentials Info */}
-        <div className="p-3 rounded-xl bg-[#F3EAE0] border border-[#DED3C7] flex items-center justify-between text-[12px] text-[#70675F]">
-          <div>
-            <span>Default: </span>
-            <code className="text-[#241F1B] font-mono font-bold">parknexadmin.com</code> / <code className="text-[#241F1B] font-mono font-bold">admin123</code>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("parknexadmin.com");
-              setPassword("admin123");
-            }}
-            className="text-[#C93B2F] hover:underline font-bold cursor-pointer"
-          >
-            Fill
-          </button>
-        </div>
-
         {errorMsg && (
           <div className="p-3.5 rounded-xl bg-[#C93B2F]/10 border border-[#C93B2F]/30 text-[#C93B2F] text-[13px] flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
