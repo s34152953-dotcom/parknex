@@ -63,7 +63,7 @@ function LoginForm() {
           type="button"
           onClick={handleInstantDemoLogin}
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] cursor-pointer disabled:opacity-60"
+          className="w-full h-11 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition-all shadow-[0_4px_16px_rgba(201,59,47,0.25)] active:scale-[0.98] cursor-pointer disabled:opacity-60"
         >
           <Zap className="w-4 h-4 fill-white" />
           <span>{loading ? "Authenticating Demo Admin..." : "Instant Demo Operator Sign-In"}</span>

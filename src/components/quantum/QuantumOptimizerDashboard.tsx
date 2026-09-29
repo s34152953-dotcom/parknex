@@ -142,34 +142,33 @@ export default function QuantumOptimizerDashboard() {
   return (
     <div className="w-full flex flex-col gap-8 pb-12">
       {/* ── TOP BANNER: QUANTUM EXPO 2026 EDITION ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1E293B] via-[#0F172A] to-[#1E1B4B] text-white p-6 sm:p-8 shadow-xl border border-slate-700/60">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-[#FFFFFF] border border-[#DED3C7] p-6 sm:p-8 shadow-sm">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#F9E3DE]/40 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-[11.5px] font-mono font-bold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F9E3DE] border border-[#C93B2F]/20 text-[#C93B2F] text-[11.5px] font-mono font-bold uppercase tracking-wider mb-3">
               <Atom className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "6s" }} />
               <span>Quantum Expo 2026 · QUBO Mobility OS</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#241F1B] tracking-tight leading-tight">
               Quantum Annealing Space Dispatcher
             </h1>
-            <p className="text-slate-300 text-[14px] sm:text-[15px] mt-2 leading-relaxed">
+            <p className="text-[#70675F] text-[14px] sm:text-[15px] mt-2 leading-relaxed">
               Real-time Quadratic Unconstrained Binary Optimization (QUBO) solving multi-vehicle parking slot allocation, EV transformer peak load management, and traffic bottleneck elimination.
             </p>
           </div>
 
           {/* Quick Metrics Header Pill */}
-          <div className="flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-md border border-white/15 p-3 sm:p-4 rounded-xl">
+          <div className="flex flex-wrap items-center gap-3 bg-[#FAF7F2] border border-[#DED3C7] p-3 sm:p-4 rounded-xl">
             <div className="flex flex-col">
-              <span className="text-[11px] font-mono text-cyan-300 uppercase">Hamiltonian Model</span>
-              <span className="text-[15px] font-black font-mono">Ising Spin Glass</span>
+              <span className="text-[11px] font-mono font-bold text-[#C93B2F] uppercase">Hamiltonian Model</span>
+              <span className="text-[15px] font-black font-mono text-[#241F1B]">Ising Spin Glass</span>
             </div>
-            <div className="w-px h-8 bg-white/20 hidden sm:block" />
+            <div className="w-px h-8 bg-[#DED3C7] hidden sm:block" />
             <div className="flex flex-col">
-              <span className="text-[11px] font-mono text-violet-300 uppercase">Quantum Tunneling</span>
-              <span className="text-[15px] font-black font-mono">Transverse Field Γ(t)</span>
+              <span className="text-[11px] font-mono font-bold text-[#C93B2F] uppercase">Quantum Tunneling</span>
+              <span className="text-[15px] font-black font-mono text-[#241F1B]">Transverse Field Γ(t)</span>
             </div>
           </div>
         </div>
@@ -198,13 +197,13 @@ export default function QuantumOptimizerDashboard() {
               onClick={() => setScenario("keynote")}
               className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                 scenario === "keynote"
-                  ? "border-[#0284C7] bg-[#F0F9FF] shadow-xs ring-2 ring-[#0284C7]/20"
+                  ? "border-[#C93B2F] bg-[#F9E3DE] shadow-xs ring-2 ring-[#C93B2F]/20"
                   : "border-[#DED3C7] bg-[#FAF7F2] hover:bg-[#F3EAE0]"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-mono font-bold text-[#0284C7] uppercase">Scenario 01</span>
-                <Car className="w-4 h-4 text-[#0284C7]" />
+                <span className={`text-[11px] font-mono font-bold uppercase ${scenario === "keynote" ? "text-[#C93B2F]" : "text-[#70675F]"}`}>Scenario 01</span>
+                <Car className={`w-4 h-4 ${scenario === "keynote" ? "text-[#C93B2F]" : "text-[#70675F]"}`} />
               </div>
               <h3 className="text-[14px] font-bold text-[#241F1B]">Keynote Rush</h3>
               <p className="text-[12px] text-[#70675F] mt-1 leading-snug">
@@ -217,13 +216,13 @@ export default function QuantumOptimizerDashboard() {
               onClick={() => setScenario("ev_surge")}
               className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                 scenario === "ev_surge"
-                  ? "border-[#7C3AED] bg-[#F5F3FF] shadow-xs ring-2 ring-[#7C3AED]/20"
+                  ? "border-[#C93B2F] bg-[#F9E3DE] shadow-xs ring-2 ring-[#C93B2F]/20"
                   : "border-[#DED3C7] bg-[#FAF7F2] hover:bg-[#F3EAE0]"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-mono font-bold text-[#7C3AED] uppercase">Scenario 02</span>
-                <Zap className="w-4 h-4 text-[#7C3AED]" />
+                <span className={`text-[11px] font-mono font-bold uppercase ${scenario === "ev_surge" ? "text-[#C93B2F]" : "text-[#70675F]"}`}>Scenario 02</span>
+                <Zap className={`w-4 h-4 ${scenario === "ev_surge" ? "text-[#C93B2F]" : "text-[#70675F]"}`} />
               </div>
               <h3 className="text-[14px] font-bold text-[#241F1B]">EV Fleet Surge</h3>
               <p className="text-[12px] text-[#70675F] mt-1 leading-snug">
@@ -241,8 +240,8 @@ export default function QuantumOptimizerDashboard() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-mono font-bold text-[#C93B2F] uppercase">Scenario 03</span>
-                <Flame className="w-4 h-4 text-[#C93B2F]" />
+                <span className={`text-[11px] font-mono font-bold uppercase ${scenario === "bottleneck" ? "text-[#C93B2F]" : "text-[#70675F]"}`}>Scenario 03</span>
+                <Flame className={`w-4 h-4 ${scenario === "bottleneck" ? "text-[#C93B2F]" : "text-[#70675F]"}`} />
               </div>
               <h3 className="text-[14px] font-bold text-[#241F1B]">Gate A Choke</h3>
               <p className="text-[12px] text-[#70675F] mt-1 leading-snug">
@@ -256,10 +255,10 @@ export default function QuantumOptimizerDashboard() {
         <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Atom className="w-4 h-4 text-[#0284C7]" />
+              <Atom className="w-4 h-4 text-[#C93B2F]" />
               <h2 className="text-[16px] font-bold text-[#241F1B]">Annealing Parameters</h2>
             </div>
-            <span className="text-[11.5px] font-mono text-[#0284C7] bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+            <span className="text-[11.5px] font-mono font-bold text-[#C93B2F] bg-[#F9E3DE] px-2 py-0.5 rounded border border-[#C93B2F]/20">
               SQA / PIMC
             </span>
           </div>
@@ -277,7 +276,7 @@ export default function QuantumOptimizerDashboard() {
                 step="25"
                 value={sweeps}
                 onChange={(e) => setSweeps(Number(e.target.value))}
-                className="w-full accent-[#0284C7] cursor-pointer"
+                className="w-full accent-[#C93B2F] cursor-pointer"
               />
             </div>
 
@@ -317,7 +316,7 @@ export default function QuantumOptimizerDashboard() {
               type="button"
               onClick={handleRunOptimization}
               disabled={isRunning || isPending}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[14px] font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[14px] font-bold transition-all shadow-md shadow-[#C93B2F]/25 active:scale-[0.98] cursor-pointer disabled:opacity-50"
             >
               {isRunning ? (
                 <>
@@ -399,19 +398,19 @@ export default function QuantumOptimizerDashboard() {
             </div>
 
             {/* 2. QUANTUM ANNEALER CARD */}
-            <div className="bg-[#FFFFFF] border-2 border-[#0284C7] rounded-2xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-100 rounded-full blur-2xl pointer-events-none -mr-8 -mt-8" />
+            <div className="bg-[#FFFFFF] border-2 border-[#C93B2F] rounded-2xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#F9E3DE]/40 rounded-full blur-2xl pointer-events-none -mr-8 -mt-8" />
 
               <div>
-                <div className="flex items-center justify-between pb-4 border-b border-cyan-100 mb-5">
+                <div className="flex items-center justify-between pb-4 border-b border-[#DED3C7] mb-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-cyan-50 border border-cyan-300 flex items-center justify-center text-[#0284C7]">
+                    <div className="w-9 h-9 rounded-xl bg-[#F9E3DE] border border-[#C93B2F]/20 flex items-center justify-center text-[#C93B2F]">
                       <Atom className="w-5 h-5 animate-spin" style={{ animationDuration: "8s" }} />
                     </div>
                     <div>
                       <h3 className="text-[17px] font-black text-[#241F1B] flex items-center gap-2">
                         <span>Quantum Annealer</span>
-                        <span className="text-[10px] font-mono bg-cyan-100 text-[#0284C7] px-2 py-0.5 rounded-full font-bold">
+                        <span className="text-[10px] font-mono bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20 px-2 py-0.5 rounded-full font-bold">
                           QUBO
                         </span>
                       </h3>
@@ -426,8 +425,8 @@ export default function QuantumOptimizerDashboard() {
 
                 {/* Key Metrics Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-200/70">
-                    <span className="text-[11px] text-[#0284C7] block font-bold">Aisle Choke Points</span>
+                  <div className="bg-[#FAF7F2] p-3.5 rounded-xl border border-[#DED3C7]">
+                    <span className="text-[11px] text-[#70675F] block font-bold">Aisle Choke Points</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-[22px] font-black text-[#2F7D5A] font-mono">
                         {benchmarkData.quantum.metrics.totalCongestionBottlenecks}
@@ -441,14 +440,14 @@ export default function QuantumOptimizerDashboard() {
                     <span className="text-[11px] text-[#70675F] block mt-0.5">zero route collision</span>
                   </div>
 
-                  <div className="bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-200/70">
-                    <span className="text-[11px] text-[#0284C7] block font-bold">Avg Walking Distance</span>
+                  <div className="bg-[#FAF7F2] p-3.5 rounded-xl border border-[#DED3C7]">
+                    <span className="text-[11px] text-[#70675F] block font-bold">Avg Walking Distance</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-[22px] font-black text-[#241F1B] font-mono">
                         {benchmarkData.quantum.metrics.avgWalkingDistance}m
                       </span>
                       {benchmarkData.improvement.walkingDistancePercent > 0 && (
-                        <span className="text-[11px] font-extrabold text-[#0284C7] bg-cyan-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[11px] font-extrabold text-[#C93B2F] bg-[#F9E3DE] px-1.5 py-0.5 rounded">
                           -{benchmarkData.improvement.walkingDistancePercent}%
                         </span>
                       )}
@@ -456,14 +455,14 @@ export default function QuantumOptimizerDashboard() {
                     <span className="text-[11px] text-[#70675F] block mt-0.5">optimized lift paths</span>
                   </div>
 
-                  <div className="bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-200/70">
-                    <span className="text-[11px] text-[#0284C7] block font-bold">Objective Energy H(x)</span>
+                  <div className="bg-[#FAF7F2] p-3.5 rounded-xl border border-[#DED3C7]">
+                    <span className="text-[11px] text-[#70675F] block font-bold">Objective Energy H(x)</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-[20px] font-bold text-[#241F1B] font-mono">
                         {benchmarkData.quantum.finalEnergy}
                       </span>
                       {benchmarkData.improvement.energyReductionPercent > 0 && (
-                        <span className="text-[11px] font-extrabold text-violet-700 bg-violet-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[11px] font-extrabold text-[#C93B2F] bg-[#F9E3DE] px-1.5 py-0.5 rounded">
                           -{benchmarkData.improvement.energyReductionPercent}%
                         </span>
                       )}
@@ -471,8 +470,8 @@ export default function QuantumOptimizerDashboard() {
                     <span className="text-[11px] text-[#70675F] block mt-0.5">minimized Hamiltonian</span>
                   </div>
 
-                  <div className="bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-200/70">
-                    <span className="text-[11px] text-[#0284C7] block font-bold">Execution Latency</span>
+                  <div className="bg-[#FAF7F2] p-3.5 rounded-xl border border-[#DED3C7]">
+                    <span className="text-[11px] text-[#70675F] block font-bold">Execution Latency</span>
                     <span className="text-[20px] font-bold text-[#241F1B] font-mono">
                       {benchmarkData.quantum.runtimeMs}ms
                     </span>
@@ -481,8 +480,8 @@ export default function QuantumOptimizerDashboard() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-cyan-50 border border-cyan-200 text-[12.5px] text-cyan-900 leading-relaxed">
-                <span className="font-bold">Quantum Advantage:</span> Quadratic coupling penalty J_ij simultaneously routes vehicles to orthogonal zones, spreading the surge across 3 levels with 0 queue wait.
+              <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#DED3C7] text-[12.5px] text-[#241F1B] leading-relaxed">
+                <span className="font-bold text-[#C93B2F]">Quantum Advantage:</span> Quadratic coupling penalty J_ij simultaneously routes vehicles to orthogonal zones, spreading the surge across 3 levels with 0 queue wait.
               </div>
             </div>
           </div>
@@ -492,7 +491,7 @@ export default function QuantumOptimizerDashboard() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
               <div>
                 <h3 className="text-[16px] font-bold text-[#241F1B] flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4 text-[#0284C7]" />
+                  <TrendingDown className="w-4 h-4 text-[#C93B2F]" />
                   <span>Hamiltonian Energy Landscape Minimization</span>
                 </h3>
                 <p className="text-[12.5px] text-[#70675F]">
@@ -506,8 +505,8 @@ export default function QuantumOptimizerDashboard() {
                   <span className="text-[#70675F]">Classical Energy: {benchmarkData.classical.finalEnergy}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-1 bg-[#0284C7] rounded" />
-                  <span className="text-[#0284C7] font-bold">Quantum Ground: {benchmarkData.quantum.finalEnergy}</span>
+                  <span className="w-3 h-1 bg-[#C93B2F] rounded" />
+                  <span className="text-[#C93B2F] font-bold">Quantum Ground: {benchmarkData.quantum.finalEnergy}</span>
                 </div>
               </div>
             </div>
@@ -516,9 +515,9 @@ export default function QuantumOptimizerDashboard() {
             <div className="w-full h-48 bg-[#FAF7F2] rounded-xl border border-[#DED3C7] p-4 relative overflow-hidden flex items-end">
               <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                 {/* Grid lines */}
-                <line x1="0" y1="20" x2="100" y2="20" stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
-                <line x1="0" y1="50" x2="100" y2="50" stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
-                <line x1="0" y1="80" x2="100" y2="80" stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+                <line x1="0" y1="20" x2="100" y2="20" stroke="#DED3C7" strokeWidth="0.5" strokeDasharray="2,2" />
+                <line x1="0" y1="50" x2="100" y2="50" stroke="#DED3C7" strokeWidth="0.5" strokeDasharray="2,2" />
+                <line x1="0" y1="80" x2="100" y2="80" stroke="#DED3C7" strokeWidth="0.5" strokeDasharray="2,2" />
 
                 {/* Classical Baseline horizontal line */}
                 <line
@@ -526,7 +525,7 @@ export default function QuantumOptimizerDashboard() {
                   y1="38"
                   x2="100"
                   y2="38"
-                  stroke="#F59E0B"
+                  stroke="#B7791F"
                   strokeWidth="2"
                   strokeDasharray="4,3"
                 />
@@ -535,20 +534,20 @@ export default function QuantumOptimizerDashboard() {
                 <path
                   d="M 0 15 Q 15 25, 30 55 T 60 75 T 85 86 L 100 88"
                   fill="none"
-                  stroke="#0284C7"
+                  stroke="#C93B2F"
                   strokeWidth="3"
                 />
 
                 {/* Quantum Tunneling event annotation */}
-                <circle cx="35" cy="58" r="4" fill="#7C3AED" className="animate-ping opacity-75" />
-                <circle cx="35" cy="58" r="2.5" fill="#7C3AED" />
+                <circle cx="35" cy="58" r="4" fill="#C93B2F" className="animate-ping opacity-75" />
+                <circle cx="35" cy="58" r="2.5" fill="#C93B2F" />
               </svg>
 
-              <div className="absolute top-4 left-6 bg-[#FFFFFF]/90 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-mono text-amber-700 border border-amber-300">
+              <div className="absolute top-4 left-6 bg-[#FFFFFF]/90 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-mono text-amber-800 border border-amber-300">
                 Classical Plateau (Local Minimum)
               </div>
 
-              <div className="absolute bottom-6 right-6 bg-[#FFFFFF]/90 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-mono text-[#0284C7] border border-cyan-300 font-bold">
+              <div className="absolute bottom-6 right-6 bg-[#FFFFFF]/90 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-mono text-[#C93B2F] border border-[#C93B2F]/30 font-bold">
                 Ground State (Quantum Annealed)
               </div>
             </div>
@@ -565,7 +564,7 @@ export default function QuantumOptimizerDashboard() {
                   Assigned bays optimized for zero aisle choke points and VIP elevator priority.
                 </p>
               </div>
-              <span className="text-[12px] font-mono font-bold text-[#0284C7] bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200">
+              <span className="text-[12px] font-mono font-bold text-[#C93B2F] bg-[#F9E3DE] px-2.5 py-1 rounded-lg border border-[#C93B2F]/20">
                 100% Conflict Free
               </span>
             </div>
@@ -592,18 +591,18 @@ export default function QuantumOptimizerDashboard() {
                         <span
                           className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${
                             item.vehicleType === "vip"
-                              ? "bg-amber-100 text-amber-800"
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
                               : item.vehicleType === "ev"
-                              ? "bg-cyan-100 text-cyan-800"
+                              ? "bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20"
                               : item.vehicleType === "accessible"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-slate-100 text-slate-700"
+                              ? "bg-blue-100 text-blue-800 border border-blue-200"
+                              : "bg-[#FAF7F2] text-[#70675F] border border-[#DED3C7]"
                           }`}
                         >
                           {item.vehicleType}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-mono font-bold text-[#0284C7]">
+                      <td className="py-3 px-3 font-mono font-bold text-[#C93B2F]">
                         {item.slotNumber}
                       </td>
                       <td className="py-3 px-3 font-mono text-[#70675F]">

@@ -66,7 +66,7 @@ export default function ParknexLogo({
         >
           PARK<span className="text-[#C93B2F]">NEX</span>
           {quantumBadge && (
-            <span className="ml-2 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-gradient-to-r from-cyan-100 to-violet-100 text-[#0284C7] border border-cyan-300 shadow-2xs">
+            <span className="ml-2 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20">
               Q
             </span>
           )}

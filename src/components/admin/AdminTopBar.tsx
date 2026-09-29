@@ -47,7 +47,7 @@ export default function AdminTopBar() {
             <span className="font-black tracking-tight text-[16px] text-[#241F1B]">
               PARK<span className="text-[#C93B2F]">NEX</span>
             </span>
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-100 text-[#0284C7] border border-cyan-200">
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20">
               Q
             </span>
           </div>
@@ -62,9 +62,9 @@ export default function AdminTopBar() {
             <span className="text-[#DED3C7]">·</span>
             <Link
               href="/admin/quantum"
-              className="text-[11.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-50 text-[#0284C7] border border-cyan-200 hover:bg-cyan-100 transition-colors flex items-center gap-1.5"
+              className="text-[11.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20 hover:bg-[#F3EAE0] transition-colors flex items-center gap-1.5"
             >
-              <Atom className="w-3 h-3 animate-spin" style={{ animationDuration: "8s" }} />
+              <Atom className="w-3 h-3 text-[#C93B2F] animate-spin" style={{ animationDuration: "8s" }} />
               QUBO Engine: Online
             </Link>
           </div>

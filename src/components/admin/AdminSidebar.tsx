@@ -92,7 +92,7 @@ export default function AdminSidebar() {
                     isActive
                       ? "text-white"
                       : item.isQuantum
-                      ? "text-[#0284C7]"
+                      ? "text-[#C93B2F]"
                       : "text-[#70675F]"
                   }`}
                   strokeWidth={isActive ? 2.4 : 1.8}
@@ -103,7 +103,7 @@ export default function AdminSidebar() {
                     className={`text-[9.5px] font-mono font-black px-1.5 py-0.5 rounded tracking-wider ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-cyan-100 text-[#0284C7] border border-cyan-200"
+                        : "bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20"
                     }`}
                   >
                     QUBO
@@ -218,7 +218,7 @@ export default function AdminSidebar() {
                         isActive
                           ? "text-white"
                           : item.isQuantum
-                          ? "text-[#0284C7]"
+                          ? "text-[#C93B2F]"
                           : "text-[#70675F]"
                       }`}
                       strokeWidth={isActive ? 2.4 : 1.8}
@@ -229,7 +229,7 @@ export default function AdminSidebar() {
                         className={`text-[9.5px] font-mono font-black px-1.5 py-0.5 rounded tracking-wider ${
                           isActive
                             ? "bg-white/20 text-white"
-                            : "bg-cyan-100 text-[#0284C7] border border-cyan-200"
+                            : "bg-[#F9E3DE] text-[#C93B2F] border border-[#C93B2F]/20"
                         }`}
                       >
                         QUBO

@@ -63,9 +63,9 @@ export default function ParkingHero() {
       <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="w-full lg:w-[56%] flex flex-col">
           {/* Editorial Quantum Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-300/80 bg-[#FFFFFF]/90 backdrop-blur-xs text-[#241F1B] text-[12px] font-bold shadow-xs self-start mb-5">
-            <Atom className="w-3.5 h-3.5 text-[#0284C7] animate-spin" style={{ animationDuration: "8s" }} />
-            <span className="font-mono text-[#0284C7]">QUANTUM EXPO 2026</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#DED3C7] bg-[#FFFFFF]/90 backdrop-blur-xs text-[#241F1B] text-[12px] font-bold shadow-xs self-start mb-5">
+            <Atom className="w-3.5 h-3.5 text-[#C93B2F] animate-spin" style={{ animationDuration: "8s" }} />
+            <span className="font-mono text-[#C93B2F]">QUANTUM EXPO 2026</span>
             <span className="text-[#DED3C7]">·</span>
             <span className="text-[#70675F]">QUBO Mobility OS</span>
           </div>
@@ -73,7 +73,7 @@ export default function ParkingHero() {
           {/* Main Headline */}
           <h1 className="text-[36px] sm:text-[48px] lg:text-[54px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight drop-shadow-xs">
             Zero-congestion parking.
-            <span className="block text-[#0284C7]">Quantum-annealed</span>
+            <span className="block text-[#C93B2F]">Quantum-annealed</span>
             <span className="block text-[#C93B2F]">for mega expos.</span>
           </h1>
 
@@ -86,7 +86,7 @@ export default function ParkingHero() {
           <div className="mt-8 flex flex-col sm:flex-row gap-3.5 w-full max-w-[480px]">
             <Link
               href="/admin/quantum"
-              className="flex items-center justify-center gap-2.5 min-h-[48px] px-6 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[15px] font-bold transition-all shadow-[0_4px_16px_rgba(2,132,199,0.3)] cursor-pointer"
+              className="flex items-center justify-center gap-2.5 min-h-[48px] px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[15px] font-bold transition-all shadow-[0_4px_16px_rgba(201,59,47,0.25)] cursor-pointer"
             >
               <Atom className="w-5 h-5 animate-spin" style={{ animationDuration: "10s" }} />
               <span>Quantum Annealer Lab</span>
@@ -117,11 +117,11 @@ export default function ParkingHero() {
               <span>-100% Lane Bottlenecks</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#0284C7]" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#C93B2F]" />
               <span>-38% Walking Distance</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <Zap className="w-3.5 h-3.5 text-[#B7791F]" />
               <span>Balanced 22kW EV Grid</span>
             </div>
           </div>
