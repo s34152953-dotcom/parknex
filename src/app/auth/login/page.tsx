@@ -4,7 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, Lock, Mail, ShieldCheck, Car, AlertCircle } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck, Car, AlertCircle, Zap } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 
 function LoginForm() {
@@ -12,12 +12,12 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectPath = searchParams?.get("redirect") || "/admin/booking";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin");
+  const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const performLogin = async (loginEmail: string) => {
+  const performLogin = async (loginEmail: string, loginPassword?: string) => {
     setLoading(true);
     setErrorMsg(null);
 
@@ -25,28 +25,54 @@ function LoginForm() {
       const result = await signIn("operator-credentials", {
         redirect: false,
         email: loginEmail,
-        password: password,
+        password: loginPassword !== undefined ? loginPassword : password,
       });
 
       if (result?.error) {
         setErrorMsg(result.error);
+        setLoading(false);
       } else if (result?.ok) {
-        router.push(redirectPath);
+        // Guaranteed full-page navigation so NextAuth session cookie is transmitted cleanly to middleware
+        window.location.href = redirectPath;
+      } else {
+        setErrorMsg("Failed to sign in. Please verify credentials.");
+        setLoading(false);
       }
-    } catch (err: any) {
+    } catch {
       setErrorMsg("An unexpected error occurred during login.");
-    } finally {
       setLoading(false);
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await performLogin(email);
+    await performLogin(email, password);
+  };
+
+  const handleInstantDemoLogin = async () => {
+    setEmail("admin");
+    setPassword("admin123");
+    await performLogin("admin", "admin123");
   };
 
   return (
     <div className="bg-[#FFFFFF] border border-[#DED3C7] rounded-2xl p-7 sm:p-9 shadow-[0_8px_24px_rgba(70,48,35,0.07)]">
+      {/* 1-Click Instant Demo Access */}
+      <div className="mb-5 pb-5 border-b border-[#DED3C7]">
+        <button
+          type="button"
+          onClick={handleInstantDemoLogin}
+          disabled={loading}
+          className="w-full h-11 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] cursor-pointer disabled:opacity-60"
+        >
+          <Zap className="w-4 h-4 fill-white" />
+          <span>{loading ? "Authenticating Demo Admin..." : "Instant Demo Operator Sign-In"}</span>
+        </button>
+        <p className="text-center text-[11.5px] text-[#70675F] mt-2 font-mono">
+          Pre-configured: <span className="font-bold text-[#241F1B]">admin</span> / <span className="font-bold text-[#241F1B]">admin123</span>
+        </p>
+      </div>
+
       <form onSubmit={handleLogin} className="flex flex-col gap-5">
         <div>
           <label
@@ -62,7 +88,7 @@ function LoginForm() {
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="parknexadmin.com"
+              placeholder="admin"
               className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] placeholder:text-[#938980] text-[14px] focus:border-[#C93B2F] focus:outline-none focus:ring-3 focus:ring-[#F9E3DE] transition-all"
               required
             />
@@ -83,7 +109,7 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
+              placeholder="admin123"
               className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] placeholder:text-[#938980] text-[14px] focus:border-[#C93B2F] focus:outline-none focus:ring-3 focus:ring-[#F9E3DE] transition-all"
               required
             />

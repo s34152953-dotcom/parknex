@@ -15,6 +15,7 @@ import {
   Video,
   X,
   ShieldCheck,
+  Atom,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 import { signOut } from "next-auth/react";
@@ -24,6 +25,7 @@ import { api } from "../../../convex/_generated/api";
 
 const adminNavLinks = [
   { label: "Live Parking Map", href: "/admin/booking", icon: MapPin },
+  { label: "Quantum Annealer", href: "/admin/quantum", icon: Atom, isQuantum: true },
   { label: "New Entry", href: "/admin/new-entry", icon: CarFront },
   { label: "Gate Scanner", href: "/admin/scan-exit", icon: QrCode },
   { label: "CCTV Monitoring", href: "/admin/cctv", icon: Video },
@@ -87,11 +89,26 @@ export default function AdminSidebar() {
               >
                 <item.icon
                   className={`w-4.5 h-4.5 shrink-0 transition-colors ${
-                    isActive ? "text-white" : "text-[#70675F]"
+                    isActive
+                      ? "text-white"
+                      : item.isQuantum
+                      ? "text-[#0284C7]"
+                      : "text-[#70675F]"
                   }`}
                   strokeWidth={isActive ? 2.4 : 1.8}
                 />
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {item.isQuantum && (
+                  <span
+                    className={`text-[9.5px] font-mono font-black px-1.5 py-0.5 rounded tracking-wider ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-cyan-100 text-[#0284C7] border border-cyan-200"
+                    }`}
+                  >
+                    QUBO
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -198,11 +215,26 @@ export default function AdminSidebar() {
                   >
                     <item.icon
                       className={`w-4.5 h-4.5 shrink-0 ${
-                        isActive ? "text-white" : "text-[#70675F]"
+                        isActive
+                          ? "text-white"
+                          : item.isQuantum
+                          ? "text-[#0284C7]"
+                          : "text-[#70675F]"
                       }`}
                       strokeWidth={isActive ? 2.4 : 1.8}
                     />
-                    <span>{item.label}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {item.isQuantum && (
+                      <span
+                        className={`text-[9.5px] font-mono font-black px-1.5 py-0.5 rounded tracking-wider ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-cyan-100 text-[#0284C7] border border-cyan-200"
+                        }`}
+                      >
+                        QUBO
+                      </span>
+                    )}
                   </Link>
                 );
               })}

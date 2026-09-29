@@ -28,11 +28,13 @@ export default function ParknexLogo({
   showWordmark = true,
   variant = "light",
   className = "",
+  quantumBadge = true,
 }: {
   size?: "sm" | "md" | "lg" | "xl";
   showWordmark?: boolean;
   variant?: "dark" | "light";
   className?: string;
+  quantumBadge?: boolean;
 }) {
   const iconSizes = {
     sm: "w-8 h-8",
@@ -56,13 +58,18 @@ export default function ParknexLogo({
 
       {showWordmark && (
         <span
-          className={`font-black uppercase tracking-[0.14em] leading-none ${wordmarkSizes[size]} ${textColor}`}
+          className={`font-black uppercase tracking-[0.14em] leading-none ${wordmarkSizes[size]} ${textColor} inline-flex items-center`}
           style={{
             fontFamily: "var(--font-sora), 'Sora', sans-serif",
             fontWeight: 800,
           }}
         >
           PARK<span className="text-[#C93B2F]">NEX</span>
+          {quantumBadge && (
+            <span className="ml-2 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-gradient-to-r from-cyan-100 to-violet-100 text-[#0284C7] border border-cyan-300 shadow-2xs">
+              Q
+            </span>
+          )}
         </span>
       )}
     </div>

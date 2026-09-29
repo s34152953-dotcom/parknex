@@ -8,6 +8,7 @@ import {
   Menu,
   AlertTriangle,
   ShieldCheck,
+  Atom,
 } from "lucide-react";
 import { ParknexIcon } from "@/components/ui/ParknexLogo";
 import { useSidebar } from "@/context/SidebarContext";
@@ -46,17 +47,26 @@ export default function AdminTopBar() {
             <span className="font-black tracking-tight text-[16px] text-[#241F1B]">
               PARK<span className="text-[#C93B2F]">NEX</span>
             </span>
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-100 text-[#0284C7] border border-cyan-200">
+              Q
+            </span>
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
-            <span className="text-[13.5px] font-bold text-[#70675F]">
-              Central Mall Grand
+            <span className="text-[13.5px] font-bold text-[#241F1B]">
+              Quantum Expo 2026
+            </span>
+            <span className="text-[12px] text-[#70675F]">
+              (Main Pavilion)
             </span>
             <span className="text-[#DED3C7]">·</span>
-            <span className="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[#2F7D5A]/10 text-[#2F7D5A] border border-[#2F7D5A]/25 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D5A] animate-pulse" />
-              Live Online
-            </span>
+            <Link
+              href="/admin/quantum"
+              className="text-[11.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-50 text-[#0284C7] border border-cyan-200 hover:bg-cyan-100 transition-colors flex items-center gap-1.5"
+            >
+              <Atom className="w-3 h-3 animate-spin" style={{ animationDuration: "8s" }} />
+              QUBO Engine: Online
+            </Link>
           </div>
         </div>
 

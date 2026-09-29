@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Car, ShieldCheck } from "lucide-react";
+import { ArrowRight, Car, ShieldCheck, Atom, Zap, CheckCircle2 } from "lucide-react";
 import ParkingScene from "./ParkingScene";
 
 /**
@@ -61,43 +61,69 @@ export default function ParkingHero() {
 
       {/* ── HERO CONTENT (Standard HTML / CSS Layer above 3D) ── */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="w-full lg:w-[52%] flex flex-col">
-          {/* Editorial Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#DED3C7] bg-[#FFFFFF]/90 backdrop-blur-xs text-[#241F1B] text-[12px] font-bold uppercase shadow-xs self-start mb-5">
-            <span className="w-2 h-2 rounded-full bg-[#C93B2F]" />
-            <span>Smart Mall Parking Management</span>
+        <div className="w-full lg:w-[56%] flex flex-col">
+          {/* Editorial Quantum Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-300/80 bg-[#FFFFFF]/90 backdrop-blur-xs text-[#241F1B] text-[12px] font-bold shadow-xs self-start mb-5">
+            <Atom className="w-3.5 h-3.5 text-[#0284C7] animate-spin" style={{ animationDuration: "8s" }} />
+            <span className="font-mono text-[#0284C7]">QUANTUM EXPO 2026</span>
+            <span className="text-[#DED3C7]">·</span>
+            <span className="text-[#70675F]">QUBO Mobility OS</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-[36px] sm:text-[48px] lg:text-[56px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight drop-shadow-xs">
-            Park in seconds.
-            <span className="block text-[#C93B2F]">Find your car</span>
-            <span className="block text-[#C93B2F]">instantly.</span>
+          <h1 className="text-[36px] sm:text-[48px] lg:text-[54px] font-black text-[#241F1B] text-left leading-[1.05] tracking-tight drop-shadow-xs">
+            Zero-congestion parking.
+            <span className="block text-[#0284C7]">Quantum-annealed</span>
+            <span className="block text-[#C93B2F]">for mega expos.</span>
           </h1>
 
           {/* Description */}
-          <p className="text-[16px] sm:text-[17.5px] text-[#70675F] mt-5 text-left leading-relaxed max-w-[500px]">
-            Drive in, receive your assigned parking space via SMS, and navigate back to your vehicle directly on your phone without downloading an app.
+          <p className="text-[16px] sm:text-[17px] text-[#70675F] mt-5 text-left leading-relaxed max-w-[520px]">
+            Powered by Simulated Quantum Annealing (QUBO/QAOA). Globally optimizes vehicle routing, EV charging transformer loads, and VIP arrivals with zero corridor gridlock.
           </p>
 
           {/* Action Buttons Row */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3.5 w-full max-w-[440px]">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3.5 w-full max-w-[480px]">
             <Link
-              href="/customer/login"
-              className="flex items-center justify-center gap-2.5 w-full min-h-[48px] px-6 rounded-xl bg-[#C93B2F] hover:bg-[#A92E25] text-white text-[15px] font-bold transition-all shadow-[0_4px_16px_rgba(201,59,47,0.25)] cursor-pointer"
+              href="/admin/quantum"
+              className="flex items-center justify-center gap-2.5 min-h-[48px] px-6 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[15px] font-bold transition-all shadow-[0_4px_16px_rgba(2,132,199,0.3)] cursor-pointer"
             >
-              <Car className="w-5 h-5" />
-              <span>Customer Portal</span>
+              <Atom className="w-5 h-5 animate-spin" style={{ animationDuration: "10s" }} />
+              <span>Quantum Annealer Lab</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
             <Link
-              href="/auth/login"
-              className="flex items-center justify-center gap-2 w-full min-h-[48px] px-6 rounded-xl border border-[#DED3C7] bg-[#FFFFFF]/95 hover:bg-[#F3EAE0] text-[#241F1B] text-[15px] font-bold transition-all shadow-xs cursor-pointer"
+              href="/customer/login"
+              className="flex items-center justify-center gap-2 min-h-[48px] px-5 rounded-xl border border-[#DED3C7] bg-[#FFFFFF]/95 hover:bg-[#F3EAE0] text-[#241F1B] text-[15px] font-bold transition-all shadow-xs cursor-pointer"
             >
-              <ShieldCheck className="w-5 h-5 text-[#C93B2F]" />
-              <span>Operator Portal</span>
+              <Car className="w-4.5 h-4.5 text-[#C93B2F]" />
+              <span>Customer Pass</span>
             </Link>
+
+            <Link
+              href="/auth/login"
+              className="flex items-center justify-center gap-1.5 min-h-[48px] px-4 rounded-xl border border-[#DED3C7] bg-[#FFFFFF]/95 hover:bg-[#F3EAE0] text-[#70675F] hover:text-[#241F1B] text-[14px] font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#70675F]" />
+              <span>Operator</span>
+            </Link>
+          </div>
+
+          {/* Quantum Advantage Highlights */}
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-[12px] font-medium text-[#70675F]">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D5A]" />
+              <span>-100% Lane Bottlenecks</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0284C7]" />
+              <span>-38% Walking Distance</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>Balanced 22kW EV Grid</span>
+            </div>
           </div>
         </div>
       </div>

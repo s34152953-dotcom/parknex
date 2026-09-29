@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Car, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { Car, ShieldCheck, AlertCircle, Loader2, Zap } from "lucide-react";
 import ParknexLogo from "@/components/ui/ParknexLogo";
 
 function CustomerLoginForm() {
@@ -15,6 +15,22 @@ function CustomerLoginForm() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     await signIn("google", { callbackUrl: "/customer/dashboard" });
+  };
+
+  const handleQuickDemoCustomerLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await signIn("customer-credentials", {
+        redirect: false,
+        email: "attendee@quantumexpo.com",
+        name: "Quantum Expo Attendee",
+      });
+      if (res?.ok) {
+        window.location.href = "/customer/dashboard";
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,17 +52,28 @@ function CustomerLoginForm() {
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span>
             {error === "OAuthCallback" || error === "OAuthCallbackError"
-              ? "Unable to complete Google sign-in. Please try again."
-              : "Sign-in error. Please try again."}
+              ? "Unable to complete Google sign-in. Please use Demo Access below."
+              : "Sign-in error. Please try Demo Access below."}
           </span>
         </div>
       )}
+
+      {/* 1-Click Instant Demo Customer Access */}
+      <button
+        type="button"
+        onClick={handleQuickDemoCustomerLogin}
+        disabled={loading}
+        className="w-full h-12 mb-3.5 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#7C3AED] hover:from-[#0369A1] hover:to-[#6D28D9] text-white text-[14px] font-bold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] cursor-pointer disabled:opacity-60"
+      >
+        <Zap className="w-4 h-4 fill-white" />
+        <span>{loading ? "Authenticating..." : "⚡ 1-Click Demo Attendee Sign-In"}</span>
+      </button>
 
       {/* Google Sign In */}
       <button
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="w-full h-13 flex items-center justify-center gap-3 bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] hover:bg-[#F3EAE0] text-[15px] font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-xs"
+        className="w-full h-12 flex items-center justify-center gap-3 bg-[#FFFFFF] border border-[#DED3C7] text-[#241F1B] hover:bg-[#F3EAE0] text-[14px] font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-xs"
       >
         {loading ? (
           <Loader2 className="w-5 h-5 text-[#241F1B] animate-spin" />

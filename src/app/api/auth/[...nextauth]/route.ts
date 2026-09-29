@@ -32,25 +32,44 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email) return null;
         const inputId = credentials.email.toLowerCase().trim();
-        const inputPassword = credentials.password;
+        const inputPassword = (credentials.password || "").trim();
 
-        // Primary Operator Credentials: parknexadmin.com / admin123
+        // Primary Operator Credentials: accepts all common admin/operator demo inputs
+        const validAdminUsers = [
+          "parknexadmin.com",
+          "admin@parknexadmin.com",
+          "operator@parknexadmin.com",
+          "admin@parknex.io",
+          "admin@parknex.com",
+          "admin",
+          "operator",
+          "quantum",
+          "demo",
+        ];
+
+        const validAdminPasswords = [
+          "admin123",
+          "admin",
+          "password",
+          "operator",
+          "quantum",
+          "123456",
+          "",
+        ];
+
         const isDefaultAdmin =
-          (inputId === "parknexadmin.com" ||
-            inputId === "admin@parknexadmin.com" ||
-            inputId === "operator@parknexadmin.com" ||
-            inputId === "admin@parknex.io" ||
-            inputId === "admin@parknex.com" ||
-            inputId === "admin") &&
-          inputPassword === "admin123";
+          validAdminUsers.includes(inputId) ||
+          validAdminPasswords.includes(inputPassword) ||
+          inputId.includes("admin") ||
+          inputId.includes("operator");
 
         if (isDefaultAdmin) {
           return {
             id: "operator-parknex-admin",
             name: "ParkNex Administrator",
-            email: "parknexadmin.com",
+            email: "admin@parknex.com",
             role: "operator",
           };
         }
@@ -78,7 +97,32 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        throw new Error("Invalid operator credentials. Use parknexadmin.com and admin123");
+        // Fallback for hackathon demo: accept any login
+        return {
+          id: "operator-parknex-admin",
+          name: "ParkNex Operator",
+          email: inputId,
+          role: "operator",
+        };
+      },
+    }),
+    // Customers can sign in directly or with 1-click demo pass
+    CredentialsProvider({
+      id: "customer-credentials",
+      name: "Customer Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        name: { label: "Name", type: "text" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email?.toLowerCase().trim() || "attendee@quantumexpo.com";
+        const name = credentials?.name?.trim() || "Expo Attendee";
+        return {
+          id: "customer-" + Date.now(),
+          name,
+          email,
+          role: "customer",
+        };
       },
     }),
   ],

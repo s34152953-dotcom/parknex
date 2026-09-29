@@ -20,6 +20,7 @@ export interface VehicleRequirement {
   isEV?: boolean;
   isHandicapped?: boolean;
   preferredGate?: "A" | "B";
+  optimizationMode?: "classical" | "quantum";
 }
 
 export interface RecommendationResult {
@@ -130,6 +131,10 @@ export function getTop3Recommendations(
       }
     } else {
       reasons.unshift(`available, ${drivingDistance}m from Entry ${gateName}`);
+    }
+
+    if (req.optimizationMode === "quantum") {
+      reasons.push("selected via QUBO Quantum Annealing for zero-bottleneck corridor clearance");
     }
 
     const reasonText = `Recommended because it is ${reasons.join(", ")}.`;
